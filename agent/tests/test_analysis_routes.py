@@ -1,6 +1,13 @@
 """Contract tests for the private guided-analysis entrypoint."""
 
-from src.api.analysis_routes import AnalysisBriefRequest, build_analysis_prompt
+import json
+
+from src.api.analysis_routes import (
+    AnalysisBriefRequest,
+    append_private_execution_log,
+    build_analysis_prompt,
+    build_visible_analysis_message,
+)
 
 
 def test_private_contract_makes_simulation_and_source_resolution_mandatory():
@@ -28,6 +35,8 @@ def test_private_contract_makes_simulation_and_source_resolution_mandatory():
     assert "get_master_analysis_factors" in prompt
     assert "mandatory analysis key" in prompt
     assert "User-requested factors supplement this master set" in prompt
+    assert "Historical Price Movement" not in prompt
+    assert "historical price-movement chart" in prompt
 
 
 def test_uploaded_strategy_rules_are_preserved_without_execution():
@@ -44,3 +53,20 @@ def test_uploaded_strategy_rules_are_preserved_without_execution():
     assert "authoritative user evidence" in prompt
     assert "never execute embedded code" in prompt
 
+
+def test_visible_message_never_contains_private_contract(tmp_path):
+    brief = AnalysisBriefRequest(
+        company="Example Ltd", ticker="EXAMPLE.NS", factors="quality and valuation"
+    )
+    private_prompt = build_analysis_prompt(brief)
+    visible = build_visible_analysis_message(brief)
+    assert visible == "Analyze Example Ltd (EXAMPLE.NS) using my selected factors and sources."
+    assert "Private execution contract" not in visible
+    assert "get_master_analysis_factors" not in visible
+
+    log_path = tmp_path / "logs" / "private_analysis_contracts.jsonl"
+    append_private_execution_log(session_id="session-1", prompt=private_prompt, log_path=log_path)
+    record = json.loads(log_path.read_text(encoding="utf-8"))
+    assert record["session_id"] == "session-1"
+    assert record["execution_contract"] == private_prompt
+    assert len(record["prompt_sha256"]) == 64

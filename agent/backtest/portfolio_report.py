@@ -92,6 +92,7 @@ def write_portfolio_workbook(
     master_factors: list[dict[str, Any]] | None = None,
     sector_factors: list[dict[str, Any]] | None = None,
     factor_authority: dict[str, Any] | None = None,
+    price_history: pd.DataFrame | None = None,
     ltcg_holding_days: int = 365,
 ) -> Path:
     """Write numeric history, benchmark, drawdown, holdings and tax sheets."""
@@ -137,6 +138,25 @@ def write_portfolio_workbook(
 
     equity_sheet = wb.create_sheet("Equity")
     _append_frame(equity_sheet, equity_frame)
+
+    prices = price_history.copy() if price_history is not None else pd.DataFrame()
+    if not prices.empty:
+        prices = prices.sort_index()
+        prices.index.name = "timestamp"
+        prices = prices.apply(pd.to_numeric, errors="coerce")
+    price_frame = prices.reset_index() if not prices.empty else pd.DataFrame(columns=["timestamp"])
+    price_sheet = wb.create_sheet("Price History")
+    _append_frame(price_sheet, price_frame)
+
+    indexed = prices.copy()
+    for column in indexed.columns:
+        valid = indexed[column].dropna()
+        indexed[column] = indexed[column] / valid.iloc[0] * 100.0 if not valid.empty and valid.iloc[0] != 0 else float("nan")
+    price_index_sheet = wb.create_sheet("Price Index")
+    _append_frame(
+        price_index_sheet,
+        indexed.reset_index() if not indexed.empty else pd.DataFrame(columns=["timestamp"]),
+    )
     benchmark = equity_frame[["timestamp", "equity", "benchmark_equity", "active_ret"]].copy()
     benchmark_sheet = wb.create_sheet("Benchmark")
     _append_frame(benchmark_sheet, benchmark)
@@ -215,6 +235,28 @@ def write_portfolio_workbook(
     drawdown_chart.height = 8
     drawdown_chart.width = 18
     charts.add_chart(drawdown_chart, "A20")
+
+    if price_index_sheet.max_column > 1 and price_index_sheet.max_row > 1:
+        price_chart = LineChart()
+        price_chart.title = "Historical Price Movement (Indexed to 100)"
+        price_chart.y_axis.title = "Index"
+        price_chart.x_axis.title = "Date"
+        price_chart.add_data(
+            Reference(
+                price_index_sheet,
+                min_col=2,
+                max_col=price_index_sheet.max_column,
+                min_row=1,
+                max_row=price_index_sheet.max_row,
+            ),
+            titles_from_data=True,
+        )
+        price_chart.set_categories(
+            Reference(price_index_sheet, min_col=1, min_row=2, max_row=price_index_sheet.max_row)
+        )
+        price_chart.height = 9
+        price_chart.width = 18
+        charts.add_chart(price_chart, "A38")
 
     wb.calculation.fullCalcOnLoad = True
     wb.calculation.forceFullCalc = True

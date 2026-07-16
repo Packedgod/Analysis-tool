@@ -7,8 +7,12 @@ evidence, pricing, ambiguity-resolution, and simulation contract.
 
 from __future__ import annotations
 
+import hashlib
+import json
 import re
 import sys
+import threading
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -17,6 +21,7 @@ from pydantic import BaseModel, Field, field_validator
 
 
 _UPLOAD_PATH_RE = re.compile(r"^uploads/[0-9a-f]{32}(?:\.[A-Za-z0-9]{1,12})?$")
+_AUDIT_LOCK = threading.Lock()
 
 
 class AnalysisBriefRequest(BaseModel):
@@ -87,12 +92,34 @@ Private execution contract:
 6. Analyze the master registry and the user's additional factors. Separate sourced facts, calculations, interpretation, risks, and estimates. Every material claim must retain a source URL/document and date. Make the report numeric-first: historical sections must use numerical tables and charts wherever the source data permits. Keep prose to short labels, exceptions, complex interpretation, and material caveats; do not repeat numbers in paragraphs.
 7. Historical simulation is mandatory and is a long-only portfolio review, not day trading. {strategy} Model stocks as portfolio holdings, use daily bars only for valuation and risk measurement, and hold between scheduled reviews. Re-run the complete master-factor procedure once per year using information available on each review date, then rebalance only at the annual review date unless the verified user strategy requires a less frequent cadence. Include realistic portfolio costs, look-ahead and survivorship controls, matched sector benchmark, annual return series, drawdown, volatility, Sharpe, turnover, holdings, and transactions.
 8. Tie portfolio drawdown and rebalancing to the client profile. Extract risk tolerance, maximum tolerable drawdown, time horizon, liquidity needs, concentration limits, and benchmark from verified user material or the request. If any is absent, produce clearly labelled conservative profile bands and a conditional comparison rather than claiming a personalized fit. Rebalancing decisions must respect the tightest risk, horizon, liquidity, and concentration constraint.
-9. Produce a separate numeric workbook report after the simulation with Summary, Master Factors, Sector Factors, Annual, Equity, Holdings, Transactions, Benchmark, Drawdown, STCG, LTCG, Manual Tax, Assumptions, and Charts sheets. Preserve every review-date factor score and portfolio state needed for year-over-year and benchmark comparison. The workbook is a required final artifact, not an internal scratch file.
+9. Produce a separate numeric workbook report after the simulation with Summary, Master Factors, Sector Factors, Annual, Equity, Price History, Price Index, Holdings, Transactions, Benchmark, Drawdown, STCG, LTCG, Manual Tax, Assumptions, and Charts sheets. Preserve every review-date factor score and portfolio state needed for year-over-year and benchmark comparison. Include a historical price-movement chart across the complete simulation timeline, indexed to 100 for multi-stock comparability. The workbook is a required final artifact, not an internal scratch file.
 10. Tax is a post-simulation overlay only. First finalize and preserve all pre-tax performance figures. Then separate realized exits into STCG and LTCG by holding period and show each stock separately. Never hard-code a tax rate: leave manual STCG and LTCG rate inputs at zero until the user supplies them, and calculate tax and post-tax gain only from those editable inputs. Do not alter pre-tax backtest metrics.
 11. Do not finish until the report contains an identity-resolution record, master-factor coverage matrix, sector/industry score, current price point, numerical financial history, graphical history, qualitative composite, risks, data-quality notes, annual portfolio backtest, benchmark comparison, client-profile drawdown assessment, and the numeric workbook artifact.
 
 {team}
 This is analysis-only. Never connect to a broker or create an executable order."""
+
+
+def build_visible_analysis_message(brief: AnalysisBriefRequest) -> str:
+    """Return the concise request shown in chat; no workflow policy is exposed."""
+    identity = f" ({brief.ticker})" if brief.ticker else ""
+    return f"Analyze {brief.company}{identity} using my selected factors and sources."
+
+
+def append_private_execution_log(
+    *, session_id: str, prompt: str, log_path: Path
+) -> None:
+    """Append the private contract to a backend-only JSONL audit log."""
+    record = {
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "session_id": session_id,
+        "prompt_sha256": hashlib.sha256(prompt.encode("utf-8")).hexdigest(),
+        "execution_contract": prompt,
+    }
+    log_path.parent.mkdir(parents=True, exist_ok=True)
+    with _AUDIT_LOCK:
+        with log_path.open("a", encoding="utf-8") as handle:
+            handle.write(json.dumps(record, ensure_ascii=False) + "\n")
 
 
 def register_analysis_routes(app: FastAPI) -> None:
@@ -129,9 +156,16 @@ def register_analysis_routes(app: FastAPI) -> None:
             config={"workflow": "equity_analysis", "guided": True},
         )
         try:
+            private_prompt = build_analysis_prompt(brief)
+            append_private_execution_log(
+                session_id=session.session_id,
+                prompt=private_prompt,
+                log_path=Path(current_host.AGENT_DIR).parent / "logs" / "private_analysis_contracts.jsonl",
+            )
             result: dict[str, Any] = await service.send_message(
                 session_id=session.session_id,
-                content=build_analysis_prompt(brief),
+                content=build_visible_analysis_message(brief),
+                execution_content=private_prompt,
                 include_shell_tools=current_host._shell_tools_enabled_for_request(request),
             )
         except Exception:

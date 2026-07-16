@@ -1,9 +1,9 @@
 """Base backtest engine with shared bar-by-bar execution loop.
 
 All market engines inherit from BaseEngine and override market-rule methods.
-The shared run_backtest() handles: data loading â†’ signal generation â†’
-pre-compute target weights (with optimizer) â†’ bar-by-bar execution with
-market rule enforcement â†’ metrics â†’ artifacts.
+The shared run_backtest() handles: data loading → signal generation →
+pre-compute target weights (with optimizer) → bar-by-bar execution with
+market rule enforcement → metrics → artifacts.
 """
 
 from __future__ import annotations
@@ -57,7 +57,7 @@ def _run_card_data_sources(config: Dict[str, Any], loader: Any) -> List[str]:
     return [str(source)] if source else []
 
 
-# â”€â”€â”€ Market detection (lightweight, for signal alignment only) â”€â”€â”€
+# ─── Market detection (lightweight, for signal alignment only) ───
 
 _CRYPTO_RE = _re.compile(r"^[A-Z]+-USDT$|^[A-Z]+/USDT$", _re.I)
 _FOREX_RE = _re.compile(r"^[A-Z]{3}/[A-Z]{3}$|^[A-Z]{6}\.FX$")
@@ -72,7 +72,7 @@ def _detect_market_for_align(code: str) -> str:
     return "equity"
 
 
-# â”€â”€â”€ Signal alignment (reused from daily_portfolio logic) â”€â”€â”€
+# ─── Signal alignment (reused from daily_portfolio logic) ───
 
 
 def _align(
@@ -213,7 +213,7 @@ def _event_feed_specs(config: Dict[str, Any]) -> List[FeedSpec]:
     """Parse the optional ``event_feeds`` feed definitions from backtest config.
 
     ``event_feeds`` is a list of feed-definition dicts (there is no built-in
-    catalogue) â€” each with ``name``/``route_template``/``event_type`` and an
+    catalogue) — each with ``name``/``route_template``/``event_type`` and an
     optional ``code_style``. An empty/absent value means "no event enrichment".
     """
     raw_feeds = config.get("event_feeds")
@@ -250,7 +250,7 @@ def _maybe_enrich_events(
         ) from exc
 
 
-# â”€â”€â”€ Base Engine â”€â”€â”€
+# ─── Base Engine ───
 
 
 class BaseEngine(ABC):
@@ -275,7 +275,7 @@ class BaseEngine(ABC):
         self._bar_idx: int = 0
         self._active_symbol: str = ""  # set by _rebalance/_close_position for subclass use
 
-    # â”€â”€ Market rule interface (subclass must implement) â”€â”€
+    # ── Market rule interface (subclass must implement) ──
 
     @abstractmethod
     def can_execute(self, symbol: str, direction: int, bar: pd.Series) -> bool:
@@ -334,7 +334,7 @@ class BaseEngine(ABC):
         Default: no-op. Override in subclass as needed.
         """
 
-    # â”€â”€ PnL / margin calculation hooks â”€â”€
+    # ── PnL / margin calculation hooks ──
     # Override in FuturesBaseEngine to inject contract multiplier.
 
     def _calc_pnl(
@@ -356,7 +356,7 @@ class BaseEngine(ABC):
         """Convert target notional exposure to number of units/contracts."""
         return target_notional / price
 
-    # â”€â”€ Main entry â”€â”€
+    # ── Main entry ──
 
     def run_backtest(
         self,
@@ -439,7 +439,7 @@ class BaseEngine(ABC):
         bench_ret = ret_df.mean(axis=1) if ret_df.shape[1] > 0 else pd.Series(0.0, index=dates)
         benchmark_metadata = {}
 
-        # â”€â”€ External benchmark fetch â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        # ── External benchmark fetch ──────────────────────────────────────────
         bench_ticker = config.get("benchmark")
         if bench_ticker and bench_ticker != "auto":
             from backtest.benchmark import resolve_benchmark
@@ -457,7 +457,7 @@ class BaseEngine(ABC):
                     "benchmark_ticker": bench_result.ticker,
                     "benchmark_return": bench_result.total_ret,
                 }
-        # â”€â”€ External benchmark fetch â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        # ── External benchmark fetch ──────────────────────────────────────────
 
         bench_equity = self.initial_capital * (1 + bench_ret).cumprod()
 
@@ -467,7 +467,7 @@ class BaseEngine(ABC):
         m["by_symbol"] = by_symbol_stats(self.trades)
         m["by_exit_reason"] = by_exit_reason_stats(self.trades)
 
-        # 7. Validation (optional â€” triggered by config["validation"])
+        # 7. Validation (optional — triggered by config["validation"])
         if config.get("validation"):
             from backtest.validation import run_validation
             v_results = run_validation(
@@ -502,7 +502,7 @@ class BaseEngine(ABC):
         print(json.dumps({k: v for k, v in m.items() if not isinstance(v, dict)}, indent=2))
         return m
 
-    # â”€â”€ Execution loop â”€â”€
+    # ── Execution loop ──
 
     def _execute_bars(
         self,
@@ -521,307 +521,307 @@ class BaseEngine(ABC):
                 if ts in data_map[c].index:
                     self.on_bar(c, data_map[c].loc[ts], ts)
 
-            # b. Rebalance each symbol to target weight
-            equity = self._calc_equity(close_df, ts)
-            for c in codes:
-                try:
-                    target_w = float(target_pos.at[ts, c]) if ts in target_pos.index else 0.0
-                    self._rebalance(c, target_w, data_map.get(c), ts, equity)
-                except Exception as exc:
-                    logger.warning("Rebalance failed for %s at %s: %s", c, ts, exc)
+            # b. Rebalance each symbol to target weight…9843 tokens truncated….clear(session_id)
+        return self.store.delete_session(session_id)
 
-            # c. Record equity snapshot
-            snap_equity = self._calc_equity(close_df, ts)
-            if self.positions and type(self)._calc_pnl is BaseEngine._calc_pnl:
-                _syms = list(self.positions.keys())
-                _eps = np.array([p.entry_price for p in self.positions.values()])
-                _dirs = np.array([p.direction for p in self.positions.values()])
-                _sizes = np.array([p.size for p in self.positions.values()])
-                _cps = np.array(
-                    [self._safe_price(close_df, ts, s, ep) for s, ep in zip(_syms, _eps)]
-                )
-                total_unrealized = float(np.sum(_dirs * _sizes * (_cps - _eps)))
-            else:
-                total_unrealized = 0.0
-                for p in self.positions.values():
-                    cp = self._safe_price(close_df, ts, p.symbol, p.entry_price)
-                    total_unrealized += self._calc_pnl(p.symbol, p.direction, p.size, p.entry_price, cp)
-            self.equity_snapshots.append(EquitySnapshot(
-                timestamp=ts,
-                capital=self.capital,
-                unrealized=total_unrealized,
-                equity=snap_equity,
-                positions=len(self.positions),
-            ))
+    async def send_message(
+        self,
+        session_id: str,
+        content: str,
+        role: str = "user",
+        *,
+        include_shell_tools: bool = False,
+        client_request_id: Optional[str] = None,
+        execution_content: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        """Send a message to a session and trigger execution.
 
-        # d. Force close all remaining positions
-        if len(dates) > 0:
-            last_ts = dates[-1]
-            for c in list(self.positions.keys()):
-                price = self._safe_price(close_df, last_ts, c, self.positions[c].entry_price)
-                self._close_position(c, price, last_ts, "end_of_backtest")
+        Args:
+            session_id: Session ID.
+            content: Message content.
+            role: Message role.
+            include_shell_tools: Whether this attempt may use shell tools.
+            client_request_id: Stable key supplied by the UI for retry deduplication.
+            execution_content: Optional private prompt used by the agent while
+                ``content`` remains the only text persisted and emitted to clients.
 
-    def _calc_equity(self, close_df: pd.DataFrame, ts: pd.Timestamp) -> float:
-        """Total equity = free cash + sum(margin + unrealised) per position.
-
-        Uses vectorized numpy path when _calc_pnl/_calc_margin are not
-        overridden by a subclass (FuturesBaseEngine, CompositeEngine).
+        Returns:
+            Dictionary containing message_id and attempt_id.
         """
-        if not self.positions:
-            return self.capital
+        session = self.store.get_session(session_id)
+        if not session:
+            raise ValueError(f"Session {session_id} not found")
 
-        _base_pnl = type(self)._calc_pnl is BaseEngine._calc_pnl
-        _base_margin = type(self)._calc_margin is BaseEngine._calc_margin
+        # A browser may retry while the local service is recovering. Persist
+        # the request key with the user message so retries remain idempotent
+        # even after a backend process restart.
+        if client_request_id:
+            for previous in reversed(self.store.get_messages(session_id, limit=1000)):
+                if (
+                    previous.role == role
+                    and previous.metadata.get("client_request_id") == client_request_id
+                ):
+                    result = {"message_id": previous.message_id}
+                    if previous.linked_attempt_id:
+                        result["attempt_id"] = previous.linked_attempt_id
+                    return result
 
-        if _base_pnl and _base_margin:
-            syms = list(self.positions.keys())
-            sizes = np.array([p.size for p in self.positions.values()])
-            entry_prices = np.array([p.entry_price for p in self.positions.values()])
-            directions = np.array([p.direction for p in self.positions.values()])
-            leverages = np.array([p.leverage for p in self.positions.values()])
+        metadata = {"client_request_id": client_request_id} if client_request_id else {}
+        attempt = None
+        if role == "user":
+            attempt = Attempt(
+                session_id=session_id,
+                parent_attempt_id=session.last_attempt_id,
+                prompt=execution_content or content,
+            )
+            self.store.create_attempt(attempt)
 
-            current_prices = np.array(
-                [self._safe_price(close_df, ts, s, ep) for s, ep in zip(syms, entry_prices)]
+        message = Message(
+            session_id=session_id,
+            role=role,
+            content=content,
+            linked_attempt_id=attempt.attempt_id if attempt else None,
+            metadata=metadata,
+        )
+        self.store.append_message(message)
+        self._search_index.index_message(session_id, role, content)
+        self.event_bus.emit(session_id, "message.received", {"message_id": message.message_id, "role": role, "content": content})
+
+        if role != "user":
+            return {"message_id": message.message_id}
+
+        assert attempt is not None
+        session.config["include_shell_tools"] = include_shell_tools
+        session.last_attempt_id = attempt.attempt_id
+        session.updated_at = datetime.now().isoformat()
+        self.store.update_session(session)
+        self.event_bus.emit(session_id, "attempt.created", {"attempt_id": attempt.attempt_id, "prompt": content})
+
+        asyncio.create_task(self._run_attempt(session, attempt, include_shell_tools=include_shell_tools))
+        return {"message_id": message.message_id, "attempt_id": attempt.attempt_id}
+
+    def get_messages(self, session_id: str, limit: int = 100) -> list[Message]:
+        """Return the message history."""
+        return self.store.get_messages(session_id, limit)
+
+    def cancel_current(self, session_id: str) -> bool:
+        """Cancel the currently running AgentLoop for a session.
+
+        Args:
+            session_id: Session ID.
+
+        Returns:
+            Whether cancellation succeeded. True means an active loop existed and received a cancel signal.
+        """
+        loop = self._active_loops.get(session_id)
+        if loop is None:
+            return False
+        loop.cancel()
+        return True
+
+    async def _run_attempt(self, session: Session, attempt: Attempt, *, include_shell_tools: bool = False) -> None:
+        """Execute an Attempt in the background."""
+        attempt.mark_running()
+        self.store.update_attempt(attempt)
+        self.event_bus.emit(session.session_id, "attempt.started", {"attempt_id": attempt.attempt_id})
+
+        try:
+            messages = self.store.get_messages(session.session_id)
+            result = await self._run_with_agent(
+                attempt,
+                messages=messages,
+                include_shell_tools=include_shell_tools,
+                session_config=dict(session.config),
+            )
+            if result.get("status") == "success":
+                attempt.mark_completed(summary=result.get("content", ""))
+            else:
+                attempt.mark_failed(error=result.get("reason", "unknown"))
+            attempt.run_dir = result.get("run_dir")
+
+            self.store.update_attempt(attempt)
+            reply_metadata = {}
+            if attempt.run_dir:
+                reply_metadata["run_id"] = Path(attempt.run_dir).name
+            reply_metadata["status"] = attempt.status.value
+            if attempt.metrics:
+                reply_metadata["metrics"] = attempt.metrics
+
+            reply = Message(
+                session_id=session.session_id, role="assistant",
+                content=self._format_result_message(attempt),
+                linked_attempt_id=attempt.attempt_id,
+                metadata=reply_metadata,
+            )
+            self.store.append_message(reply)
+            self._search_index.index_message(session.session_id, "assistant", reply.content)
+            self.event_bus.emit(
+                session.session_id,
+                "attempt.completed" if attempt.status == AttemptStatus.COMPLETED else "attempt.failed",
+                {"attempt_id": attempt.attempt_id, "status": attempt.status.value,
+                 "summary": attempt.summary, "error": attempt.error, "run_dir": attempt.run_dir},
             )
 
-            margins = sizes * entry_prices / leverages
-            pnls = directions * sizes * (current_prices - entry_prices)
-            return self.capital + float(np.sum(margins + pnls))
+        except Exception as exc:
+            attempt.mark_failed(error=str(exc))
+            self.store.update_attempt(attempt)
+            self.event_bus.emit(session.session_id, "attempt.failed", {"attempt_id": attempt.attempt_id, "error": str(exc)})
 
-        equity = self.capital
-        for sym, pos in self.positions.items():
-            cp = self._safe_price(close_df, ts, sym, pos.entry_price)
-            margin = self._calc_margin(sym, pos.size, pos.entry_price, pos.leverage)
-            unrealized = self._calc_pnl(sym, pos.direction, pos.size, pos.entry_price, cp)
-            equity += margin + unrealized
-        return equity
-
-    def _rebalance(
+    async def _run_with_agent(
         self,
-        symbol: str,
-        target_weight: float,
-        df: Optional[pd.DataFrame],
-        ts: pd.Timestamp,
-        equity: float,
-    ) -> None:
-        """Adjust position for *symbol* toward *target_weight*."""
-        self._active_symbol = symbol
-        target_dir = 1 if target_weight > 1e-9 else (-1 if target_weight < -1e-9 else 0)
-        current_pos = self.positions.get(symbol)
+        attempt: Attempt,
+        messages: list = None,
+        *,
+        include_shell_tools: bool = False,
+        session_config: Optional[Dict[str, Any]] = None,
+    ) -> Dict[str, Any]:
+        """Execute an attempt with the V5 AgentLoop.
 
-        # Nothing to do
-        if current_pos is None and target_dir == 0:
-            return
-        if df is None or ts not in df.index:
-            return
+        Args:
+            attempt: Current execution attempt.
+            messages: Session message history.
+            include_shell_tools: Whether the registry may include shell tools.
+            session_config: Optional session-level config overrides. MCP server
+                definitions under the ``mcpServers`` key are merged on top of
+                the user config file via ``load_runtime_agent_config`` so each
+                session can extend or override the global MCP server list.
 
-        bar = df.loc[ts]
+        Returns:
+            Result dictionary containing status, run_dir, run_id, metrics, and related fields.
+        """
+        from src.tools import build_registry
+        from src.providers.chat import ChatLLM
+        from src.agent.loop import AgentLoop
+        from src.memory.persistent import PersistentMemory
+        from src.config.loader import load_runtime_agent_config, sanitize_session_overrides
 
-        # Close if target is flat or direction changed
-        if current_pos is not None:
-            need_close = target_dir == 0 or target_dir != current_pos.direction
-            if need_close:
-                if self.can_execute(symbol, 0, bar):
-                    open_price = float(bar.get("open", bar.get("close", 0)))
-                    price = self.apply_slippage(open_price, -current_pos.direction)
-                    self._close_position(symbol, price, ts, "signal")
-                else:
-                    return  # blocked (e.g. limit-down can't sell)
+        llm = ChatLLM()
+        pm = PersistentMemory()
 
-        # Open new if target non-zero and no remaining position
-        if target_dir != 0 and symbol not in self.positions:
-            if not self.can_execute(symbol, target_dir, bar):
-                return  # blocked (e.g. A-share no-short)
+        session_id = attempt.session_id
+        attempt_id = attempt.attempt_id
+        loop = asyncio.get_running_loop()
 
-            open_price = float(bar.get("open", bar.get("close", 0)))
-            if open_price <= 0:
-                return
+        safe_overrides = sanitize_session_overrides(session_config) if session_config else session_config
+        agent_config = load_runtime_agent_config(overrides=safe_overrides)
 
-            slipped = self.apply_slippage(open_price, target_dir)
-            leverage = self.default_leverage
-            target_notional = abs(target_weight) * equity * leverage
-            raw_size = self._calc_raw_size(symbol, target_notional, slipped)
-            size = self.round_size(raw_size, slipped)
-            if size <= 0:
-                return
+        def event_callback(event_type: str, data: Dict[str, Any]) -> None:
+            """Forward AgentLoop events to the SSE event bus."""
+            data["attempt_id"] = attempt_id
+            self.event_bus.emit(session_id, event_type, data)
 
-            margin = self._calc_margin(symbol, size, slipped, leverage)
-            comm = self.calc_commission(size, slipped, target_dir, is_open=True)
+        def _mcp_collision_warn(msg: str) -> None:
+            """Forward MCP server-name collision warnings to the operator event channel."""
+            self.event_bus.emit(session_id, "mcp.warning", {"attempt_id": attempt_id, "message": msg})
 
-            # Capital check â€” reduce if insufficient
-            if margin + comm > self.capital:
-                available = self.capital - comm
-                if available <= 0:
-                    return
-                size = self.round_size(
-                    self._calc_raw_size(symbol, available * leverage, slipped), slipped,
-                )
-                if size <= 0:
-                    return
-                margin = self._calc_margin(symbol, size, slipped, leverage)
-                comm = self.calc_commission(size, slipped, target_dir, is_open=True)
-
-            self.capital -= (margin + comm)
-            self.positions[symbol] = Position(
-                symbol=symbol,
-                direction=target_dir,
-                entry_price=slipped,
-                entry_time=ts,
-                size=size,
-                leverage=leverage,
-                entry_bar_idx=self._bar_idx,
-                entry_commission=comm,
-            )
-
-    def _close_position(
-        self,
-        symbol: str,
-        exit_price: float,
-        exit_time: pd.Timestamp,
-        reason: str,
-    ) -> None:
-        """Close position, record trade, return capital."""
-        self._active_symbol = symbol
-        pos = self.positions.pop(symbol, None)
-        if pos is None:
-            return
-
-        pnl = self._calc_pnl(symbol, pos.direction, pos.size, pos.entry_price, exit_price)
-        margin = self._calc_margin(symbol, pos.size, pos.entry_price, pos.leverage)
-        pnl_pct = pnl / margin * 100 if margin > 1e-9 else 0.0
-        exit_comm = self.calc_commission(pos.size, exit_price, pos.direction, is_open=False)
-
-        self.capital += margin + pnl - exit_comm
-
-        holding_bars = max(self._bar_idx - pos.entry_bar_idx, 0)
-
-        self.trades.append(TradeRecord(
-            symbol=symbol,
-            direction=pos.direction,
-            entry_price=pos.entry_price,
-            exit_price=exit_price,
-            entry_time=pos.entry_time,
-            exit_time=exit_time,
-            size=pos.size,
-            leverage=pos.leverage,
-            pnl=pnl,
-            pnl_pct=pnl_pct,
-            exit_reason=reason,
-            holding_bars=holding_bars,
-            commission=pos.entry_commission + exit_comm,
-        ))
-
-    # â”€â”€ Artifacts â”€â”€
-
-    def _write_artifacts(
-        self,
-        run_dir: Path,
-        data_map: Dict[str, pd.DataFrame],
-        dates: pd.DatetimeIndex,
-        equity_series: pd.Series,
-        bench_equity: pd.Series,
-        bench_ret: pd.Series,
-        target_pos: pd.DataFrame,
-        metrics: dict,
-        codes: List[str],
-        config: Dict[str, Any],
-    ) -> None:
-        """Write CSV artifacts compatible with daily_portfolio format."""
-        out = run_dir / "artifacts"
-        out.mkdir(parents=True, exist_ok=True)
-
-        # OHLCV per symbol
-        for code, df in data_map.items():
-            df.to_csv(out / f"ohlcv_{code}.csv")
-
-        # Equity curve
-        port_ret = equity_series.pct_change().fillna(0.0)
-        peak = equity_series.cummax()
-        dd = (equity_series - peak) / peak.replace(0, 1)
-        eq_df = pd.DataFrame({
-            "ret": port_ret,
-            "equity": equity_series,
-            "drawdown": dd,
-            "benchmark_equity": bench_equity.reindex(dates),
-            "active_ret": port_ret - bench_ret.reindex(dates).fillna(0.0),
-        }, index=dates)
-        eq_df.index.name = "timestamp"
-        eq_df.to_csv(out / "equity.csv")
-
-        # Position weights (target, for compatibility)
-        target_pos.index.name = "timestamp"
-        target_pos.to_csv(out / "positions.csv")
-
-        # Trades (compatible format)
-        trade_rows = []
-        for t in self.trades:
-            # Entry event
-            trade_rows.append({
-                "timestamp": str(t.entry_time.date()) if hasattr(t.entry_time, "date") else str(t.entry_time),
-                "code": t.symbol,
-                "side": "buy" if t.direction == 1 else "sell",
-                "price": round(t.entry_price, 4),
-                "qty": round(t.size, 6),
-                "reason": "signal",
-                "pnl": 0.0,
-                "holding_days": 0,
-                "return_pct": 0.0,
-            })
-            # Exit event
-            try:
-                hold_days = (t.exit_time - t.entry_time).days
-            except Exception:
-                hold_days = 0
-            trade_rows.append({
-                "timestamp": str(t.exit_time.date()) if hasattr(t.exit_time, "date") else str(t.exit_time),
-                "code": t.symbol,
-                "side": "sell" if t.direction == 1 else "buy",
-                "price": round(t.exit_price, 4),
-                "qty": round(t.size, 6),
-                "reason": t.exit_reason,
-                "pnl": round(t.pnl, 4),
-                "holding_days": hold_days,
-                "return_pct": round(t.pnl_pct, 2),
-            })
-
-        trade_cols = ["timestamp", "code", "side", "price", "qty", "reason", "pnl", "holding_days", "return_pct"]
-        pd.DataFrame(trade_rows or [], columns=trade_cols).to_csv(out / "trades.csv", index=False)
-
-        # Metrics
-        flat_metrics = {k: v for k, v in metrics.items() if not isinstance(v, dict)}
-        pd.DataFrame([flat_metrics]).to_csv(out / "metrics.csv", index=False)
-
-        # Numeric-first portfolio report. Manual tax rates remain editable and
-        # are never applied to the pre-tax simulation metrics above.
-        from backtest.portfolio_report import write_portfolio_workbook
-        from src.analysis.master_factors import factor_pack
-
-        master_pack = factor_pack(config.get("analysis_sector"), include_qualitative=False)
-
-        write_portfolio_workbook(
-            out / "portfolio_report.xlsx",
-            equity=eq_df,
-            positions=target_pos,
-            trades=pd.DataFrame(trade_rows or [], columns=trade_cols),
-            metrics=flat_metrics,
-            master_factors=master_pack["common_parameters"],
-            sector_factors=master_pack.get("sector_factors", []),
-            factor_authority=master_pack["authority"],
+        registry = await loop.run_in_executor(
+            _AGENT_EXECUTOR,
+            lambda: build_registry(
+                persistent_memory=pm,
+                include_shell_tools=include_shell_tools,
+                agent_config=agent_config,
+                session_id=session_id,
+                event_callback=event_callback,
+                warn_callback=_mcp_collision_warn,
+            ),
         )
 
-    # â”€â”€ Helpers â”€â”€
+        agent = AgentLoop(
+            registry=registry,
+            llm=llm,
+            event_callback=event_callback,
+            max_iterations=50,
+            persistent_memory=pm,
+        )
+        self._active_loops[session_id] = agent
+
+        # Build the message history context.
+        history = self._convert_messages_to_history(messages) if messages else None
+
+        try:
+            result = await loop.run_in_executor(
+                _AGENT_EXECUTOR,
+                lambda: agent.run(
+                    user_message=attempt.prompt,
+                    history=history,
+                    session_id=session_id,
+                ),
+            )
+        finally:
+            self._active_loops.pop(session_id, None)
+
+        # Load metrics from the run output when available.
+        if result.get("run_dir"):
+            metrics = self._load_metrics(Path(result["run_dir"]))
+            if metrics:
+                result["metrics"] = metrics
+
+        return result
 
     @staticmethod
-    def _safe_price(
-        close_df: pd.DataFrame,
-        ts: pd.Timestamp,
-        symbol: str,
-        fallback: float,
-    ) -> float:
-        """Get close price with fallback."""
-        if ts in close_df.index and symbol in close_df.columns:
-            val = close_df.at[ts, symbol]
-            if pd.notna(val):
-                return float(val)
-        return fallback
+    def _convert_messages_to_history(messages: list) -> list[Dict[str, Any]]:
+        """Convert Session messages into OpenAI-format history.
 
+        Keeps the readable ``[prev_run: {run_id}]`` marker instead of removing it
+        completely, and trims by character budget instead of a hard six-message cap
+        so the LLM can still see previous artifact paths and strategy content during
+        iterative updates.
+
+        Args:
+            messages: Session message list without the current turn.
+
+        Returns:
+            OpenAI-format messages trimmed from the newest items within the token budget.
+        """
+        import re
+        from pathlib import Path
+
+        def _shorten_run_dir(match: re.Match) -> str:
+            path_str = match.group(0).replace("Run directory:", "").strip()
+            run_id = Path(path_str).name if path_str else ""
+            return f"[prev_run: {run_id}]" if run_id else ""
+
+        history = []
+        for msg in messages[:-1]:
+            role = msg.role if hasattr(msg, "role") else msg.get("role", "user")
+            content = msg.content if hasattr(msg, "content") else msg.get("content", "")
+            if not content.strip() or role not in ("user", "assistant"):
+                continue
+            content = re.sub(r"Run directory:\s*\S+", _shorten_run_dir, content).strip()
+            if content:
+                history.append({"role": role, "content": content})
+
+        # Trim from the newest messages within a character budget of roughly 3000 tokens.
+        MAX_HISTORY_CHARS = 12000
+        total_chars = 0
+        trimmed: list = []
+        for msg in reversed(history):
+            msg_len = len(msg.get("content", ""))
+            if total_chars + msg_len > MAX_HISTORY_CHARS:
+                break
+            trimmed.append(msg)
+            total_chars += msg_len
+        return list(reversed(trimmed))
+
+    @staticmethod
+    def _load_metrics(run_dir: Path) -> Optional[Dict[str, Any]]:
+        """Load metrics.csv from a run directory."""
+        import csv
+        metrics_path = run_dir / "artifacts" / "metrics.csv"
+        if not metrics_path.exists():
+            return None
+        try:
+            with open(metrics_path, "r", encoding="utf-8") as f:
+                rows = list(csv.DictReader(f))
+                if rows:
+                    return {k: float(v) for k, v in rows[0].items() if v}
+        except Exception:
+            pass
+        return None
+
+    @staticmethod
+    def _format_result_message(attempt: Attempt) -> str:
+        """Format the final execution result message."""
+        if attempt.status == AttemptStatus.COMPLETED:
+            return attempt.summary or "Strategy execution completed."
+        return f"Execution failed: {attempt.error or 'unknown error'}"

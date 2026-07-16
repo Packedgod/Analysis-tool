@@ -30,6 +30,10 @@ def test_workbook_preserves_numeric_history_benchmark_tax_lots_and_charts(tmp_pa
         ],
         columns=["timestamp", "code", "side", "price", "qty", "reason", "pnl", "holding_days", "return_pct"],
     )
+    prices = pd.DataFrame(
+        {"AAA.NS": [100.0, 110.0, 121.0, 115.0], "BBB.NS": [200.0, 190.0, 209.0, 220.0]},
+        index=dates,
+    )
 
     output = write_portfolio_workbook(
         tmp_path / "portfolio_report.xlsx",
@@ -40,12 +44,13 @@ def test_workbook_preserves_numeric_history_benchmark_tax_lots_and_charts(tmp_pa
         master_factors=[{"Fundamental": "Return on Equity", "Category": "Profitability"}],
         sector_factors=[{"row": 4, "cells": [None, "Sector KPI", 0.25, ">=15%"]}],
         factor_authority={"sha256": "abc123"},
+        price_history=prices,
     )
 
     workbook = load_workbook(output, data_only=False)
     expected = {
         "Summary", "Master Factors", "Sector Factors", "Annual", "Equity", "Holdings", "Transactions", "Benchmark",
-        "Drawdown", "STCG", "LTCG", "Manual Tax", "Assumptions", "Charts",
+        "Price History", "Price Index", "Drawdown", "STCG", "LTCG", "Manual Tax", "Assumptions", "Charts",
     }
     assert expected.issubset(workbook.sheetnames)
     assert workbook["STCG"]["B2"].value == "AAA.NS"
@@ -56,12 +61,18 @@ def test_workbook_preserves_numeric_history_benchmark_tax_lots_and_charts(tmp_pa
     assert workbook["Master Factors"]["A2"].value == "Return on Equity"
     assert workbook["Sector Factors"]["C2"].value == "Sector KPI"
     assert isinstance(workbook["Annual"]["B2"].value, (int, float))
-    assert len(workbook["Charts"]._charts) == 2
+    assert workbook["Price History"]["B2"].value == 100
+    assert workbook["Price Index"]["C2"].value == 100
+    assert len(workbook["Charts"]._charts) == 3
 
 
 def test_private_portfolio_rules_do_not_appear_in_guided_frontend():
     root = Path(__file__).resolve().parents[2]
-    frontend = (root / "frontend" / "src" / "pages" / "Home.tsx").read_text(encoding="utf-8")
+    frontend = "\n".join(
+        path.read_text(encoding="utf-8")
+        for path in (root / "frontend" / "src").rglob("*")
+        if path.suffix in {".ts", ".tsx"}
+    )
 
     for private_term in (
         "Private execution contract",
@@ -76,4 +87,3 @@ def test_private_portfolio_rules_do_not_appear_in_guided_frontend():
         "qualitative_industry_layer_weight",
     ):
         assert private_term not in frontend
-

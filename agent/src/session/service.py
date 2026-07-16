@@ -90,6 +90,7 @@ class SessionService:
         *,
         include_shell_tools: bool = False,
         client_request_id: Optional[str] = None,
+        execution_content: Optional[str] = None,
     ) -> Dict[str, Any]:
         """Send a message to a session and trigger execution.
 
@@ -99,6 +100,8 @@ class SessionService:
             role: Message role.
             include_shell_tools: Whether this attempt may use shell tools.
             client_request_id: Stable key supplied by the UI for retry deduplication.
+            execution_content: Optional private prompt used by the agent while
+                ``content`` remains the only text persisted and emitted to clients.
 
         Returns:
             Dictionary containing message_id and attempt_id.
@@ -127,7 +130,7 @@ class SessionService:
             attempt = Attempt(
                 session_id=session_id,
                 parent_attempt_id=session.last_attempt_id,
-                prompt=content,
+                prompt=execution_content or content,
             )
             self.store.create_attempt(attempt)
 
@@ -380,3 +383,4 @@ class SessionService:
         if attempt.status == AttemptStatus.COMPLETED:
             return attempt.summary or "Strategy execution completed."
         return f"Execution failed: {attempt.error or 'unknown error'}"
+
