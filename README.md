@@ -61,4 +61,3 @@ not commit `.env`; it may contain credentials. Start the server with:
 
 This fork retains the upstream MIT license and notices from
 [HKUDS/Vibe-Trading](https://github.com/HKUDS/Vibe-Trading).
-

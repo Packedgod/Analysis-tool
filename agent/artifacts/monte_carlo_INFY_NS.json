@@ -1,0 +1,41 @@
+{
+  "code": "INFY.NS",
+  "model": "Geometric Brownian Motion calibrated to historical daily log returns",
+  "history_start": "2021-07-14 00:00:00",
+  "history_end": "2026-07-14 00:00:00",
+  "history_observations": 1238,
+  "current_price": 1092.9000244140625,
+  "currency": "INR",
+  "horizon_trading_days": 252,
+  "simulations": 10000,
+  "random_seed": 20260714,
+  "annualized_log_drift": -0.07468859807263896,
+  "annualized_simple_return_estimate": -0.071967567574857,
+  "annualized_volatility": 0.2569903896749163,
+  "mean_terminal_price": 1045.1117446888406,
+  "median_terminal_price": 1012.159657238848,
+  "probability_of_loss": 0.6215,
+  "probability_gain_20pct_or_more": 0.1514,
+  "probability_loss_20pct_or_more": 0.2848,
+  "terminal_price_percentiles": {
+    "p01": 556.168754819343,
+    "p05": 666.1836332888148,
+    "p10": 731.4720637678126,
+    "p25": 850.3511203128346,
+    "p50": 1012.159657238848,
+    "p75": 1202.9265997114053,
+    "p90": 1399.1960785321423,
+    "p95": 1546.4119350852645,
+    "p99": 1852.45038386818
+  },
+  "terminal_return_percentiles": {
+    "p01": -0.4911073818325493,
+    "p05": -0.39044412260309314,
+    "p50": -0.07387717574487368,
+    "p95": 0.4149619366275921,
+    "p99": 0.6949861309238565
+  },
+  "var_95_one_year": 0.39044412260309314,
+  "cvar_95_one_year": 0.4529681166793682,
+  "caveat": "GBM assumes stable drift/volatility and normally distributed log returns; it does not model earnings gaps, regime shifts, fat tails, dividends, or INR currency effects for non-INR investors."
+}
