@@ -1,9 +1,9 @@
 """Base backtest engine with shared bar-by-bar execution loop.
 
 All market engines inherit from BaseEngine and override market-rule methods.
-The shared run_backtest() handles: data loading → signal generation →
-pre-compute target weights (with optimizer) → bar-by-bar execution with
-market rule enforcement → metrics → artifacts.
+The shared run_backtest() handles: data loading â†’ signal generation â†’
+pre-compute target weights (with optimizer) â†’ bar-by-bar execution with
+market rule enforcement â†’ metrics â†’ artifacts.
 """
 
 from __future__ import annotations
@@ -57,7 +57,7 @@ def _run_card_data_sources(config: Dict[str, Any], loader: Any) -> List[str]:
     return [str(source)] if source else []
 
 
-# ─── Market detection (lightweight, for signal alignment only) ───
+# â”€â”€â”€ Market detection (lightweight, for signal alignment only) â”€â”€â”€
 
 _CRYPTO_RE = _re.compile(r"^[A-Z]+-USDT$|^[A-Z]+/USDT$", _re.I)
 _FOREX_RE = _re.compile(r"^[A-Z]{3}/[A-Z]{3}$|^[A-Z]{6}\.FX$")
@@ -72,7 +72,7 @@ def _detect_market_for_align(code: str) -> str:
     return "equity"
 
 
-# ─── Signal alignment (reused from daily_portfolio logic) ───
+# â”€â”€â”€ Signal alignment (reused from daily_portfolio logic) â”€â”€â”€
 
 
 def _align(
@@ -213,7 +213,7 @@ def _event_feed_specs(config: Dict[str, Any]) -> List[FeedSpec]:
     """Parse the optional ``event_feeds`` feed definitions from backtest config.
 
     ``event_feeds`` is a list of feed-definition dicts (there is no built-in
-    catalogue) — each with ``name``/``route_template``/``event_type`` and an
+    catalogue) â€” each with ``name``/``route_template``/``event_type`` and an
     optional ``code_style``. An empty/absent value means "no event enrichment".
     """
     raw_feeds = config.get("event_feeds")
@@ -250,7 +250,7 @@ def _maybe_enrich_events(
         ) from exc
 
 
-# ─── Base Engine ───
+# â”€â”€â”€ Base Engine â”€â”€â”€
 
 
 class BaseEngine(ABC):
@@ -275,7 +275,7 @@ class BaseEngine(ABC):
         self._bar_idx: int = 0
         self._active_symbol: str = ""  # set by _rebalance/_close_position for subclass use
 
-    # ── Market rule interface (subclass must implement) ──
+    # â”€â”€ Market rule interface (subclass must implement) â”€â”€
 
     @abstractmethod
     def can_execute(self, symbol: str, direction: int, bar: pd.Series) -> bool:
@@ -334,7 +334,7 @@ class BaseEngine(ABC):
         Default: no-op. Override in subclass as needed.
         """
 
-    # ── PnL / margin calculation hooks ──
+    # â”€â”€ PnL / margin calculation hooks â”€â”€
     # Override in FuturesBaseEngine to inject contract multiplier.
 
     def _calc_pnl(
@@ -356,7 +356,7 @@ class BaseEngine(ABC):
         """Convert target notional exposure to number of units/contracts."""
         return target_notional / price
 
-    # ── Main entry ──
+    # â”€â”€ Main entry â”€â”€
 
     def run_backtest(
         self,
@@ -439,7 +439,7 @@ class BaseEngine(ABC):
         bench_ret = ret_df.mean(axis=1) if ret_df.shape[1] > 0 else pd.Series(0.0, index=dates)
         benchmark_metadata = {}
 
-        # ── External benchmark fetch ──────────────────────────────────────────
+        # â”€â”€ External benchmark fetch â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         bench_ticker = config.get("benchmark")
         if bench_ticker and bench_ticker != "auto":
             from backtest.benchmark import resolve_benchmark
@@ -457,7 +457,7 @@ class BaseEngine(ABC):
                     "benchmark_ticker": bench_result.ticker,
                     "benchmark_return": bench_result.total_ret,
                 }
-        # ── External benchmark fetch ──────────────────────────────────────────
+        # â”€â”€ External benchmark fetch â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
         bench_equity = self.initial_capital * (1 + bench_ret).cumprod()
 
@@ -467,7 +467,7 @@ class BaseEngine(ABC):
         m["by_symbol"] = by_symbol_stats(self.trades)
         m["by_exit_reason"] = by_exit_reason_stats(self.trades)
 
-        # 7. Validation (optional — triggered by config["validation"])
+        # 7. Validation (optional â€” triggered by config["validation"])
         if config.get("validation"):
             from backtest.validation import run_validation
             v_results = run_validation(
@@ -502,7 +502,7 @@ class BaseEngine(ABC):
         print(json.dumps({k: v for k, v in m.items() if not isinstance(v, dict)}, indent=2))
         return m
 
-    # ── Execution loop ──
+    # â”€â”€ Execution loop â”€â”€
 
     def _execute_bars(
         self,
@@ -648,7 +648,7 @@ class BaseEngine(ABC):
             margin = self._calc_margin(symbol, size, slipped, leverage)
             comm = self.calc_commission(size, slipped, target_dir, is_open=True)
 
-            # Capital check — reduce if insufficient
+            # Capital check â€” reduce if insufficient
             if margin + comm > self.capital:
                 available = self.capital - comm
                 if available <= 0:
@@ -711,7 +711,7 @@ class BaseEngine(ABC):
             commission=pos.entry_commission + exit_comm,
         ))
 
-    # ── Artifacts ──
+    # â”€â”€ Artifacts â”€â”€
 
     def _write_artifacts(
         self,
@@ -790,7 +790,19 @@ class BaseEngine(ABC):
         flat_metrics = {k: v for k, v in metrics.items() if not isinstance(v, dict)}
         pd.DataFrame([flat_metrics]).to_csv(out / "metrics.csv", index=False)
 
-    # ── Helpers ──
+        # Numeric-first portfolio report. Manual tax rates remain editable and
+        # are never applied to the pre-tax simulation metrics above.
+        from backtest.portfolio_report import write_portfolio_workbook
+
+        write_portfolio_workbook(
+            out / "portfolio_report.xlsx",
+            equity=eq_df,
+            positions=target_pos,
+            trades=pd.DataFrame(trade_rows or [], columns=trade_cols),
+            metrics=flat_metrics,
+        )
+
+    # â”€â”€ Helpers â”€â”€
 
     @staticmethod
     def _safe_price(
@@ -805,3 +817,4 @@ class BaseEngine(ABC):
             if pd.notna(val):
                 return float(val)
         return fallback
+

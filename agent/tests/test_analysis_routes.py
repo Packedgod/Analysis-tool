@@ -18,6 +18,13 @@ def test_private_contract_makes_simulation_and_source_resolution_mandatory():
     assert "verified, authoritative user-provided source" in prompt
     assert "identity-resolution record" in prompt
     assert "Never connect to a broker" in prompt
+    assert "numeric-first" in prompt
+    assert "long-only portfolio review, not day trading" in prompt
+    assert "once per year" in prompt
+    assert "client profile" in prompt
+    assert "portfolio_report.xlsx" not in prompt
+    assert "STCG" in prompt and "LTCG" in prompt
+    assert "Never hard-code a tax rate" in prompt
 
 
 def test_uploaded_strategy_rules_are_preserved_without_execution():

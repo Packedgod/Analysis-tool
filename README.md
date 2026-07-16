@@ -55,6 +55,11 @@ not commit `.env`; it may contain credentials. Start the server with:
   Their contents are parsed as data and are never executed.
 - Every company analysis includes a historical simulation: uploaded strategy
   rules when provided, otherwise a disclosed general benchmark and trend model.
+- Listed-equity simulations use a long-only portfolio posture with annual
+  review/rebalancing, client-profile drawdown constraints, numeric-first
+  history, benchmark comparison, and an automatic `portfolio_report.xlsx`.
+- The workbook separates STCG/LTCG exits and leaves tax rates as editable
+  post-simulation inputs so pre-tax results are never changed retroactively.
 - Backtests and shadow results are simulations, not investment advice.
 - Brokerage is permanently disabled in this product, regardless of environment
   variables or copied Vibe-Trading configuration.

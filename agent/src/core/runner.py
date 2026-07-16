@@ -40,7 +40,7 @@ _SANDBOX_USER = "vibe-sandbox"
 # HOME. Data loaders that run in the same subprocess resolve these via
 # Path.home(); everything else in the real home (.env, sessions.db, memory/,
 # live/ mandate+audit ledger, shadow_*, dotfiles) stays unreadable to generated
-# strategy code — that broad read access was the VT-001 exposure.
+# strategy code â€” that broad read access was the VT-001 exposure.
 _SANDBOX_HOME_REEXPOSE = ("cache", "data-bridge", "qveris.json")
 # RLIMIT_AS caps *virtual* address space (mmap included). numpy/BLAS reserve
 # multi-GB virtual regions that are never resident, so a 2 GB cap spuriously
@@ -55,7 +55,7 @@ def _resolve_sandbox_credentials() -> tuple[str, str] | None:
     """Return ``(user, group)`` for the privilege-dropped subprocess, else None.
 
     None (run without a UID drop) is returned whenever the ``vibe-sandbox``
-    account is absent or the platform has no ``pwd`` module — i.e. every
+    account is absent or the platform has no ``pwd`` module â€” i.e. every
     environment except the hardened Docker image that pre-creates the account and
     is granted CAP_SETUID/CAP_SETGID. A user that exists but cannot actually be
     dropped to (no capability) is handled at the ``subprocess.run`` call site.
@@ -71,7 +71,7 @@ def _resolve_sandbox_credentials() -> tuple[str, str] | None:
 
 def _rlimit_as_bytes() -> int:
     """Return the configured RLIMIT_AS ceiling in bytes."""
-    raw = os.environ.get(_SANDBOX_RLIMIT_AS_MB_ENV, "")  # noqa: env-gate — sandbox rlimit tuning, not app config
+    raw = os.environ.get(_SANDBOX_RLIMIT_AS_MB_ENV, "")  # noqa: env-gate â€” sandbox rlimit tuning, not app config
     try:
         mb = int(raw) if raw.strip() else _DEFAULT_RLIMIT_AS_MB
     except ValueError:
@@ -132,7 +132,7 @@ def _prepare_sandbox_home(real_home: Path | None) -> Path:
                     (dst_root / rel).symlink_to(src, target_is_directory=src.is_dir())
                 except OSError:
                     # Best-effort: a loader that can't find its config just falls
-                    # back to a live fetch / disabled cache — never a hard break.
+                    # back to a live fetch / disabled cache â€” never a hard break.
                     pass
             try:
                 os.chmod(dst_root, 0o755)
@@ -308,6 +308,7 @@ _ARTIFACTS_SPEC = {
         "metrics": {"schema": "metrics_csv", "path": "artifacts/metrics.csv"},
         "trades": {"schema": "trade_log", "path": "artifacts/trades.csv"},
         "positions": {"schema": "positions_csv", "path": "artifacts/positions.csv"},
+        "portfolio_report": {"schema": "xlsx", "path": "artifacts/portfolio_report.xlsx"},
         "run_card_json": {"schema": "json", "path": "run_card.json"},
         "run_card_md": {"schema": "markdown", "path": "run_card.md"},
     },
@@ -436,8 +437,8 @@ class Runner:
     def _run_sandboxed(self, cmd: list[str], run_kwargs: dict[str, Any]) -> "subprocess.CompletedProcess[str]":
         """Run the subprocess, dropping to ``vibe-sandbox`` when the host allows it.
 
-        When the UID drop is unavailable — no such user (the common case outside
-        the hardened container) or the caller lacks CAP_SETUID — a clear WARNING
+        When the UID drop is unavailable â€” no such user (the common case outside
+        the hardened container) or the caller lacks CAP_SETUID â€” a clear WARNING
         is logged and the process runs without the drop. The AST static defense in
         backtest/runner.py stays active regardless, so this fallback is safe.
         """
@@ -573,3 +574,4 @@ class Runner:
             stderr=process.stderr,
             artifacts=artifacts,
         )
+
