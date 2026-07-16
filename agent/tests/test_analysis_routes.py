@@ -25,6 +25,9 @@ def test_private_contract_makes_simulation_and_source_resolution_mandatory():
     assert "portfolio_report.xlsx" not in prompt
     assert "STCG" in prompt and "LTCG" in prompt
     assert "Never hard-code a tax rate" in prompt
+    assert "get_master_analysis_factors" in prompt
+    assert "mandatory analysis key" in prompt
+    assert "User-requested factors supplement this master set" in prompt
 
 
 def test_uploaded_strategy_rules_are_preserved_without_execution():

@@ -89,6 +89,9 @@ def write_portfolio_workbook(
     positions: pd.DataFrame,
     trades: pd.DataFrame,
     metrics: dict[str, Any],
+    master_factors: list[dict[str, Any]] | None = None,
+    sector_factors: list[dict[str, Any]] | None = None,
+    factor_authority: dict[str, Any] | None = None,
     ltcg_holding_days: int = 365,
 ) -> Path:
     """Write numeric history, benchmark, drawdown, holdings and tax sheets."""
@@ -107,6 +110,24 @@ def write_portfolio_workbook(
         if numeric is not None:
             summary.append([str(key), numeric])
     _style_table(summary)
+
+    master_sheet = wb.create_sheet("Master Factors")
+    _append_frame(master_sheet, pd.DataFrame(master_factors or []))
+
+    sector_sheet = wb.create_sheet("Sector Factors")
+    raw_sector_rows = sector_factors or []
+    max_cells = max((len(item.get("cells", [])) for item in raw_sector_rows), default=0)
+    sector_frame = pd.DataFrame(
+        [
+            {
+                "source_row": item.get("row"),
+                **{f"field_{index + 1}": value for index, value in enumerate(item.get("cells", []))},
+            }
+            for item in raw_sector_rows
+        ],
+        columns=["source_row", *[f"field_{index + 1}" for index in range(max_cells)]],
+    )
+    _append_frame(sector_sheet, sector_frame)
 
     annual_sheet = wb.create_sheet("Annual")
     _append_frame(annual_sheet, annual)
@@ -169,6 +190,9 @@ def write_portfolio_workbook(
     assumptions.append(["ltcg_holding_days", int(ltcg_holding_days)])
     assumptions.append(["tax_applied_after_simulation", 1])
     assumptions.append(["manual_tax_rates", 1])
+    if factor_authority:
+        assumptions.append(["master_factor_source_sha256", factor_authority.get("sha256")])
+        assumptions.append(["master_factor_authoritative", 1])
     _style_table(assumptions)
 
     charts = wb.create_sheet("Charts")

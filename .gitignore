@@ -3,6 +3,7 @@ agent/.venv/
 __pycache__/
 .pytest_cache/
 .runtime/
+.tmp_factor_inspect/
 logs/
 *.pyc
 
@@ -75,7 +76,7 @@ assets/*.mp4
 # Local demo / promo production workspace
 demo/
 
-# Manual E2E smoke tests — require live API keys (OpenRouter / yfinance),
+# Manual E2E smoke tests â€” require live API keys (OpenRouter / yfinance),
 # would break CI if committed. Kept local; run explicitly when validating
 # a release.
 agent/tests/e2e_*.py
@@ -109,3 +110,4 @@ scripts/vibe_watchdog.ps1
 # Alpha Zoo wiki artifacts (generated, not source)
 wiki/alpha-library/manifest.json
 wiki/alpha-library/content/
+

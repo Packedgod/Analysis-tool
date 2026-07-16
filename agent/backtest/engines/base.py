@@ -484,7 +484,7 @@ class BaseEngine(ABC):
         # 8. Artifacts
         self._write_artifacts(
             run_dir, data_map, dates, equity_series, bench_equity, bench_ret,
-            target_pos, m, valid_codes,
+            target_pos, m, valid_codes, config,
         )
 
         # 9. Trust Layer run card
@@ -724,6 +724,7 @@ class BaseEngine(ABC):
         target_pos: pd.DataFrame,
         metrics: dict,
         codes: List[str],
+        config: Dict[str, Any],
     ) -> None:
         """Write CSV artifacts compatible with daily_portfolio format."""
         out = run_dir / "artifacts"
@@ -793,6 +794,9 @@ class BaseEngine(ABC):
         # Numeric-first portfolio report. Manual tax rates remain editable and
         # are never applied to the pre-tax simulation metrics above.
         from backtest.portfolio_report import write_portfolio_workbook
+        from src.analysis.master_factors import factor_pack
+
+        master_pack = factor_pack(config.get("analysis_sector"), include_qualitative=False)
 
         write_portfolio_workbook(
             out / "portfolio_report.xlsx",
@@ -800,6 +804,9 @@ class BaseEngine(ABC):
             positions=target_pos,
             trades=pd.DataFrame(trade_rows or [], columns=trade_cols),
             metrics=flat_metrics,
+            master_factors=master_pack["common_parameters"],
+            sector_factors=master_pack.get("sector_factors", []),
+            factor_authority=master_pack["authority"],
         )
 
     # â”€â”€ Helpers â”€â”€

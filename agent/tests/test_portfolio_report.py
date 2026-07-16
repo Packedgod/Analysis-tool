@@ -37,11 +37,14 @@ def test_workbook_preserves_numeric_history_benchmark_tax_lots_and_charts(tmp_pa
         positions=positions,
         trades=trades,
         metrics={"total_return": 0.232, "max_drawdown": -0.05, "trade_count": 2},
+        master_factors=[{"Fundamental": "Return on Equity", "Category": "Profitability"}],
+        sector_factors=[{"row": 4, "cells": [None, "Sector KPI", 0.25, ">=15%"]}],
+        factor_authority={"sha256": "abc123"},
     )
 
     workbook = load_workbook(output, data_only=False)
     expected = {
-        "Summary", "Annual", "Equity", "Holdings", "Transactions", "Benchmark",
+        "Summary", "Master Factors", "Sector Factors", "Annual", "Equity", "Holdings", "Transactions", "Benchmark",
         "Drawdown", "STCG", "LTCG", "Manual Tax", "Assumptions", "Charts",
     }
     assert expected.issubset(workbook.sheetnames)
@@ -50,6 +53,8 @@ def test_workbook_preserves_numeric_history_benchmark_tax_lots_and_charts(tmp_pa
     assert workbook["Manual Tax"]["C2"].value == 0
     assert workbook["Manual Tax"]["C3"].value == 0
     assert workbook["Manual Tax"]["D2"].value == "=MAX(0,B2)*C2"
+    assert workbook["Master Factors"]["A2"].value == "Return on Equity"
+    assert workbook["Sector Factors"]["C2"].value == "Sector KPI"
     assert isinstance(workbook["Annual"]["B2"].value, (int, float))
     assert len(workbook["Charts"]._charts) == 2
 
@@ -66,6 +71,9 @@ def test_private_portfolio_rules_do_not_appear_in_guided_frontend():
         "50/200",
         "annual review date",
         "manual_tax_rate",
+        "get_master_analysis_factors",
+        "common_category_weight",
+        "qualitative_industry_layer_weight",
     ):
         assert private_term not in frontend
 
