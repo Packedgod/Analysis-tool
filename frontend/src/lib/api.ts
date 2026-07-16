@@ -88,6 +88,27 @@ export interface UploadResult {
   status: string;
   file_path: string;
   filename: string;
+  size_bytes: number;
+  sha256: string;
+  verification_status: "user_verified";
+  source_authority: "authoritative_user_source";
+}
+
+export interface AnalysisBriefRequest {
+  company: string;
+  ticker?: string;
+  factors: string;
+  history_years: number;
+  strategy_path?: string;
+  strategy_name?: string;
+  use_team: boolean;
+}
+
+export interface AnalysisStartResponse {
+  session_id: string;
+  attempt_id: string;
+  message_id: string;
+  status: "started";
 }
 
 async function uploadFile(file: File): Promise<UploadResult> {
@@ -107,6 +128,11 @@ function appendQueryParam(url: string, key: string, value: string): string {
 
 export const api = {
   uploadFile,
+  startAnalysis: (brief: AnalysisBriefRequest) => request<AnalysisStartResponse>("/analysis/start", {
+    method: "POST",
+    body: JSON.stringify(brief),
+    networkRetries: 5,
+  }),
   // Runtime capability flags. `capabilities.brokerage` mirrors the backend
   // VIBE_TRADING_ENABLE_BROKERAGE switch so the UI can hide every live-trading
   // surface in the research-only build without probing the gated /live routes.
@@ -228,7 +254,7 @@ export const api = {
   alphaCompareStreamUrl: (jobId: string) =>
     withAuthTicket(`${BASE}/alpha/compare/${encodeURIComponent(jobId)}/stream`),
 
-  // Connector runtime channel — privileged surface actions (NOT agent tools).
+  // Connector runtime channel â€” privileged surface actions (NOT agent tools).
   // commit is the ONLY action that writes a mandate; halt trips the kill switch.
   commitMandate: (body: CommitMandateRequest) =>
     request<CommitMandateResponse>("/mandate/commit", {
@@ -240,7 +266,7 @@ export const api = {
       method: "POST",
       body: JSON.stringify({ session_id, broker, reason }),
     }),
-  // Read the persistent runtime status across all authorized brokers (SPEC §7.5).
+  // Read the persistent runtime status across all authorized brokers (SPEC Â§7.5).
   // Polled by the RunnerStatus panel; a plain authenticated GET, never a chat message.
   getLiveStatus: (signal?: AbortSignal) => request<LiveStatus>("/live/status", { signal }),
   authorizeLive: (broker: string) =>
@@ -248,7 +274,7 @@ export const api = {
       method: "POST",
       body: JSON.stringify({ broker }),
     }),
-  // Start/stop the persistent runner (SPEC §7.5). Privileged surface actions, not agent tools.
+  // Start/stop the persistent runner (SPEC Â§7.5). Privileged surface actions, not agent tools.
   startLiveRunner: (broker: string) =>
     request<LiveRunnerResponse>("/live/runner/start", {
       method: "POST",
@@ -818,7 +844,7 @@ export interface AlphaCompareRow {
   ir: number;
   ic_positive_ratio: number;
   ic_count: number;
-  /** `delta_<sort>_vs_best` — gap to the top-ranked alpha on the active metric. */
+  /** `delta_<sort>_vs_best` â€” gap to the top-ranked alpha on the active metric. */
   [deltaKey: string]: number | string;
 }
 
@@ -840,7 +866,7 @@ export interface AlphaCompareResult {
 
 // --- Connector runtime channel types ---
 
-/** One mandate profile inside a `mandate.proposal` event (SPEC Consent §1). */
+/** One mandate profile inside a `mandate.proposal` event (SPEC Consent Â§1). */
 export interface MandateProfile {
   ordinal: number;
   label: string;
@@ -861,7 +887,7 @@ export interface MandateProposalAccount {
   funded_by: string;
 }
 
-/** Payload of the `mandate.proposal` SSE event (SPEC Consent §1). */
+/** Payload of the `mandate.proposal` SSE event (SPEC Consent Â§1). */
 export interface MandateProposal {
   type?: string;
   proposal_id: string;
@@ -872,11 +898,11 @@ export interface MandateProposal {
   profiles: MandateProfile[];
   funding_note?: string;
   halt_note?: string;
-  /** Present only when this proposal was triggered by a mandate breach (SPEC Consent §3). */
+  /** Present only when this proposal was triggered by a mandate breach (SPEC Consent Â§3). */
   reauth_for?: { breach_id?: string } | null;
 }
 
-/** Payload of the `mandate.committed` SSE event (SPEC Consent §1 COMMIT). */
+/** Payload of the `mandate.committed` SSE event (SPEC Consent Â§1 COMMIT). */
 export interface MandateCommitted {
   proposal_id?: string;
   mandate_id?: string;
@@ -889,7 +915,7 @@ export interface MandateCommitted {
   expires_at?: string;
 }
 
-/** Payload of the `live.halted` SSE event (SPEC Consent §4). */
+/** Payload of the `live.halted` SSE event (SPEC Consent Â§4). */
 export interface LiveHalted {
   broker?: string | null;
   tripped_at?: string;
@@ -897,7 +923,7 @@ export interface LiveHalted {
   reason?: string;
 }
 
-/** Payload of the `live.action` SSE event (SPEC Consent §5 audit notify). */
+/** Payload of the `live.action` SSE event (SPEC Consent Â§5 audit notify). */
 export interface LiveAction {
   audit_id?: string;
   ts?: string;
@@ -913,7 +939,7 @@ export interface CommitMandateRequest {
   broker: string;
   proposal_id: string;
   selected_ordinal: number;
-  /** Present only on the adjust path (SPEC Consent §3); null otherwise. */
+  /** Present only on the adjust path (SPEC Consent Â§3); null otherwise. */
   adjustments?: Record<string, unknown> | null;
   /** Explicit affirmative consent; the surface sets it on the user's click. */
   consent_ack: boolean;
@@ -951,7 +977,7 @@ export interface LiveAuthorizeResponse {
   note?: string;
 }
 
-/** Mandate limits surfaced inside a `GET /live/status` broker entry (SPEC §7.5). */
+/** Mandate limits surfaced inside a `GET /live/status` broker entry (SPEC Â§7.5). */
 export interface LiveMandateLimits {
   max_order_notional_usd?: number;
   max_total_exposure_usd?: number;
@@ -969,13 +995,13 @@ export interface LiveMandateStatus {
   account_ref?: string;
   created_at?: string;
   limits?: LiveMandateLimits;
-  /** ISO timestamp the mandate auto-expires (SPEC §7.5 #7 proactive expiry). */
+  /** ISO timestamp the mandate auto-expires (SPEC Â§7.5 #7 proactive expiry). */
   expires_at?: string;
   expires_in_seconds?: number | null;
   expired?: boolean;
 }
 
-/** Runner liveness block of a `GET /live/status` broker entry (SPEC §7.5 #3). */
+/** Runner liveness block of a `GET /live/status` broker entry (SPEC Â§7.5 #3). */
 export interface LiveRunnerLiveness {
   broker?: string;
   alive: boolean;
@@ -998,7 +1024,7 @@ export interface LiveBrokerStatus {
   halted: boolean;
 }
 
-/** Response of `GET /live/status` (SPEC §7.5 runner status panel + C2). */
+/** Response of `GET /live/status` (SPEC Â§7.5 runner status panel + C2). */
 export interface LiveStatus {
   brokers: LiveBrokerStatus[];
   global_halted: boolean;
@@ -1022,3 +1048,4 @@ export interface MessageItem {
   linked_attempt_id?: string;
   metadata?: Record<string, unknown>;
 }
+

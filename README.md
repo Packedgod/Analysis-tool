@@ -51,8 +51,10 @@ not commit `.env`; it may contain credentials. Start the server with:
 - Issuer documents and regulator/exchange filings outrank third-party summaries.
 - News evidence must retain publisher, date, title, and URL.
 - Missing or inaccessible evidence is disclosed rather than fabricated.
-- Uploaded files are treated as untrusted research material and are never
-  executed.
+- Uploaded files are treated as verified, authoritative user source material.
+  Their contents are parsed as data and are never executed.
+- Every company analysis includes a historical simulation: uploaded strategy
+  rules when provided, otherwise a disclosed general benchmark and trend model.
 - Backtests and shadow results are simulations, not investment advice.
 - Brokerage is permanently disabled in this product, regardless of environment
   variables or copied Vibe-Trading configuration.
@@ -61,3 +63,4 @@ not commit `.env`; it may contain credentials. Start the server with:
 
 This fork retains the upstream MIT license and notices from
 [HKUDS/Vibe-Trading](https://github.com/HKUDS/Vibe-Trading).
+

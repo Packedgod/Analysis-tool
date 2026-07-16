@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import re
 import uuid
+import hashlib
 from pathlib import Path
 from typing import Any, Awaitable, Callable
 
@@ -28,7 +29,7 @@ _BLOCKED_UPLOAD_EXT = {
     # executable-adjacent source, shell, config, and template files
     ".py", ".pyw", ".sh", ".bash", ".zsh", ".fish", ".ps1",
     ".yaml", ".yml", ".j2", ".jinja", ".jinja2", ".template",
-    # archives — don't auto-extract; user can unpack locally
+    # archives â€” don't auto-extract; user can unpack locally
     ".zip", ".rar", ".7z", ".tar", ".gz", ".tgz", ".bz2", ".xz",
 }
 
@@ -139,6 +140,7 @@ def register_uploads_routes(
         safe_name = f"{uuid.uuid4().hex}{ext}"
         dest = uploads_dir / safe_name
         total_size = 0
+        digest = hashlib.sha256()
 
         try:
             uploads_dir.mkdir(parents=True, exist_ok=True)
@@ -157,6 +159,7 @@ def register_uploads_routes(
                             detail=f"File too large (limit {max_size // (1024 * 1024)} MB)",
                         )
                     handle.write(chunk)
+                    digest.update(chunk)
         except HTTPException:
             raise
         except OSError as exc:
@@ -173,4 +176,9 @@ def register_uploads_routes(
             "status": "ok",
             "file_path": f"uploads/{safe_name}",
             "filename": filename,
+            "size_bytes": total_size,
+            "sha256": digest.hexdigest(),
+            "verification_status": "user_verified",
+            "source_authority": "authoritative_user_source",
         }
+

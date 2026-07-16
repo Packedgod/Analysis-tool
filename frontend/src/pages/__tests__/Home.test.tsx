@@ -1,24 +1,43 @@
-import { describe, expect, it } from "vitest";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { MemoryRouter } from "react-router-dom";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { buildAnalysisPrompt } from "@/pages/Home";
+import { api } from "@/lib/api";
+import { Home } from "@/pages/Home";
 
-describe("buildAnalysisPrompt", () => {
-  it("requires official reports, reliable evidence, simulation safety, and no broker", () => {
-    const prompt = buildAnalysisPrompt({
-      company: "Reliance Industries",
-      ticker: "RELIANCE.NS",
-      factors: "cash flow and competitive position",
-      historyYears: 3,
-      strategyPath: "uploads/strategy.pdf",
-      strategyName: "strategy.pdf",
-      useTeam: true,
+vi.mock("@/lib/api", () => ({
+  api: {
+    startAnalysis: vi.fn(),
+    uploadFile: vi.fn(),
+  },
+}));
+
+describe("Home", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it("sends only the user-facing brief to the private analysis endpoint", async () => {
+    vi.mocked(api.startAnalysis).mockResolvedValue({
+      session_id: "session-1",
+      attempt_id: "attempt-1",
+      message_id: "message-1",
+      status: "started",
     });
 
-    expect(prompt).toContain("official website");
-    expect(prompt).toContain("Reuters");
-    expect(prompt).toContain("RELIANCE.NS");
-    expect(prompt).toContain("uploads/strategy.pdf");
-    expect(prompt).toContain("never place or prepare an order");
-    expect(prompt).toContain("multi-agent investment committee");
+    render(<MemoryRouter><Home /></MemoryRouter>);
+
+    fireEvent.change(screen.getByPlaceholderText("Reliance Industries"), {
+      target: { value: "Reliance Industries" },
+    });
+    fireEvent.change(screen.getByPlaceholderText("RELIANCE.NS"), {
+      target: { value: "RELIANCE.NS" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Start analysis" }));
+
+    await waitFor(() => expect(api.startAnalysis).toHaveBeenCalledWith(expect.objectContaining({
+      company: "Reliance Industries",
+      ticker: "RELIANCE.NS",
+      history_years: 3,
+    })));
   });
 });
+

@@ -3,99 +3,170 @@
 @tailwind utilities;
 
 @layer base {
-  :root {
-    /* Light mode surfaces */
-    --background: 220 20% 98%;
-    --foreground: 220 20% 10%;
+  :root,
+  :root[data-theme="exchange"] {
+    --background: 214 33% 97%;
+    --foreground: 222 45% 12%;
     --card: 0 0% 100%;
-    --card-foreground: 220 20% 10%;
-
-    /* Popover: a slightly elevated surface used for floating menus,
-       tooltips, and the language switcher dropdown. Falls back to a
-       solid white (light) or surface-1 (dark) so dropdowns never
-       appear transparent and let underlying content bleed through. */
+    --card-foreground: 222 45% 12%;
     --popover: 0 0% 100%;
-    --popover-foreground: 220 20% 10%;
-
-    /* Brand accent */
-    --primary: 27 90% 52%;
+    --popover-foreground: 222 45% 12%;
+    --primary: 217 91% 52%;
     --primary-foreground: 0 0% 100%;
-
-    --muted: 220 14% 92%;
-    --muted-foreground: 220 14% 46%;
-    --destructive: 0 84% 60%;
+    --muted: 214 28% 92%;
+    --muted-foreground: 216 16% 43%;
+    --destructive: 0 76% 54%;
     --destructive-foreground: 0 0% 100%;
-    --border: 220 14% 87%;
-    --radius: 0.5rem;
-
-    /* Semantic colors */
-    --success: 142 71% 45%;
-    --danger: 0 84% 60%;
-    --warning: 38 92% 50%;
-    --info: 217 91% 60%;
-
-    /* Chart tokens */
-    --chart-grid: 220 14% 90%;
-    --chart-text: 220 14% 46%;
-    --chart-axis: 220 14% 80%;
-    --chart-compare-a: #3b82f6;
+    --border: 214 24% 84%;
+    --success: 153 74% 34%;
+    --danger: 0 76% 54%;
+    --warning: 38 92% 45%;
+    --info: 217 91% 52%;
+    --chart-grid: 214 24% 88%;
+    --chart-text: 216 16% 43%;
+    --chart-axis: 214 24% 78%;
+    --chart-compare-a: #2563eb;
     --chart-compare-b: #f59e0b;
+    --radius: 0.55rem;
   }
 
-  .dark {
-    /* Dark mode: 4-level surface system */
-    --background: 220 20% 5%;       /* bg-base */
-    --foreground: 220 10% 92%;
-    --card: 220 20% 8%;             /* surface-1 */
-    --card-foreground: 220 10% 92%;
-
-    --popover: 220 20% 9%;          /* surface-1.5 (slightly lighter than card) */
-    --popover-foreground: 220 10% 92%;
-
-    --primary: 27 90% 52%;
-    --primary-foreground: 0 0% 100%;
-
-    --muted: 220 20% 13%;           /* surface-2 */
-    --muted-foreground: 220 10% 55%;
-    --destructive: 0 62% 50%;
+  :root[data-theme="midnight"] {
+    --background: 222 38% 5%;
+    --foreground: 210 24% 94%;
+    --card: 222 33% 8%;
+    --card-foreground: 210 24% 94%;
+    --popover: 222 30% 10%;
+    --popover-foreground: 210 24% 94%;
+    --primary: 173 80% 42%;
+    --primary-foreground: 222 45% 7%;
+    --muted: 221 25% 13%;
+    --muted-foreground: 215 15% 60%;
+    --destructive: 0 70% 50%;
     --destructive-foreground: 0 0% 100%;
-    --border: 220 20% 18%;          /* surface-3 */
-
-    /* Semantic colors */
-    --success: 142 71% 45%;
-    --danger: 0 62% 50%;
-    --warning: 38 92% 50%;
-    --info: 217 91% 60%;
-
-    /* Chart tokens */
-    --chart-grid: 220 20% 12%;
-    --chart-text: 220 10% 42%;
-    --chart-axis: 220 20% 22%;
-    --chart-compare-a: #60a5fa;
+    --border: 220 24% 18%;
+    --success: 153 72% 48%;
+    --danger: 0 70% 54%;
+    --warning: 40 90% 55%;
+    --info: 199 89% 58%;
+    --chart-grid: 220 24% 13%;
+    --chart-text: 215 15% 53%;
+    --chart-axis: 220 24% 23%;
+    --chart-compare-a: #2dd4bf;
     --chart-compare-b: #fbbf24;
   }
 
-  * { @apply border-border; }
-  body { @apply bg-background text-foreground; }
+  :root[data-theme="terminal"] {
+    --background: 120 18% 4%;
+    --foreground: 84 45% 88%;
+    --card: 120 16% 7%;
+    --card-foreground: 84 45% 88%;
+    --popover: 120 15% 9%;
+    --popover-foreground: 84 45% 88%;
+    --primary: 84 81% 48%;
+    --primary-foreground: 120 22% 4%;
+    --muted: 120 12% 12%;
+    --muted-foreground: 98 16% 55%;
+    --destructive: 0 68% 50%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 110 15% 18%;
+    --success: 84 81% 48%;
+    --danger: 0 68% 54%;
+    --warning: 48 95% 53%;
+    --info: 160 72% 45%;
+    --chart-grid: 110 15% 13%;
+    --chart-text: 98 16% 50%;
+    --chart-axis: 110 15% 23%;
+    --chart-compare-a: #84cc16;
+    --chart-compare-b: #22c55e;
+  }
 
-  /* Prose table enhancements */
+  :root[data-theme="ivory"] {
+    --background: 42 35% 96%;
+    --foreground: 28 30% 13%;
+    --card: 42 48% 99%;
+    --card-foreground: 28 30% 13%;
+    --popover: 42 48% 99%;
+    --popover-foreground: 28 30% 13%;
+    --primary: 25 92% 38%;
+    --primary-foreground: 42 50% 98%;
+    --muted: 38 26% 89%;
+    --muted-foreground: 30 14% 42%;
+    --destructive: 0 70% 48%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 35 24% 80%;
+    --success: 149 66% 31%;
+    --danger: 0 70% 48%;
+    --warning: 38 90% 44%;
+    --info: 207 72% 42%;
+    --chart-grid: 35 24% 84%;
+    --chart-text: 30 14% 42%;
+    --chart-axis: 35 24% 73%;
+    --chart-compare-a: #b45309;
+    --chart-compare-b: #0369a1;
+  }
+
+  * { @apply border-border; }
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings: "tnum" 1, "ss01" 1;
+  }
+
   .prose table { border-collapse: collapse; width: 100%; }
   .prose th, .prose td { border: 1px solid hsl(var(--border)); }
   .prose tbody tr:nth-child(even) { background: hsl(var(--muted) / 0.3); }
 
-  /* Smooth scrollbar for webkit */
   ::-webkit-scrollbar { width: 6px; height: 6px; }
   ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb { background: hsl(var(--border)); border-radius: 3px; }
   ::-webkit-scrollbar-thumb:hover { background: hsl(var(--muted-foreground)); }
 }
 
-/* Streaming pulse-slide animation for the "running" bar */
+@layer components {
+  .stock-panel {
+    box-shadow: inset 0 1px 0 hsl(var(--foreground) / 0.025);
+  }
+
+  .market-grid {
+    background-color: hsl(var(--card));
+    background-image:
+      linear-gradient(hsl(var(--primary) / 0.035) 1px, transparent 1px),
+      linear-gradient(90deg, hsl(var(--primary) / 0.035) 1px, transparent 1px);
+    background-size: 28px 28px;
+  }
+
+  .field-label {
+    @apply flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.13em] text-muted-foreground;
+  }
+
+  .field-label em {
+    @apply font-normal normal-case tracking-normal text-muted-foreground/70;
+  }
+
+  .stock-input {
+    @apply w-full rounded-md border bg-background px-3 py-3 text-sm text-foreground outline-none transition;
+    box-shadow: inset 0 1px 2px hsl(var(--foreground) / 0.025);
+  }
+
+  .stock-input:focus {
+    border-color: hsl(var(--primary));
+    box-shadow: 0 0 0 3px hsl(var(--primary) / 0.12);
+  }
+
+  .primary-action {
+    @apply inline-flex items-center justify-center gap-2 rounded-md bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground transition disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  .primary-action:hover:not(:disabled) {
+    filter: brightness(1.06);
+    transform: translateY(-1px);
+  }
+}
+
 @keyframes pulse-slide {
-  0%   { transform: translateX(-100%); }
-  50%  { transform: translateX(200%); }
+  0% { transform: translateX(-100%); }
+  50% { transform: translateX(200%); }
   100% { transform: translateX(-100%); }
 }
 
-/* RTL: mirror directional icons (chevrons, arrows) automatically */
 [dir="rtl"] .rtl\:flip-x { transform: scaleX(-1); }
+

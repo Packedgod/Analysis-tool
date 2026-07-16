@@ -29,7 +29,7 @@ for _s in ("stdout", "stderr"):
         _r(encoding="utf-8", errors="replace")
 
 # ---------------------------------------------------------------------------
-# Extracted infrastructure — re-exported for route-module and test access
+# Extracted infrastructure â€” re-exported for route-module and test access
 # ---------------------------------------------------------------------------
 
 from src.api.security import (  # noqa: F401, E402
@@ -133,7 +133,7 @@ app.add_middleware(
 )
 
 # Middleware functions are defined in src.api.security / src.api.helpers, so
-# the @app.middleware("http") decorator cannot be used here — register them
+# the @app.middleware("http") decorator cannot be used here â€” register them
 # programmatically instead.
 app.middleware("http")(_reject_untrusted_loopback_host)
 app.middleware("http")(_spa_html_deep_link_fallback)
@@ -208,6 +208,10 @@ from src.api.sessions_routes import (  # noqa: F401, E402
     _live_action_frame_from_tool_result,
     _mandate_proposal_frame_from_tool_result,
 )
+
+# --- Guided analysis (workflow stays server-side, never in the browser bundle) ---
+from src.api.analysis_routes import register_analysis_routes  # noqa: E402
+register_analysis_routes(app)
 
 # --- System ---
 from src.api.system_routes import register_system_routes  # noqa: E402
@@ -395,3 +399,4 @@ def serve_main(argv: list[str] | None = None) -> int:
 
 if __name__ == "__main__":
     raise SystemExit(serve_main())
+

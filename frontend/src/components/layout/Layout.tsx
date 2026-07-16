@@ -1,9 +1,9 @@
 import { useTranslation } from "react-i18next";
 import { useEffect, useRef, useState } from "react";
 import { Link, Outlet, useLocation, useSearchParams } from "react-router-dom";
-import { Activity, BarChart3, Bot, Check, ChevronDown, FileText, Languages, Moon, Sun, Plus, Trash2, Pencil, MessageSquare, ChevronsLeft, ChevronsRight, Settings, Layers, Loader2 } from "lucide-react";
+import { BarChart3, Bot, Check, ChevronDown, FileText, Languages, Palette, Plus, Trash2, Pencil, MessageSquare, ChevronsLeft, ChevronsRight, Settings, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useDarkMode } from "@/hooks/useDarkMode";
+import { THEMES, useDarkMode } from "@/hooks/useDarkMode";
 import { api, type SessionItem } from "@/lib/api";
 import { useAgentStore } from "@/stores/agent";
 import { ConnectionBanner } from "@/components/layout/ConnectionBanner";
@@ -16,17 +16,14 @@ export function Layout() {
   const { t } = useTranslation();
 
   const NAV = [
-    { to: "/", icon: BarChart3, label: t('layout.home') },
-    { to: "/agent", icon: Bot, label: t('layout.agent') },
-    { to: "/runtime", icon: Activity, label: t('layout.runtime') },
-    { to: "/reports", icon: FileText, label: t('layout.reports') },
-    { to: "/alpha-zoo", icon: Layers, label: t('layout.alphaZoo') },
-    { to: "/settings", icon: Settings, label: t('layout.settings') },
-    { to: "/correlation", icon: BarChart3, label: t('layout.correlation') },
+    { to: "/", icon: BarChart3, label: "Dashboard" },
+    { to: "/agent", icon: Bot, label: "Research" },
+    { to: "/reports", icon: FileText, label: "Reports" },
+    { to: "/settings", icon: Settings, label: "Settings" },
   ];
   const { pathname } = useLocation();
   const [searchParams] = useSearchParams();
-  const { dark, toggle } = useDarkMode();
+  const { theme, setTheme } = useDarkMode();
   const [sessions, setSessions] = useState<SessionItem[]>([]);
   const [sessionsLoading, setSessionsLoading] = useState(true);
   const sseStatus = useAgentStore(s => s.sseStatus);
@@ -84,7 +81,12 @@ export function Layout() {
         <div className={cn("border-b", collapsed ? "p-2 flex justify-center" : "p-4")}>
           <Link to="/" className={cn("flex items-center font-bold text-base tracking-tight", collapsed ? "justify-center" : "gap-2")}>
             <BarChart3 className="h-5 w-5 text-primary shrink-0" />
-            {!collapsed && "Vibe Analysis"}
+            {!collapsed && (
+              <span className="leading-none">
+                <span className="block">Vantage</span>
+                <span className="mt-1 block text-[9px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Equity Research</span>
+              </span>
+            )}
           </Link>
         </div>
 
@@ -112,7 +114,7 @@ export function Layout() {
           })}
         </nav>
 
-        {/* Sessions — hidden when collapsed */}
+        {/* Sessions â€” hidden when collapsed */}
         {!collapsed && (
           <div className="flex-1 overflow-auto border-t mt-2 flex flex-col">
             <div className="flex items-center justify-between px-4 py-2">
@@ -215,8 +217,15 @@ export function Layout() {
         <div className={cn("border-t", collapsed ? "p-1 flex flex-col items-center gap-1" : "p-3 space-y-2")}>
           {collapsed ? (
             <>
-              <button onClick={toggle} className="p-1.5 text-muted-foreground hover:text-foreground rounded transition-colors" title={dark ? t('layout.light') : t('layout.dark')}>
-                {dark ? <Sun className="h-3.5 w-3.5" /> : <Moon className="h-3.5 w-3.5" />}
+              <button
+                onClick={() => {
+                  const index = THEMES.findIndex((item) => item.id === theme);
+                  setTheme(THEMES[(index + 1) % THEMES.length].id);
+                }}
+                className="p-1.5 text-muted-foreground hover:text-foreground rounded transition-colors"
+                title="Change colour scheme"
+              >
+                <Palette className="h-3.5 w-3.5" />
               </button>
               <button onClick={() => setCollapsed(false)} className="p-1.5 text-muted-foreground hover:text-foreground rounded transition-colors" title={t('layout.expand')}>
                 <ChevronsRight className="h-3.5 w-3.5" />
@@ -224,14 +233,18 @@ export function Layout() {
             </>
           ) : (
             <>
-              <div className="flex items-center justify-between">
-                <button
-                  onClick={toggle}
-                  className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  {dark ? <Sun className="h-3.5 w-3.5" /> : <Moon className="h-3.5 w-3.5" />}
-                  {dark ? t('layout.light') : t('layout.dark')}
-                </button>
+              <div className="flex items-center justify-between gap-2">
+                <label className="flex min-w-0 flex-1 items-center gap-1.5 text-xs text-muted-foreground">
+                  <Palette className="h-3.5 w-3.5 shrink-0" />
+                  <select
+                    value={theme}
+                    onChange={(event) => setTheme(event.target.value as typeof theme)}
+                    aria-label="Colour scheme"
+                    className="min-w-0 flex-1 rounded border bg-background px-1.5 py-1 text-[11px] text-foreground outline-none"
+                  >
+                    {THEMES.map((item) => <option key={item.id} value={item.id}>{item.label}</option>)}
+                  </select>
+                </label>
                 <div className="flex items-center gap-1">
                   <button
                     onClick={() => setCollapsed(true)}
@@ -263,7 +276,7 @@ export function Layout() {
 }
 
 // ---------------------------------------------------------------------------
-// Language switcher — dropdown listing every language registered in
+// Language switcher â€” dropdown listing every language registered in
 // src/i18n/index.ts. Persists the choice via i18next's localStorage detector
 // and emits the `languageChanged` event handled in the i18n module to flip
 // <html dir/lang> for RTL languages.
@@ -315,7 +328,7 @@ function LanguageSwitcher() {
       if (!r) return;
       // Anchor: align the menu's right edge with the trigger's right edge,
       // then clamp to the viewport so the menu never overflows the screen.
-      const menuWidth = 160; // px — approx longest label "العربية" + padding
+      const menuWidth = 160; // px â€” approx longest label "Ø§Ù„Ø¹Ø±Ø¨ÙŠØ©" + padding
       const gap = 4; // mb-1
       const desiredLeft = r.right - menuWidth;
       const maxLeft = window.innerWidth - menuWidth - 8;
@@ -323,7 +336,7 @@ function LanguageSwitcher() {
       const left = Math.max(minLeft, Math.min(maxLeft, desiredLeft));
       setMenuStyle({
         left,
-        // distance from viewport bottom: viewport height − trigger top + gap
+        // distance from viewport bottom: viewport height âˆ’ trigger top + gap
         bottom: window.innerHeight - r.top + gap,
         minWidth: menuWidth,
       });
@@ -342,7 +355,7 @@ function LanguageSwitcher() {
   // variant like "ja-JP"), we fall back to i18n.languages (plural) which
   // includes both the detected and resolved codes. NOTE: i18n.languages
   // always contains the fallback language ("en"), so it must NOT be the
-  // primary match — otherwise "en" being first in SUPPORTED_LANGUAGES
+  // primary match â€” otherwise "en" being first in SUPPORTED_LANGUAGES
   // would always win and the switcher would never show any other language.
   const current =
     SUPPORTED_LANGUAGES.find((l) => l.code === i18n.language) ??
@@ -404,3 +417,4 @@ function LanguageSwitcher() {
     </div>
   );
 }
+
