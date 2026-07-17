@@ -19,6 +19,7 @@ from typing import Any, Callable
 import pytest
 
 from src.agent.loop import AgentLoop
+from src.agent.tools import BaseTool
 from src.providers.chat import ProviderStreamError
 
 
@@ -67,6 +68,46 @@ class _StubLLMWithUsage:
         response = _StubLLMResponse()
         response.content = "done"
         response.usage_metadata = {"input_tokens": 10, "output_tokens": 5, "total_tokens": 15}
+        return response
+
+    def chat(self, messages: list[dict[str, Any]], **_: Any) -> _StubLLMResponse:
+        return _StubLLMResponse()
+
+
+class _FailedBacktestTool(BaseTool):
+    """Backtest stub that models a subprocess failure without touching the network."""
+
+    name = "backtest"
+    description = "Failing backtest fixture"
+    parameters = {"type": "object", "properties": {}}
+    repeatable = True
+    is_readonly = False
+
+    def execute(self, **kwargs: Any) -> str:
+        return json.dumps({"status": "error", "exit_code": 1, "error": "engine crashed"})
+
+
+class _StubLLMFailedBacktestThenFinal:
+    """Call a failing backtest once, then incorrectly claim completion."""
+
+    def __init__(self) -> None:
+        self.calls = 0
+
+    def stream_chat(
+        self,
+        messages: list[dict[str, Any]],
+        tools: list[Any] | None = None,
+        on_text_chunk: Callable[[str], None] | None = None,
+        on_reasoning_chunk: Callable[[str], None] | None = None,
+        should_cancel: Callable[[], bool] | None = None,
+    ) -> _StubLLMResponse:
+        self.calls += 1
+        response = _StubLLMResponse()
+        if self.calls == 1:
+            response.has_tool_calls = True
+            response.tool_calls = [SimpleNamespace(id="backtest-1", name="backtest", arguments={})]
+        else:
+            response.content = "Backtest completed successfully."
         return response
 
     def chat(self, messages: list[dict[str, Any]], **_: Any) -> _StubLLMResponse:
@@ -242,6 +283,21 @@ def test_usage_metadata_is_persisted_to_run_artifact(tmp_path: Path, monkeypatch
         {"iter": 1, "input_tokens": 10, "output_tokens": 5, "total_tokens": 15}
     ]
     assert payload["updated_at"].endswith("Z")
+
+
+def test_failed_backtest_cannot_be_marked_success_by_final_text(tmp_path: Path) -> None:
+    """A model response cannot override a failed engine with no metrics artifact."""
+    agent = _build_agent(
+        _StubLLMFailedBacktestThenFinal(), max_iter=3, tmp_run_dir=tmp_path / "run"
+    )
+    agent.registry.register(_FailedBacktestTool())
+
+    result = agent.run(user_message="run the backtest")
+
+    assert result["status"] == "failed"
+    assert result["reason"] == "backtest_failed: the engine did not produce artifacts/metrics.csv"
+    state = json.loads((tmp_path / "run" / "state.json").read_text(encoding="utf-8"))
+    assert state["status"] == "failed"
 
 
 class _StubLLMAlwaysToolCalls:

@@ -546,6 +546,7 @@ class AgentLoop:
         self._event_callback = event_callback
         self.max_iterations = max_iterations
         self._called_ok: set[str] = set()
+        self._failed_tools: set[str] = set()
         self._cancel_event = threading.Event()
         self._previous_summary: str = ""
         self._persistent_memory = persistent_memory
@@ -574,6 +575,7 @@ class AgentLoop:
         # Reset per-run state (safe for reuse across multiple run() calls)
         self._cancel_event.clear()
         self._called_ok = set()
+        self._failed_tools = set()
         self._previous_summary = ""
 
         state_store = RunStateStore()
@@ -1004,6 +1006,10 @@ class AgentLoop:
                 f"{MAX_CONSECUTIVE_CONTENT_FILTER_SKIPS} consecutive LLM "
                 "responses were blocked by content moderation"
             )
+            state_store.mark_failure(run_dir, final_reason)
+            final_status = "failed"
+        elif "backtest" in self._failed_tools and not (run_dir / "artifacts" / "metrics.csv").exists():
+            final_reason = "backtest_failed: the engine did not produce artifacts/metrics.csv"
             state_store.mark_failure(run_dir, final_reason)
             final_status = "failed"
         elif (run_dir / "artifacts" / "metrics.csv").exists() or final_content:
@@ -1446,6 +1452,9 @@ class AgentLoop:
         success = _is_tool_success(result)
         if success:
             self._called_ok.add(tc.name)
+            self._failed_tools.discard(tc.name)
+        else:
+            self._failed_tools.add(tc.name)
 
         status = "ok" if success else "error"
         truncated = result[:TOOL_RESULT_LIMIT]
