@@ -25,6 +25,7 @@ import { CandlestickChart } from "@/components/charts/CandlestickChart";
 import { EquityChart } from "@/components/charts/EquityChart";
 import { MetricsCard } from "@/components/chat/MetricsCard";
 import { ValidationPanel } from "@/components/charts/ValidationPanel";
+import { VisualInsightsPanel } from "@/components/charts/VisualInsightsPanel";
 import { Skeleton, SkeletonMetrics, SkeletonChart } from "@/components/common/Skeleton";
 import { ErrorBoundary } from "@/components/common/ErrorBoundary";
 
@@ -301,21 +302,28 @@ export function RunDetail() {
       <div className="flex-1 overflow-auto">
         <ErrorBoundary>
           {tab === "chart" && (
-            <ChartTab
-              run={run}
-              chartPickerSymbol={chartPickerSymbol}
-              selectedSymbols={selectedSymbols}
-              chartCache={chartCache}
-              loadingSymbols={chartLoadingSymbols}
-              bulkLoading={bulkChartLoading}
-              bulkProgress={bulkChartProgress}
-              onPickSymbol={setChartPickerSymbol}
-              onAddSymbol={handleAddChartSymbol}
-              onCurrentOnly={handleCurrentChartOnly}
-              onRemoveSymbol={handleRemoveChartSymbol}
-              onLoadAll={handleLoadAllChartSymbols}
-              onCancelLoadAll={handleCancelLoadAllCharts}
-            />
+            <>
+              <VisualInsightsPanel runId={run.run_id} poll={run.run_stage !== "done"} />
+              {((run.chart_symbols?.length || 0) > 0 || Object.keys(run.price_series || {}).length > 0 || (run.equity_curve?.length || 0) > 0) && (
+                <div className="border-t bg-background/40">
+                  <ChartTab
+                    run={run}
+                    chartPickerSymbol={chartPickerSymbol}
+                    selectedSymbols={selectedSymbols}
+                    chartCache={chartCache}
+                    loadingSymbols={chartLoadingSymbols}
+                    bulkLoading={bulkChartLoading}
+                    bulkProgress={bulkChartProgress}
+                    onPickSymbol={setChartPickerSymbol}
+                    onAddSymbol={handleAddChartSymbol}
+                    onCurrentOnly={handleCurrentChartOnly}
+                    onRemoveSymbol={handleRemoveChartSymbol}
+                    onLoadAll={handleLoadAllChartSymbols}
+                    onCancelLoadAll={handleCancelLoadAllCharts}
+                  />
+                </div>
+              )}
+            </>
           )}
           {tab === "trades" && <TradesTab run={run} />}
           {tab === "validation" && run.validation && <ValidationPanel data={run.validation} />}

@@ -483,8 +483,11 @@ export function Agent() {
                 fetchedMetrics = runData.metrics;
                 fetchedCurve = runData.equity_curve?.map((e) => ({ time: e.time, equity: Number(e.equity) }));
                 showCard = true;
+              } else {
+                const insights = await api.getRunInsights(runId);
+                showCard = insights.charts.length > 0 || insights.kpis.length > 0;
               }
-              // succeeded but not report-worthy (plain chat turn) → skip card
+              // Plain chat turns without structured numerical artifacts skip the card.
             } catch {
               // fetch failed (auth/404/network) → can't tell, show link as fallback
               showCard = true;
@@ -702,6 +705,9 @@ export function Agent() {
               runMetrics = runData.metrics;
               runCurve = runData.equity_curve?.map(e => ({ time: e.time, equity: Number(e.equity) }));
               showCard = true;
+            } else {
+              const insights = await api.getRunInsights(runId);
+              showCard = insights.charts.length > 0 || insights.kpis.length > 0;
             }
           } catch {
             showCard = true; // fetch failed → show link as fallback

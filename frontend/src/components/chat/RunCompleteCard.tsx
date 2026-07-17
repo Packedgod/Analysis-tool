@@ -6,6 +6,7 @@ import { api } from "@/lib/api";
 import { AgentAvatar } from "./AgentAvatar";
 import { MetricsCard } from "./MetricsCard";
 import { MiniEquityChart } from "@/components/charts/MiniEquityChart";
+import { VisualInsightsPanel } from "@/components/charts/VisualInsightsPanel";
 import { PineScriptViewer } from "./PineScriptViewer";
 import type { AgentMessage } from "@/types/agent";
 
@@ -75,6 +76,7 @@ export const RunCompleteCard = memo(function RunCompleteCard({ msg }: Props) {
         {curve && curve.length > 1 && (
           <MiniEquityChart data={curve} height={80} />
         )}
+        {msg.runId && <VisualInsightsPanel runId={msg.runId} compact />}
         <div className="flex items-center gap-3 flex-wrap">
           {msg.runId && (
             <Link

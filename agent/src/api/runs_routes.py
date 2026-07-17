@@ -252,6 +252,17 @@ def register_runs_routes(
 
     # --- Routes ---
 
+    @app.get("/runs/{run_id}/insights", dependencies=[Depends(require_auth)])
+    async def get_run_insights(run_id: str):
+        """Derive safe chart and KPI specifications from persisted artifacts."""
+        _host_validate_path_param(run_id, "run_id")
+        run_dir = _host_RUNS_DIR() / run_id
+        if not run_dir.is_dir():
+            raise HTTPException(status_code=404, detail=f"Run {run_id} not found")
+        from src.analysis.visual_insights import build_visual_insights
+
+        return build_visual_insights(run_dir)
+
     @app.get("/runs/{run_id}/code", dependencies=[Depends(require_auth)])
     async def get_run_code(run_id: str):
         """Return strategy source files for a run.

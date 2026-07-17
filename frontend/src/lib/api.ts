@@ -145,6 +145,7 @@ export const api = {
     const qs = q.toString();
     return request<RunData>(`/runs/${id}${qs ? `?${qs}` : ""}`);
   },
+  getRunInsights: (id: string) => request<RunInsights>(`/runs/${id}/insights`),
   getRunCode: (id: string) => request<Record<string, string>>(`/runs/${id}/code`),
   getRunPine: (id: string) => request<PineScriptResult>(`/runs/${id}/pine`),
   listSessions: () => request<SessionItem[]>("/sessions"),
@@ -452,6 +453,45 @@ export interface EquityPoint {
   time: string;
   equity: string | number;
   drawdown: string | number;
+}
+
+export interface InsightKpi {
+  label: string;
+  value: number;
+  display: string;
+  unit: string;
+  source: string;
+}
+
+export interface InsightSeries {
+  name: string;
+  unit: string;
+  values: Array<number | null>;
+}
+
+export interface InsightChart {
+  id: string;
+  title: string;
+  type: "bar" | "line";
+  categories: string[];
+  series: InsightSeries[];
+  source: string;
+}
+
+export interface InsightTable {
+  title: string;
+  columns: string[];
+  rows: string[][];
+  source: string;
+}
+
+export interface RunInsights {
+  run_id: string;
+  generated_at: string;
+  kpis: InsightKpi[];
+  charts: InsightChart[];
+  tables: InsightTable[];
+  sources: string[];
 }
 
 export interface ValidationData {
