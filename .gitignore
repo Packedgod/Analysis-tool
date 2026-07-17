@@ -99,11 +99,12 @@ CONTRIBUTING.md
 .github/
 assets/
 wiki/
-tools/
+/tools/
 Dockerfile
 docker-compose.yml
 scripts/vibe_watchdog.ps1
 .pytest_tmp/
+*.egg-info/
 
 .DS_Store
 
