@@ -8,6 +8,7 @@ from pathlib import Path
 from backtest.loaders.registry import VALID_SOURCES
 from src.agent.progress import emit_progress
 from src.agent.tools import BaseTool
+from src.analysis.execution_backbone import validate_backbone_manifest
 from src.core.runner import Runner
 from src.tools.path_utils import safe_run_dir
 
@@ -41,6 +42,10 @@ def run_backtest(run_dir: str) -> str:
 
     if config["source"] not in VALID_SOURCES:
         return json.dumps({"status": "error", "error": f"source must be one of {VALID_SOURCES}, got: {config['source']}"}, ensure_ascii=False)
+
+    backbone_error = validate_backbone_manifest(run_path, config)
+    if backbone_error:
+        return json.dumps({"status": "error", "error": backbone_error}, ensure_ascii=False)
 
     signal_path = run_path / "code" / "signal_engine.py"
     if not signal_path.exists():
@@ -78,7 +83,11 @@ class BacktestTool(BaseTool):
     """Backtest execution tool."""
 
     name = "backtest"
-    description = "Run backtest: validate config.json + signal_engine.py, invoke built-in engine."
+    description = (
+        "Run a backtest only after prepare_analysis_backbone has searched the complete requested "
+        "fiscal span issuer-first, exhausted NSE/BSE/regulator/archive fallbacks for gaps, "
+        "ingested the retrieved reports, and loaded both authoritative workbooks for every code."
+    )
     parameters = {
         "type": "object",
         "properties": {
