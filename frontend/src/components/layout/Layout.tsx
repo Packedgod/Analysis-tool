@@ -16,8 +16,8 @@ export function Layout() {
   const { t } = useTranslation();
 
   const NAV = [
-    { to: "/", icon: BarChart3, label: "Dashboard" },
-    { to: "/agent", icon: Bot, label: "Research" },
+    { to: "/", icon: BarChart3, label: "Research Home" },
+    { to: "/agent", icon: Bot, label: "Analysis" },
     { to: "/reports", icon: FileText, label: "Reports" },
     { to: "/settings", icon: Settings, label: "Settings" },
   ];
@@ -71,16 +71,16 @@ export function Layout() {
   };
 
   return (
-    <div className="flex h-screen bg-background rtl:flex-row-reverse">
+    <div className="flex h-screen overflow-hidden bg-background rtl:flex-row-reverse">
       {/* Sidebar */}
       <aside className={cn(
-        "border-e bg-card flex flex-col shrink-0 transition-all duration-200 overflow-visible",
-        collapsed ? "w-12" : "w-64"
+        "terminal-sidebar border-e bg-card/90 backdrop-blur-xl flex flex-col shrink-0 transition-[width] duration-200 overflow-visible",
+        collapsed ? "w-[58px]" : "w-[238px]"
       )}>
         {/* Brand */}
-        <div className={cn("border-b", collapsed ? "p-2 flex justify-center" : "p-4")}>
+        <div className={cn("border-b border-border/70", collapsed ? "p-3 flex justify-center" : "px-4 py-5")}>
           <Link to="/" className={cn("flex items-center font-bold text-base tracking-tight", collapsed ? "justify-center" : "gap-2")}>
-            <BarChart3 className="h-5 w-5 text-primary shrink-0" />
+            <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl border border-primary/25 bg-primary/10 shadow-[0_0_30px_hsl(var(--primary)/0.12)]"><BarChart3 className="h-5 w-5 text-primary" /></span>
             {!collapsed && (
               <span className="leading-none">
                 <span className="block">Vantage</span>
@@ -91,7 +91,7 @@ export function Layout() {
         </div>
 
         {/* Nav */}
-        <nav className={cn("space-y-0.5", collapsed ? "p-1" : "p-2")}>
+        <nav className={cn("space-y-1", collapsed ? "p-2" : "p-3")}>
           {NAV.map(({ to, icon: Icon, label }) => {
             const text = label;
             return (
@@ -99,11 +99,11 @@ export function Layout() {
                 key={to}
                 to={to}
                 className={cn(
-                  "flex items-center rounded-md text-sm transition-colors",
-                  collapsed ? "justify-center p-2" : "gap-3 px-3 py-2",
+                  "flex items-center rounded-xl text-sm transition-all duration-150",
+                  collapsed ? "justify-center p-2.5" : "gap-3 px-3 py-2.5",
                   (to === "/" ? pathname === "/" : pathname.startsWith(to))
-                    ? "bg-primary/10 text-primary font-medium"
-                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                    ? "border border-primary/20 bg-primary/10 text-primary font-medium shadow-[inset_0_1px_0_hsl(var(--primary)/0.08)]"
+                    : "border border-transparent text-muted-foreground hover:border-border/70 hover:bg-muted/60 hover:text-foreground"
                 )}
                 title={collapsed ? text : undefined}
               >

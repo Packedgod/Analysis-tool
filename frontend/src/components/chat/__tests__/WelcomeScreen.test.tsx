@@ -1,5 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { MemoryRouter } from "react-router-dom";
 import { WelcomeScreen } from "../WelcomeScreen";
 
 describe("WelcomeScreen", () => {
@@ -7,38 +8,40 @@ describe("WelcomeScreen", () => {
 
   beforeEach(() => onExample.mockClear());
 
+  const renderWelcome = () => render(<MemoryRouter><WelcomeScreen onExample={onExample} /></MemoryRouter>);
+
   it("renders the title", () => {
-    render(<WelcomeScreen onExample={onExample} />);
-    expect(screen.getByText("Vibe-Trading")).toBeInTheDocument();
+    renderWelcome();
+    expect(screen.getByRole("heading", { name: "Analysis" })).toBeInTheDocument();
   });
 
   it("renders capability chips", () => {
-    render(<WelcomeScreen onExample={onExample} />);
-    expect(screen.getByText("Finance Skills Library")).toBeInTheDocument();
-    expect(screen.getByText("Swarm Agent Teams")).toBeInTheDocument();
-    expect(screen.getByText("Shadow Account Backtest")).toBeInTheDocument();
+    renderWelcome();
+    expect(screen.getByText("Primary-source research")).toBeInTheDocument();
+    expect(screen.getByText("Investment committees")).toBeInTheDocument();
+    expect(screen.getByText("Portfolio diagnostics")).toBeInTheDocument();
   });
 
   it("renders example categories", () => {
-    render(<WelcomeScreen onExample={onExample} />);
-    expect(screen.getByText("A-Share Backtest")).toBeInTheDocument();
-    expect(screen.getByText("Research & Analysis")).toBeInTheDocument();
-    expect(screen.getByText("Swarm Teams")).toBeInTheDocument();
+    renderWelcome();
+    expect(screen.getByText("Company Research")).toBeInTheDocument();
+    expect(screen.getByText("Investment Team")).toBeInTheDocument();
+    expect(screen.getByText("Analysis Swarm")).toBeInTheDocument();
   });
 
   it("calls onExample with prompt when an example button is clicked", async () => {
-    render(<WelcomeScreen onExample={onExample} />);
+    renderWelcome();
     const user = userEvent.setup();
-    await user.click(screen.getByText("A-Share Portfolio Optimization"));
+    await user.click(screen.getByText("Company Research"));
     expect(onExample).toHaveBeenCalledTimes(1);
     expect(onExample).toHaveBeenCalledWith(
-      expect.stringContaining("risk-parity portfolio"),
+      expect.stringContaining("evidence-first equity analyst"),
     );
   });
 
   it("renders the helper text", () => {
-    render(<WelcomeScreen onExample={onExample} />);
-    expect(screen.getByText("Describe a trading strategy to get started.")).toBeInTheDocument();
-    expect(screen.getByText("Try an example:")).toBeInTheDocument();
+    renderWelcome();
+    expect(screen.getByText(/Ask about a company, sector, portfolio/)).toBeInTheDocument();
+    expect(screen.getByText("How do you want to work?")).toBeInTheDocument();
   });
 });

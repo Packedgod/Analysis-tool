@@ -137,6 +137,7 @@ export const api = {
   // VIBE_TRADING_ENABLE_BROKERAGE switch so the UI can hide every live-trading
   // surface in the research-only build without probing the gated /live routes.
   getApiInfo: (signal?: AbortSignal) => request<ApiInfo>("/api", { signal }),
+  getMarketOverview: (signal?: AbortSignal) => request<MarketOverview>("/market/overview", { signal }),
   listRuns: (limit?: number) => request<RunListItem[]>(`/runs${limit ? `?limit=${encodeURIComponent(String(limit))}` : ""}`),
   getRun: (id: string, params: RunDetailParams = {}) => {
     const q = new URLSearchParams();
@@ -291,6 +292,23 @@ export const api = {
 // --- Capability types ---
 
 /** Runtime capability flags returned by `GET /api`. */
+
+export interface MarketOverviewItem {
+  symbol: string;
+  name: string;
+  mark: string;
+  price: number;
+  change_percent: number;
+}
+
+export interface MarketOverview {
+  status: "live" | "stale" | "unavailable";
+  source: string;
+  observed_at: string | null;
+  refresh_seconds: number;
+  items: MarketOverviewItem[];
+}
+
 export interface ApiInfo {
   service: string;
   version: string;

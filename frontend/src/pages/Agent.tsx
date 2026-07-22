@@ -1309,7 +1309,7 @@ export function Agent() {
   return (
     <div className="flex flex-col flex-1 min-w-0 overflow-hidden h-full">
       <div ref={listRef} className="flex-1 overflow-auto p-6 scroll-smooth relative">
-        <div className="max-w-3xl mx-auto space-y-4">
+        <div className={`${!sessionLoading && messages.length === 0 ? "max-w-6xl" : "max-w-3xl"} mx-auto space-y-4 transition-[max-width] duration-300`}>
           {sessionLoading && (
             <div className="space-y-4 py-4">
               {[1, 2, 3].map(i => (

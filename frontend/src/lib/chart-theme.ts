@@ -57,7 +57,8 @@ function buildTheme() {
 }
 
 export function getChartTheme() {
-  const key = `${document.documentElement.className}|${document.documentElement.lang || navigator.language}`;
+  const root = document.documentElement;
+  const key = `${root.className}|${root.dataset.theme}|${root.style.cssText}|${root.lang || navigator.language}`;
   if (_cache && _cacheKey === key) return _cache;
   _cache = buildTheme();
   _cacheKey = key;

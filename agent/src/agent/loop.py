@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import concurrent.futures
 import copy
+import csv
 import json
 import logging
 import queue
@@ -59,6 +60,96 @@ COLLAPSE_HEAD = 900
 COLLAPSE_TAIL = 500
 
 TAIL_TOKEN_BUDGET = 20_000
+
+_EVIDENCE_ONLY_FINAL_INSTRUCTION = """\
+[SYSTEM — EVIDENCE-ONLY FINALIZATION]
+Use the verified artifact snapshot below as the authoritative source for the final answer.
+- Report material numeric claims only when they appear in this snapshot or another explicit tool result.
+- Do not estimate, approximate, infer, extrapolate, or fill missing values.
+- Do not claim that artifact data is unavailable when it appears below.
+- If a requested value is absent, label it unavailable and state which evidence is missing.
+- Distinguish historical results from forward-looking statements; omit unsupported forecasts.
+"""
+
+
+def _build_artifact_evidence_snapshot(run_dir: Path) -> str:
+    """Build a compact, complete evidence snapshot from canonical run artifacts."""
+    snapshot: dict[str, Any] = {
+        "run_id": run_dir.name,
+        "evidence_policy": "Only values present here or in explicit tool results may be reported as facts.",
+        "artifacts": {},
+    }
+
+    run_card_path = run_dir / "run_card.json"
+    if run_card_path.exists():
+        try:
+            run_card = json.loads(run_card_path.read_text(encoding="utf-8"))
+            snapshot["run_card"] = {
+                key: run_card.get(key)
+                for key in (
+                    "schema_version",
+                    "generated_at",
+                    "backtest",
+                    "data_sources",
+                    "metrics",
+                    "validation",
+                    "warnings",
+                    "reproducibility",
+                )
+                if key in run_card
+            }
+            snapshot["artifacts"]["run_card.json"] = "verified"
+        except (OSError, json.JSONDecodeError) as exc:
+            snapshot["artifacts"]["run_card.json"] = f"unreadable: {exc}"
+
+    metrics_path = run_dir / "artifacts" / "metrics.csv"
+    if metrics_path.exists():
+        try:
+            with metrics_path.open(encoding="utf-8", newline="") as handle:
+                rows = list(csv.DictReader(handle))
+            snapshot["metrics_csv"] = rows
+            snapshot["artifacts"]["artifacts/metrics.csv"] = {
+                "status": "verified",
+                "rows": len(rows),
+            }
+        except (OSError, csv.Error) as exc:
+            snapshot["artifacts"]["artifacts/metrics.csv"] = f"unreadable: {exc}"
+
+    validation_path = run_dir / "artifacts" / "validation.json"
+    if validation_path.exists():
+        try:
+            snapshot["validation_json"] = json.loads(validation_path.read_text(encoding="utf-8"))
+            snapshot["artifacts"]["artifacts/validation.json"] = "verified"
+        except (OSError, json.JSONDecodeError) as exc:
+            snapshot["artifacts"]["artifacts/validation.json"] = f"unreadable: {exc}"
+
+    for relative in ("artifacts/equity.csv", "artifacts/trades.csv"):
+        path = run_dir / relative
+        if not path.exists():
+            continue
+        try:
+            with path.open(encoding="utf-8", newline="") as handle:
+                reader = csv.DictReader(handle)
+                rows = list(reader)
+            summary: dict[str, Any] = {
+                "status": "verified",
+                "columns": reader.fieldnames or [],
+                "rows": len(rows),
+            }
+            if rows:
+                summary["first_row"] = rows[0]
+                summary["last_row"] = rows[-1]
+            if relative.endswith("trades.csv"):
+                summary["records"] = rows
+            snapshot[relative.replace("/", "_").replace(".csv", "_summary")] = summary
+            snapshot["artifacts"][relative] = "verified"
+        except (OSError, csv.Error) as exc:
+            snapshot["artifacts"][relative] = f"unreadable: {exc}"
+
+    if not snapshot["artifacts"]:
+        return ""
+    return json.dumps(snapshot, ensure_ascii=False, sort_keys=True)
+
 
 
 def _override(name: str):
@@ -626,6 +717,7 @@ class AgentLoop:
 
         iteration = 0
         final_content = ""
+        evidence_snapshot_injected = False
         content_filter_count = 0
         consecutive_content_filter_count = 0
         content_filter_circuit_breaker = False
@@ -689,11 +781,24 @@ class AgentLoop:
                         "role": "user",
                         "content": (
                             f"[SYSTEM] You have {remaining} iterations remaining out of "
-                            f"{self.max_iterations}. Please wrap up your work. "
-                            "Stop calling tools and provide your final answer as plain text. "
-                            "If you have partial results, summarize what you have so far."
+                            f"{self.max_iterations}. Finish the requested work efficiently. "
+                            "Do not repeat successful reads or calculations. Before the final answer, "
+                            "use the canonical artifact evidence and omit unsupported claims."
                         ),
                     })
+
+                    evidence_snapshot = _build_artifact_evidence_snapshot(run_dir)
+                    if evidence_snapshot:
+                        messages.append({
+                            "role": "system",
+                            "content": (
+                                _EVIDENCE_ONLY_FINAL_INSTRUCTION
+                                + "\n<verified-artifact-snapshot>\n"
+                                + evidence_snapshot
+                                + "\n</verified-artifact-snapshot>"
+                            ),
+                        })
+                        evidence_snapshot_injected = True
 
                 # Streaming output + collect thinking text
                 thinking_chunks: List[str] = []
@@ -726,6 +831,19 @@ class AgentLoop:
 
                 # On last iteration, drop tool definitions to force text output
                 is_last_iteration = (iteration == self.max_iterations)
+                if is_last_iteration:
+                    evidence_snapshot = _build_artifact_evidence_snapshot(run_dir)
+                    if evidence_snapshot:
+                        messages.append({
+                            "role": "system",
+                            "content": (
+                                _EVIDENCE_ONLY_FINAL_INSTRUCTION
+                                + "\n<verified-artifact-snapshot>\n"
+                                + evidence_snapshot
+                                + "\n</verified-artifact-snapshot>"
+                            ),
+                        })
+                        evidence_snapshot_injected = True
                 tool_defs = None if is_last_iteration else self.registry.get_definitions()
                 if is_last_iteration:
                     trace.write({"type": "forced_text_only", "iter": current_iter})
@@ -855,6 +973,33 @@ class AgentLoop:
                 consecutive_content_filter_count = 0
 
                 if not response.has_tool_calls:
+                    candidate_content = response.content or ""
+                    if candidate_content and not evidence_snapshot_injected:
+                        evidence_snapshot = _build_artifact_evidence_snapshot(run_dir)
+                        if evidence_snapshot:
+                            messages.append({"role": "assistant", "content": candidate_content})
+                            messages.append({
+                                "role": "system",
+                                "content": (
+                                    _EVIDENCE_ONLY_FINAL_INSTRUCTION
+                                    + "\n<verified-artifact-snapshot>\n"
+                                    + evidence_snapshot
+                                    + "\n</verified-artifact-snapshot>"
+                                ),
+                            })
+                            messages.append({
+                                "role": "user",
+                                "content": (
+                                    "Rewrite the final answer now using only the verified evidence. "
+                                    "Remove unsupported estimates and do not call available artifacts unverified."
+                                ),
+                            })
+                            evidence_snapshot_injected = True
+                            trace.write({
+                                "type": "evidence_finalization_retry",
+                                "iter": current_iter,
+                            })
+                            continue
                     final_content = response.content or ""
                     if not final_content:
                         empty_model_response_iter = iteration

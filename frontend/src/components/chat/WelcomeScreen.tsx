@@ -1,275 +1,203 @@
-import { useTranslation } from "react-i18next";
-import { Bot, TrendingUp, Globe, Sparkles, Users, UserCircle2, NotebookPen, Landmark, Gem } from "lucide-react";
-import { useCapabilities } from "@/hooks/useCapabilities";
+import type { ReactNode } from "react";
+import { Link } from "react-router-dom";
+import {
+  ArrowRight,
+  BarChart3,
+  Building2,
+  FileCheck2,
+  Files,
+  FlaskConical,
+  LayoutDashboard,
+  Network,
+  PieChart,
+  Search,
+  ShieldCheck,
+  Sparkles,
+  Users,
+} from "lucide-react";
 
-interface Example {
-  titleKey: string;
-  descKey: string;
-  promptKey: string;
+interface ResearchMode {
+  title: string;
+  eyebrow: string;
+  description: string;
+  prompt: string;
+  icon: ReactNode;
+  tone: string;
 }
 
-interface Category {
-  labelKey: string;
-  icon: React.ReactNode;
-  color: string;
-  examples: Example[];
-}
-
-const CATEGORIES: Category[] = [
+const RESEARCH_MODES: ResearchMode[] = [
   {
-    labelKey: "welcome.categories.multiMarketBacktest",
-    icon: <TrendingUp className="h-4 w-4" />,
-    color: "text-red-400 border-red-500/30 hover:border-red-500/60 hover:bg-red-500/5",
-    examples: [
-      {
-        titleKey: "welcome.examples.crossMarketPortfolio",
-        descKey: "welcome.examples.crossMarketPortfolioDesc",
-        promptKey: "welcome.examples.crossMarketPortfolioPrompt",
-      },
-      {
-        titleKey: "welcome.examples.btcMacd",
-        descKey: "welcome.examples.btcMacdDesc",
-        promptKey: "welcome.examples.btcMacdPrompt",
-      },
-      {
-        titleKey: "welcome.examples.usTechMaxDiv",
-        descKey: "welcome.examples.usTechMaxDivDesc",
-        promptKey: "welcome.examples.usTechMaxDivPrompt",
-      },
-    ],
+    title: "Company Research",
+    eyebrow: "Single security",
+    description: "Build a source-linked view of the business, financials, valuation, management, catalysts, and risks.",
+    prompt: "Research a listed company as an evidence-first equity analyst. Resolve the exact security, use primary sources where possible, analyze the business, financial history, valuation, management, catalysts, and risks, and clearly separate verified facts from inference.",
+    icon: <Building2 className="h-5 w-5" />,
+    tone: "text-primary bg-primary/10 border-primary/20",
   },
   {
-    labelKey: "welcome.categories.researchAnalysis",
-    icon: <Sparkles className="h-4 w-4" />,
-    color: "text-amber-400 border-amber-500/30 hover:border-amber-500/60 hover:bg-amber-500/5",
-    examples: [
-      {
-        titleKey: "welcome.examples.multiFactorAlpha",
-        descKey: "welcome.examples.multiFactorAlphaDesc",
-        promptKey: "welcome.examples.multiFactorAlphaPrompt",
-      },
-      {
-        titleKey: "welcome.examples.optionsGreeks",
-        descKey: "welcome.examples.optionsGreeksDesc",
-        promptKey: "welcome.examples.optionsGreeksPrompt",
-      },
-    ],
+    title: "Investment Team",
+    eyebrow: "Committee review",
+    description: "Assemble long, short, valuation, forensic, and risk perspectives into one investment decision.",
+    prompt: "[Swarm Team Mode] Assemble an investment committee for my next request: include a fundamental analyst, valuation analyst, forensic skeptic, industry specialist, and risk chair. Require evidence for material claims and synthesize consensus, disagreements, and open questions.",
+    icon: <Users className="h-5 w-5" />,
+    tone: "text-violet-400 bg-violet-500/10 border-violet-500/20",
   },
   {
-    labelKey: "welcome.categories.valueInvesting",
-    icon: <Gem className="h-4 w-4" />,
-    color: "text-yellow-400 border-yellow-500/30 hover:border-yellow-500/60 hover:bg-yellow-500/5",
-    examples: [
-      {
-        titleKey: "welcome.examples.valueCommittee",
-        descKey: "welcome.examples.valueCommitteeDesc",
-        promptKey: "welcome.examples.valueCommitteePrompt",
-      },
-      {
-        titleKey: "welcome.examples.bottleneckHunter",
-        descKey: "welcome.examples.bottleneckHunterDesc",
-        promptKey: "welcome.examples.bottleneckHunterPrompt",
-      },
-      {
-        titleKey: "welcome.examples.thesisTracker",
-        descKey: "welcome.examples.thesisTrackerDesc",
-        promptKey: "welcome.examples.thesisTrackerPrompt",
-      },
-      {
-        titleKey: "welcome.examples.valuationCheck",
-        descKey: "welcome.examples.valuationCheckDesc",
-        promptKey: "welcome.examples.valuationCheckPrompt",
-      },
-    ],
+    title: "Analysis Swarm",
+    eyebrow: "Parallel specialists",
+    description: "Run independent specialists in parallel for broad, complex, or cross-market research questions.",
+    prompt: "[Swarm Team Mode] Use the best analysis swarm for my next research question. Divide the work into independent evidence, financial, industry, competitive, valuation, and risk workstreams, then reconcile contradictions before answering.",
+    icon: <Network className="h-5 w-5" />,
+    tone: "text-sky-400 bg-sky-500/10 border-sky-500/20",
   },
   {
-    labelKey: "welcome.categories.swarmTeams",
-    icon: <Users className="h-4 w-4" />,
-    color: "text-violet-400 border-violet-500/30 hover:border-violet-500/60 hover:bg-violet-500/5",
-    examples: [
-      {
-        titleKey: "welcome.examples.investmentCommittee",
-        descKey: "welcome.examples.investmentCommitteeDesc",
-        promptKey: "welcome.examples.investmentCommitteePrompt",
-      },
-      {
-        titleKey: "welcome.examples.quantStrategyDesk",
-        descKey: "welcome.examples.quantStrategyDeskDesc",
-        promptKey: "welcome.examples.quantStrategyDeskPrompt",
-      },
-    ],
+    title: "Portfolio Lab",
+    eyebrow: "Multi-asset view",
+    description: "Study holdings, concentration, correlations, scenarios, allocation, drawdowns, and portfolio-level risk.",
+    prompt: "Analyze my portfolio as a research and risk problem. Review each holding's role, concentration, factor and sector exposures, correlations, downside scenarios, and diversification gaps. Do not suggest trades without supporting evidence.",
+    icon: <PieChart className="h-5 w-5" />,
+    tone: "text-emerald-400 bg-emerald-500/10 border-emerald-500/20",
   },
   {
-    labelKey: "welcome.categories.docWebResearch",
-    icon: <Globe className="h-4 w-4" />,
-    color: "text-blue-400 border-blue-500/30 hover:border-blue-500/60 hover:bg-blue-500/5",
-    examples: [
-      {
-        titleKey: "welcome.examples.earningsReport",
-        descKey: "welcome.examples.earningsReportDesc",
-        promptKey: "welcome.examples.earningsReportPrompt",
-      },
-      {
-        titleKey: "welcome.examples.macroResearch",
-        descKey: "welcome.examples.macroResearchDesc",
-        promptKey: "welcome.examples.macroResearchPrompt",
-      },
-    ],
+    title: "Evidence Desk",
+    eyebrow: "Documents & sources",
+    description: "Interrogate filings, reports, spreadsheets, transcripts, and web evidence with a traceable audit trail.",
+    prompt: "Use the files attached to this conversation as primary evidence. Extract the important claims and figures, reconcile inconsistencies, identify what is missing, and produce a citation-ready research brief without filling gaps with assumptions.",
+    icon: <FileCheck2 className="h-5 w-5" />,
+    tone: "text-amber-400 bg-amber-500/10 border-amber-500/20",
   },
   {
-    labelKey: "welcome.categories.tradeJournal",
-    icon: <NotebookPen className="h-4 w-4" />,
-    color: "text-orange-400 border-orange-500/30 hover:border-orange-500/60 hover:bg-orange-500/5",
-    examples: [
-      {
-        titleKey: "welcome.examples.analyzeBrokerExport",
-        descKey: "welcome.examples.analyzeBrokerExportDesc",
-        promptKey: "welcome.examples.analyzeBrokerExportPrompt",
-      },
-      {
-        titleKey: "welcome.examples.diagnoseBehavior",
-        descKey: "welcome.examples.diagnoseBehaviorDesc",
-        promptKey: "welcome.examples.diagnoseBehaviorPrompt",
-      },
-    ],
-  },
-  {
-    labelKey: "welcome.categories.tradingConnectors",
-    icon: <Landmark className="h-4 w-4" />,
-    color: "text-cyan-400 border-cyan-500/30 hover:border-cyan-500/60 hover:bg-cyan-500/5",
-    examples: [
-      {
-        titleKey: "welcome.examples.checkConnector",
-        descKey: "welcome.examples.checkConnectorDesc",
-        promptKey: "welcome.examples.checkConnectorPrompt",
-      },
-      {
-        titleKey: "welcome.examples.analyzePortfolio",
-        descKey: "welcome.examples.analyzePortfolioDesc",
-        promptKey: "welcome.examples.analyzePortfolioPrompt",
-      },
-      {
-        titleKey: "welcome.examples.quoteTrend",
-        descKey: "welcome.examples.quoteTrendDesc",
-        promptKey: "welcome.examples.quoteTrendPrompt",
-      },
-    ],
-  },
-  {
-    labelKey: "welcome.categories.shadowAccount",
-    icon: <UserCircle2 className="h-4 w-4" />,
-    color: "text-emerald-400 border-emerald-500/30 hover:border-emerald-500/60 hover:bg-emerald-500/5",
-    examples: [
-      {
-        titleKey: "welcome.examples.trainShadow",
-        descKey: "welcome.examples.trainShadowDesc",
-        promptKey: "welcome.examples.trainShadowPrompt",
-      },
-      {
-        titleKey: "welcome.examples.shadowDelta",
-        descKey: "welcome.examples.shadowDeltaDesc",
-        promptKey: "welcome.examples.shadowDeltaPrompt",
-      },
-      {
-        titleKey: "welcome.examples.shadowReport",
-        descKey: "welcome.examples.shadowReportDesc",
-        promptKey: "welcome.examples.shadowReportPrompt",
-      },
-    ],
+    title: "Strategy Lab",
+    eyebrow: "Optional quant path",
+    description: "Test an investment rule or hypothesis with reproducible backtests, benchmarks, and validation artifacts.",
+    prompt: "Help me turn an investment hypothesis into a reproducible test. Define the universe, signal, rebalance logic, benchmark, transaction-cost assumptions, validation checks, and failure conditions before running any backtest.",
+    icon: <FlaskConical className="h-5 w-5" />,
+    tone: "text-rose-400 bg-rose-500/10 border-rose-500/20",
   },
 ];
 
-const CAPABILITY_CHIP_KEYS = [
-  "welcome.capabilities.financeSkills",
-  "welcome.capabilities.swarmTeams",
-  "welcome.capabilities.autoTools",
-  "welcome.capabilities.markets",
-  "welcome.capabilities.connectors",
-  "welcome.capabilities.timeframes",
-  "welcome.capabilities.optimizers",
-  "welcome.capabilities.riskMetrics",
-  "welcome.capabilities.options",
-  "welcome.capabilities.pdfWeb",
-  "welcome.capabilities.factorML",
-  "welcome.capabilities.journalAnalyzer",
-  "welcome.capabilities.shadowBacktest",
-  "welcome.capabilities.memory",
-  "welcome.capabilities.sessionSearch",
-] as const;
+const CAPABILITIES = [
+  "Primary-source research",
+  "Company & sector analysis",
+  "Investment committees",
+  "Parallel analysis swarms",
+  "Portfolio diagnostics",
+  "Document intelligence",
+  "Valuation & scenarios",
+  "Reproducible strategy tests",
+];
 
 interface Props {
-  onExample: (s: string) => void;
+  onExample: (prompt: string) => void;
 }
 
 export function WelcomeScreen({ onExample }: Props) {
-  const { t } = useTranslation();
-  // Research-only build hides the live-trading connector examples + chip.
-  const { brokerageEnabled } = useCapabilities();
-  const categories = brokerageEnabled
-    ? CATEGORIES
-    : CATEGORIES.filter((c) => c.labelKey !== "welcome.categories.tradingConnectors");
-  const capabilityChipKeys = brokerageEnabled
-    ? CAPABILITY_CHIP_KEYS
-    : CAPABILITY_CHIP_KEYS.filter((k) => k !== "welcome.capabilities.connectors");
   return (
-    <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-8 text-center">
-      {/* Header */}
-      <div className="space-y-3">
-        <div className="h-16 w-16 mx-auto rounded-2xl bg-gradient-to-br from-primary/80 to-info/80 flex items-center justify-center shadow-lg">
-          <Bot className="h-8 w-8 text-white" />
-        </div>
-        <div>
-          <h2 className="text-2xl font-bold tracking-tight">{t('welcome.title')}</h2>
-          <p className="text-xs text-muted-foreground mt-1 max-w-sm mx-auto leading-relaxed">
-            {t('welcome.subtitle')}
-          </p>
-          <p className="text-sm text-muted-foreground mt-2 max-w-md leading-relaxed mx-auto">
-            {t('welcome.describePrompt')}
-          </p>
-        </div>
-      </div>
-
-      {/* Capability chips */}
-      <div className="flex flex-wrap justify-center gap-2 max-w-lg">
-        {capabilityChipKeys.map((key) => (
-          <span
-            key={key}
-            className="px-2.5 py-1 text-xs rounded-full border border-border/60 text-muted-foreground bg-muted/30"
-          >
-            {t(key)}
-          </span>
-        ))}
-      </div>
-
-      {/* Example categories grid */}
-      <div className="w-full max-w-2xl text-left space-y-4">
-        <p className="text-xs text-muted-foreground px-1">{t('welcome.tryExample')}</p>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          {categories.map((cat) => (
-            <div key={cat.labelKey} className="space-y-2">
-              <div className={`flex items-center gap-1.5 text-xs font-medium px-1 ${cat.color.split(" ").filter(c => c.startsWith("text-")).join(" ")}`}>
-                {cat.icon}
-                <span>{t(cat.labelKey as any)}</span>
-              </div>
-              <div className="space-y-1.5">
-                {cat.examples.map((ex) => (
-                  <button
-                    key={ex.titleKey}
-                    onClick={() => onExample(t(ex.promptKey as any))}
-                    className={`block w-full text-left px-3 py-2.5 rounded-xl border transition-colors ${cat.color}`}
-                  >
-                    <span className="text-sm font-medium text-foreground leading-snug">
-                      {t(ex.titleKey as any)}
-                    </span>
-                    <span className="block text-xs text-muted-foreground mt-0.5 leading-snug">
-                      {t(ex.descKey as any)}
-                    </span>
-                  </button>
-                ))}
-              </div>
+    <div className="space-y-5 pb-8 text-left">
+      <section className="terminal-card market-grid relative overflow-hidden rounded-[24px] border bg-card/75 p-5 sm:p-7 lg:p-9">
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_82%_26%,hsl(var(--primary)/0.15),transparent_30rem)]" />
+        <div className="relative z-10">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+              <Link to="/" className="transition hover:text-primary">Dashboard</Link>
+              <span>/</span>
+              <span className="text-primary">Analysis workspace</span>
             </div>
+            <span className="inline-flex items-center gap-2 rounded-full border border-success/25 bg-success/10 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-success">
+              <span className="h-2 w-2 animate-pulse rounded-full bg-success" /> Evidence system online
+            </span>
+          </div>
+
+          <div className="mt-8 grid gap-8 lg:grid-cols-[minmax(0,1.3fr)_minmax(300px,.7fr)] lg:items-end">
+            <div>
+              <div className="mb-5 grid h-14 w-14 place-items-center rounded-2xl border border-primary/25 bg-primary/10 shadow-[0_0_45px_hsl(var(--primary)/0.12)]">
+                <Search className="h-7 w-7 text-primary" />
+              </div>
+              <p className="font-mono text-[11px] uppercase tracking-[0.24em] text-primary">Research intelligence</p>
+              <h1 className="mt-2 text-4xl font-semibold tracking-[-0.045em] sm:text-5xl lg:text-6xl">Analysis</h1>
+              <p className="mt-4 max-w-3xl text-base leading-7 text-muted-foreground">
+                Ask about a company, sector, portfolio, document, market, or investment question. Analysis assembles the right evidence and specialists, then returns a transparent research view—not just a trade idea.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2">
+              <Link to="/" className="group rounded-2xl border bg-background/45 p-4 transition hover:border-primary/35 hover:bg-primary/5">
+                <LayoutDashboard className="h-5 w-5 text-primary" />
+                <p className="mt-5 text-sm font-semibold">Research dashboard</p>
+                <p className="mt-1 text-[11px] leading-4 text-muted-foreground">Markets, leaders, and launch controls</p>
+                <ArrowRight className="mt-4 h-4 w-4 text-muted-foreground transition group-hover:translate-x-1 group-hover:text-primary" />
+              </Link>
+              <Link to="/reports" className="group rounded-2xl border bg-background/45 p-4 transition hover:border-primary/35 hover:bg-primary/5">
+                <Files className="h-5 w-5 text-primary" />
+                <p className="mt-5 text-sm font-semibold">Research archive</p>
+                <p className="mt-1 text-[11px] leading-4 text-muted-foreground">Reports, runs, and evidence history</p>
+                <ArrowRight className="mt-4 h-4 w-4 text-muted-foreground transition group-hover:translate-x-1 group-hover:text-primary" />
+              </Link>
+            </div>
+          </div>
+
+          <div className="mt-8 flex flex-wrap gap-2 border-t border-border/70 pt-5">
+            {CAPABILITIES.map((capability) => (
+              <span key={capability} className="rounded-full border bg-background/40 px-3 py-1.5 text-[10px] font-medium text-muted-foreground">
+                {capability}
+              </span>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="terminal-card rounded-[24px] border bg-card/65 p-4 sm:p-6">
+        <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <div className="flex items-center gap-2 text-primary">
+              <Sparkles className="h-4 w-4" />
+              <p className="text-[10px] font-semibold uppercase tracking-[0.18em]">Choose a research mode</p>
+            </div>
+            <h2 className="mt-1.5 text-2xl font-semibold tracking-tight">How do you want to work?</h2>
+            <p className="mt-1 text-sm text-muted-foreground">Pick a starting structure, then make the conversation your own.</p>
+          </div>
+          <span className="font-mono text-[10px] text-muted-foreground">6 flexible workspaces</span>
+        </div>
+
+        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+          {RESEARCH_MODES.map((mode) => (
+            <button
+              key={mode.title}
+              type="button"
+              onClick={() => onExample(mode.prompt)}
+              className="group min-h-[180px] rounded-2xl border bg-background/35 p-4 text-left transition hover:-translate-y-0.5 hover:border-primary/30 hover:bg-primary/[0.04]"
+            >
+              <div className="flex items-start justify-between gap-3">
+                <span className={`grid h-10 w-10 place-items-center rounded-xl border ${mode.tone}`}>{mode.icon}</span>
+                <ArrowRight className="h-4 w-4 text-muted-foreground transition group-hover:translate-x-1 group-hover:text-primary" />
+              </div>
+              <p className="mt-5 font-mono text-[9px] uppercase tracking-[0.16em] text-muted-foreground">{mode.eyebrow}</p>
+              <h3 className="mt-1 text-base font-semibold">{mode.title}</h3>
+              <p className="mt-2 text-xs leading-5 text-muted-foreground">{mode.description}</p>
+            </button>
           ))}
         </div>
+      </section>
+
+      <section className="grid gap-3 md:grid-cols-3">
+        {[
+          { number: "01", title: "Ask freely", text: "Start with a question, ticker, file, portfolio, or research objective.", icon: <Search className="h-4 w-4" /> },
+          { number: "02", title: "Choose the team", text: "Work with one analyst, an investment committee, or a parallel swarm.", icon: <Users className="h-4 w-4" /> },
+          { number: "03", title: "Audit the answer", text: "Inspect evidence, calculations, validation, reports, and unresolved gaps.", icon: <ShieldCheck className="h-4 w-4" /> },
+        ].map((item) => (
+          <div key={item.number} className="rounded-2xl border bg-card/45 p-4">
+            <div className="flex items-center justify-between text-primary">
+              {item.icon}
+              <span className="font-mono text-[9px] text-muted-foreground">{item.number}</span>
+            </div>
+            <p className="mt-4 text-sm font-semibold">{item.title}</p>
+            <p className="mt-1 text-xs leading-5 text-muted-foreground">{item.text}</p>
+          </div>
+        ))}
+      </section>
+
+      <div className="flex items-center justify-center gap-2 py-2 text-[10px] text-muted-foreground">
+        <BarChart3 className="h-3.5 w-3.5" /> Strategy and trading tools remain available inside Strategy Lab when your research calls for them.
       </div>
     </div>
   );

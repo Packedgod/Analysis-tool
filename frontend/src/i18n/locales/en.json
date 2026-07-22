@@ -118,10 +118,10 @@
     "disconnected": "Connection lost"
   },
   "welcome": {
-    "title": "Vibe-Trading",
-    "subtitle": "vibe trading with your professional financial agent team",
-    "describePrompt": "Describe a trading strategy to get started.",
-    "tryExample": "Try an example:",
+    "title": "Analysis",
+    "subtitle": "Evidence-first research with specialist financial intelligence",
+    "describePrompt": "Ask a company, portfolio, document, market, or investment question.",
+    "tryExample": "Choose a research mode:",
     "categories": {
       "multiMarketBacktest": "A-Share Backtest",
       "researchAnalysis": "Research & Analysis",
@@ -366,7 +366,7 @@
     "save": "Save",
     "cancelGoal": "Cancel goal",
     "describeGoal": "Describe the research goal to attach to this session",
-    "placeholder": "e.g. Create a dual MA crossover strategy for 000001.SZ, backtest 2024",
+    "placeholder": "Ask about a company, portfolio, sector, document, valuation, risk, or research goal…",
     "send": "Send message",
     "messageInputLabel": "Message to the agent",
     "inputHint": "Enter to send · Shift+Enter for a new line",

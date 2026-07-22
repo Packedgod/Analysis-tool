@@ -91,6 +91,19 @@ function yieldToBrowser(): Promise<void> {
   });
 }
 
+function StockIdentity({ symbol }: { symbol: string }) {
+  const short = symbol.split(".")[0];
+  const mark = short.replace(/[^A-Z0-9]/gi, "").slice(0, 4) || "EQ";
+  return (
+    <span className="symbol-chip">
+      <span className="grid h-7 w-7 place-items-center rounded-full border border-primary/25 bg-primary/10 text-[8px] text-primary">
+        {mark}
+      </span>
+      <span>{symbol}</span>
+    </span>
+  );
+}
+
 export function RunDetail() {
   const { runId } = useParams<{ runId: string }>();
   const navigate = useNavigate();
@@ -244,10 +257,10 @@ export function RunDetail() {
   }
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex h-full flex-col bg-background">
       {/* Header */}
-      <div className="border-b p-4 space-y-3">
-        <div className="flex items-center gap-3">
+      <div className="terminal-card relative z-10 space-y-4 border-b bg-card/75 p-4 backdrop-blur-xl lg:px-6 lg:py-5">
+        <div className="flex flex-wrap items-center gap-3">
           <button
             onClick={() => navigate(-1)}
             className="p-1 rounded-md hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
@@ -255,28 +268,40 @@ export function RunDetail() {
           >
             <ArrowLeft className="h-4 w-4" />
           </button>
-          {ok ? <CheckCircle2 className="h-5 w-5 text-success" /> : <XCircle className="h-5 w-5 text-danger" />}
-          <h1 className="font-mono text-sm font-medium">{runId}</h1>
-          {run.elapsed_seconds && <span className="text-xs text-muted-foreground">{run.elapsed_seconds.toFixed(1)}s</span>}
+          <span className={cn("inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider", ok ? "border-success/25 bg-success/10 text-success" : "border-danger/25 bg-danger/10 text-danger")}>
+            {ok ? <CheckCircle2 className="h-3.5 w-3.5" /> : <XCircle className="h-3.5 w-3.5" />}
+            {ok ? "Evidence verified" : "Run needs attention"}
+          </span>
+          <h1 className="font-mono text-xs font-medium text-muted-foreground">{runId}</h1>
+          {run.elapsed_seconds != null && run.elapsed_seconds > 0 && <span className="ml-auto rounded-lg border bg-background/50 px-2.5 py-1 font-mono text-[10px] text-muted-foreground">{run.elapsed_seconds.toFixed(1)}s runtime</span>}
         </div>
-        {run.prompt && <p className="text-sm text-muted-foreground">{run.prompt}</p>}
+        {run.prompt && <p className="max-w-5xl text-base font-medium leading-relaxed tracking-tight">{run.prompt}</p>}
+        {(run.chart_symbols?.length || 0) > 0 && (
+          <div className="flex flex-wrap gap-2" aria-label="Securities in this analysis">
+            {run.chart_symbols!.slice(0, 12).map((symbol) => (
+              <button key={symbol} type="button" onClick={() => { setTab("chart"); void handleCurrentChartOnly(symbol); }}>
+                <StockIdentity symbol={symbol} />
+              </button>
+            ))}
+          </div>
+        )}
         {run.metrics && <MetricsCard metrics={run.metrics as Record<string, number>} />}
 
-        <div className="flex items-center gap-1">
+        <div className="flex flex-wrap items-center gap-1 rounded-xl border bg-background/35 p-1.5">
           {TABS.filter(t => !t.hidden).map(({ id, label, icon: Icon }) => (
             <button
               key={id}
               onClick={() => setTab(id)}
               className={cn(
-                "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm transition-colors",
-                tab === id ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted"
+                "flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-medium transition-all",
+                tab === id ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:bg-muted hover:text-foreground"
               )}
             >
               <Icon className="h-3.5 w-3.5" /> {label}
             </button>
           ))}
 
-          <div className="ml-auto flex gap-1">
+          <div className="ml-auto flex flex-wrap gap-1">
             {run.trade_log && run.trade_log.length > 0 && (
               <button
                 onClick={() => downloadCsv(`trades_${runId}.csv`, buildTradesCsv(run.trade_log!))}
@@ -299,7 +324,7 @@ export function RunDetail() {
         </div>
       </div>
 
-      <div className="flex-1 overflow-auto">
+      <div className="flex-1 overflow-auto bg-[radial-gradient(circle_at_80%_0%,hsl(var(--primary)/0.04),transparent_32rem)]">
         <ErrorBoundary>
           {tab === "chart" && (
             <>

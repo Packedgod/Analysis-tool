@@ -23,7 +23,7 @@ import { cn } from "@/lib/utils";
 type View = "overview" | "charts" | "data";
 type ChartMode = "bar" | "line";
 
-const SERIES_COLORS = ["#2dd4bf", "#60a5fa", "#fbbf24", "#c084fc", "#fb7185"];
+const SERIES_COLORS = ["#b6ff3b", "#52d681", "#62b6ff", "#f7c948", "#ff718c"];
 
 interface Props {
   runId: string;

@@ -4,6 +4,7 @@ import { Database, KeyRound, Loader2, MessageSquareMore, Play, RefreshCw, Rotate
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { QVerisSettings } from "@/components/settings/QVerisSettings"; // QVERIS-INTEGRATION
+import { ThemeStudio } from "@/components/settings/ThemeStudio";
 import { api, isAuthRequiredError, type ChannelRuntimeStatus, type DataSourceSettings, type LLMProviderOption, type LLMSettings } from "@/lib/api";
 import { getApiAuthKey, setApiAuthKey } from "@/lib/apiAuth";
 
@@ -245,6 +246,7 @@ export function Settings() {
           <h1 className="text-2xl font-semibold tracking-tight">{"Settings"}</h1>
           <p className="max-w-3xl text-sm text-muted-foreground">{"Configure model credentials and market data source tokens for this local project."}</p>
         </div>
+        <ThemeStudio />
         {localApiAccessSection}
         {/* QVERIS-INTEGRATION */}
         <QVerisSettings />
@@ -398,6 +400,8 @@ export function Settings() {
         <h1 className="text-2xl font-semibold tracking-tight">{"Settings"}</h1>
         <p className="max-w-3xl text-sm text-muted-foreground">{"Configure model credentials and market data source tokens for this local project."}</p>
       </div>
+
+      <ThemeStudio />
 
       {localApiAccessSection}
 

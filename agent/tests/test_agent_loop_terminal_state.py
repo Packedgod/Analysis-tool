@@ -18,7 +18,7 @@ from typing import Any, Callable
 
 import pytest
 
-from src.agent.loop import AgentLoop
+from src.agent.loop import AgentLoop, _build_artifact_evidence_snapshot
 from src.agent.tools import BaseTool
 from src.providers.chat import ProviderStreamError
 
@@ -408,3 +408,148 @@ def test_force_text_only_on_last_iteration(tmp_path: Path) -> None:
     assert result["status"] == "success"
     assert "Final answer" in result["content"]
     assert result["iterations"] == 5
+
+
+class _StubLLMUntilEvidenceFinal:
+    """Keep requesting tools until the loop's forced finalization turn."""
+
+    def __init__(self) -> None:
+        self.final_messages: list[dict[str, Any]] = []
+
+    def stream_chat(
+        self,
+        messages: list[dict[str, Any]],
+        tools: list[Any] | None = None,
+        on_text_chunk: Callable[[str], None] | None = None,
+        on_reasoning_chunk: Callable[[str], None] | None = None,
+        should_cancel: Callable[[], bool] | None = None,
+    ) -> _StubLLMResponse:
+        response = _StubLLMResponse()
+        if tools is not None:
+            response.has_tool_calls = True
+            response.tool_calls = [
+                SimpleNamespace(
+                    id="read-again",
+                    name="read_file",
+                    arguments={"path": "artifacts/metrics.csv"},
+                )
+            ]
+            return response
+        self.final_messages = list(messages)
+        response.content = "Evidence-backed final answer."
+        return response
+
+    def chat(self, messages: list[dict[str, Any]], **_: Any) -> _StubLLMResponse:
+        return _StubLLMResponse()
+
+
+def _write_canonical_artifacts(run_dir: Path) -> None:
+    artifacts = run_dir / "artifacts"
+    artifacts.mkdir(parents=True, exist_ok=True)
+    (artifacts / "metrics.csv").write_text(
+        "sharpe,max_drawdown,benchmark_return,total_return\n"
+        "0.9615924559,-0.1677228591,0.6367611861,0.8202029385\n",
+        encoding="utf-8",
+    )
+    (artifacts / "validation.json").write_text(
+        json.dumps({"monte_carlo": {"p_value_sharpe": 0.593, "p_value_max_dd": 0.069}}),
+        encoding="utf-8",
+    )
+    (artifacts / "equity.csv").write_text(
+        "timestamp,equity,drawdown,benchmark_equity\n"
+        "2021-04-01,1000000,0,1000000\n"
+        "2026-07-17,1820202.9385,-0.1134708109,1636761.1861\n",
+        encoding="utf-8",
+    )
+    (artifacts / "trades.csv").write_text(
+        "code,pnl,return_pct\nTEST.NS,820202.9385,82.02029385\n",
+        encoding="utf-8",
+    )
+    (run_dir / "run_card.json").write_text(
+        json.dumps(
+            {
+                "schema_version": "0.1",
+                "metrics": {"sharpe": 0.9615924559, "max_drawdown": -0.1677228591},
+                "validation": {"monte_carlo": {"p_value_sharpe": 0.593}},
+                "warnings": [],
+            }
+        ),
+        encoding="utf-8",
+    )
+
+
+def test_artifact_evidence_snapshot_reads_complete_canonical_files(tmp_path: Path) -> None:
+    run_dir = tmp_path / "run"
+    _write_canonical_artifacts(run_dir)
+
+    snapshot = json.loads(_build_artifact_evidence_snapshot(run_dir))
+
+    assert snapshot["metrics_csv"][0]["sharpe"] == "0.9615924559"
+    assert snapshot["validation_json"]["monte_carlo"]["p_value_sharpe"] == 0.593
+    assert snapshot["artifacts_equity_summary"]["last_row"]["equity"] == "1820202.9385"
+    assert snapshot["artifacts_trades_summary"]["records"][0]["code"] == "TEST.NS"
+
+
+def test_forced_finalization_injects_verified_snapshot(tmp_path: Path) -> None:
+    run_dir = tmp_path / "run"
+    _write_canonical_artifacts(run_dir)
+    llm = _StubLLMUntilEvidenceFinal()
+    agent = _build_agent(llm, max_iter=2, tmp_run_dir=run_dir)
+
+    result = agent.run(user_message="Give me a verified report")
+
+    assert result["status"] == "success"
+    assert result["content"] == "Evidence-backed final answer."
+    final_system = "\n".join(
+        str(message.get("content", ""))
+        for message in llm.final_messages
+        if message.get("role") == "system"
+    )
+    assert "<verified-artifact-snapshot>" in final_system
+    assert '"sharpe": "0.9615924559"' in final_system
+    assert '"p_value_sharpe": 0.593' in final_system
+    assert "If a requested value is absent, label it unavailable" in final_system
+
+
+class _StubLLMEarlyDraftThenEvidenceFinal:
+    """Return an unsupported draft, then rewrite after evidence is injected."""
+
+    def __init__(self) -> None:
+        self.calls = 0
+        self.rewrite_messages: list[dict[str, Any]] = []
+
+    def stream_chat(
+        self,
+        messages: list[dict[str, Any]],
+        tools: list[Any] | None = None,
+        on_text_chunk: Callable[[str], None] | None = None,
+        on_reasoning_chunk: Callable[[str], None] | None = None,
+        should_cancel: Callable[[], bool] | None = None,
+    ) -> _StubLLMResponse:
+        self.calls += 1
+        response = _StubLLMResponse()
+        if self.calls == 1:
+            response.content = "The artifacts are unverified, so this is approximate."
+        else:
+            self.rewrite_messages = list(messages)
+            response.content = "Sharpe is 0.9615924559, as recorded in metrics.csv."
+        return response
+
+    def chat(self, messages: list[dict[str, Any]], **_: Any) -> _StubLLMResponse:
+        return _StubLLMResponse()
+
+
+def test_early_final_answer_is_rewritten_against_artifact_evidence(tmp_path: Path) -> None:
+    run_dir = tmp_path / "run"
+    _write_canonical_artifacts(run_dir)
+    llm = _StubLLMEarlyDraftThenEvidenceFinal()
+    agent = _build_agent(llm, max_iter=3, tmp_run_dir=run_dir)
+
+    result = agent.run(user_message="Give me a verified report")
+
+    assert result["status"] == "success"
+    assert result["content"] == "Sharpe is 0.9615924559, as recorded in metrics.csv."
+    assert llm.calls == 2
+    rewrite_context = "\n".join(str(message.get("content", "")) for message in llm.rewrite_messages)
+    assert "Rewrite the final answer now using only the verified evidence" in rewrite_context
+    assert '"sharpe": "0.9615924559"' in rewrite_context
