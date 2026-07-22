@@ -157,6 +157,90 @@ def _provider_readiness() -> Tuple[bool, str]:
     return True, "ready"
 
 
+_MARKET_SYMBOLS = (
+    ("^NSEI", "NIFTY 50", "INDEX"),
+    ("^BSESN", "SENSEX", "INDEX"),
+    ("RELIANCE.NS", "Reliance", "RIL"),
+    ("HDFCBANK.NS", "HDFC Bank", "HDFC"),
+    ("ICICIBANK.NS", "ICICI Bank", "ICICI"),
+    ("BHARTIARTL.NS", "Bharti Airtel", "AIRTEL"),
+    ("TCS.NS", "TCS", "TCS"),
+    ("INFY.NS", "Infosys", "INFY"),
+)
+_market_overview_cache: Dict[str, object] = {"expires_at": 0.0, "payload": None}
+_market_overview_lock = threading.Lock()
+
+
+def _load_market_overview() -> Dict[str, object]:
+    """Return a short-lived, source-labelled snapshot for the landing ticker."""
+    now = time.monotonic()
+    cached = _market_overview_cache.get("payload")
+    if cached and now < float(_market_overview_cache.get("expires_at") or 0):
+        return dict(cached)  # type: ignore[arg-type]
+
+    with _market_overview_lock:
+        now = time.monotonic()
+        cached = _market_overview_cache.get("payload")
+        if cached and now < float(_market_overview_cache.get("expires_at") or 0):
+            return dict(cached)  # type: ignore[arg-type]
+        try:
+            import yfinance as yf
+
+            symbols = [row[0] for row in _MARKET_SYMBOLS]
+            frame = yf.download(
+                tickers=symbols,
+                period="7d",
+                interval="1d",
+                group_by="ticker",
+                auto_adjust=False,
+                progress=False,
+                threads=True,
+                timeout=6,
+            )
+            items = []
+            for symbol, name, mark in _MARKET_SYMBOLS:
+                try:
+                    series = frame[symbol]["Close"].dropna() if len(symbols) > 1 else frame["Close"].dropna()
+                    if len(series) < 2:
+                        continue
+                    price = float(series.iloc[-1])
+                    previous = float(series.iloc[-2])
+                    change = ((price / previous) - 1.0) * 100.0 if previous else 0.0
+                    items.append({
+                        "symbol": symbol,
+                        "name": name,
+                        "mark": mark,
+                        "price": round(price, 2),
+                        "change_percent": round(change, 2),
+                    })
+                except (KeyError, TypeError, ValueError, IndexError):
+                    continue
+            payload: Dict[str, object] = {
+                "status": "live" if items else "unavailable",
+                "source": "Yahoo Finance",
+                "observed_at": datetime.now(timezone.utc).isoformat(),
+                "refresh_seconds": 60,
+                "items": items,
+            }
+            if items:
+                _market_overview_cache["payload"] = payload
+                _market_overview_cache["expires_at"] = now + 60.0
+            return payload
+        except Exception as exc:  # noqa: BLE001 - landing ticker degrades independently
+            logger.info("Market overview refresh unavailable: %s", exc)
+            if cached:
+                stale = dict(cached)  # type: ignore[arg-type]
+                stale["status"] = "stale"
+                return stale
+            return {
+                "status": "unavailable",
+                "source": "Yahoo Finance",
+                "observed_at": None,
+                "refresh_seconds": 60,
+                "items": [],
+            }
+
+
 # ---------------------------------------------------------------------------
 # Registration
 # ---------------------------------------------------------------------------
@@ -198,6 +282,14 @@ def register_system_routes(
 
     # --- Routes ---
 
+    from src.api.quant_labs_routes import register_quant_lab_routes
+
+    register_quant_lab_routes(app, require_auth)
+
+    from src.api.market_routes import register_market_routes
+
+    register_market_routes(app, require_auth)
+
     def _health_payload() -> HealthResponse:
         return HealthResponse(
             status="healthy",
@@ -219,6 +311,15 @@ def register_system_routes(
     async def health_check():
         """Backward-compatible alias for ``/live`` (legacy monitors)."""
         return _health_payload()
+
+    @app.get("/market/overview", dependencies=[Depends(require_auth)])
+    async def market_overview():
+        """Return a short-lived observed quote snapshot for the landing tape.
+
+        The response is source-labelled and never fabricates fallback prices;
+        an unavailable provider yields an empty, explicitly unavailable feed.
+        """
+        return _load_market_overview()
 
     @app.get("/ready")
     async def readiness_probe():

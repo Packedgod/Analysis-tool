@@ -1,4 +1,4 @@
-"""Backend tool exposing the authoritative factor workbook by sector."""
+"""Backend tool exposing the two-workbook analysis backbone by sector."""
 
 from __future__ import annotations
 
@@ -12,10 +12,11 @@ from src.analysis.master_factors import factor_pack
 class MasterAnalysisFactorsTool(BaseTool):
     name = "get_master_analysis_factors"
     description = (
-        "Mandatory factor source for every listed-equity analysis. Returns the 70 authoritative "
-        "common fundamentals, sector mapping/benchmark, weighted qualitative framework, and the "
-        "relevant sector/industry KPI block from the user-verified master workbook. Call after "
-        "resolving the issuer sector and use these factors as the primary analysis key."
+        "Mandatory backend backbone for every prompt. Returns the user-verified Stocks_Sector "
+        "bottom-up standards and India_Macro_Market_Briefing top-down standards, including the "
+        "70 common fundamentals, sector/industry KPIs, qualitative framework, current macro "
+        "readings, cycle placement, linkage map, positioning, triggers, caveats, and governing "
+        "workflow. Call before answering; pass a resolved sector for listed-equity requests."
     )
     repeatable = True
     is_readonly = True
@@ -26,6 +27,10 @@ class MasterAnalysisFactorsTool(BaseTool):
                 "type": "string",
                 "description": "Resolved sector name. Omit to retrieve the common core and sector index.",
             },
+            "code": {
+                "type": "string",
+                "description": "Listing symbol used to normalize provider sectors to the workbook taxonomy.",
+            },
             "include_qualitative": {
                 "type": "boolean",
                 "description": "Include the weighted qualitative factor framework (default true).",
@@ -35,9 +40,12 @@ class MasterAnalysisFactorsTool(BaseTool):
         "required": [],
     }
 
-    def execute(self, sector: str | None = None, include_qualitative: bool = True, **_: Any) -> str:
+    def execute(
+        self, sector: str | None = None, include_qualitative: bool = True,
+        code: str = "", **_: Any,
+    ) -> str:
         return json.dumps(
-            factor_pack(sector, include_qualitative=include_qualitative),
+            factor_pack(sector, include_qualitative=include_qualitative, code=code),
             ensure_ascii=False,
             allow_nan=False,
         )
