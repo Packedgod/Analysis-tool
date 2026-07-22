@@ -282,6 +282,14 @@ def register_system_routes(
 
     # --- Routes ---
 
+    from src.api.quant_labs_routes import register_quant_lab_routes
+
+    register_quant_lab_routes(app, require_auth)
+
+    from src.api.market_routes import register_market_routes
+
+    register_market_routes(app, require_auth)
+
     def _health_payload() -> HealthResponse:
         return HealthResponse(
             status="healthy",
