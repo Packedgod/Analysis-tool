@@ -7,7 +7,19 @@ import { THEMES, useDarkMode } from "@/hooks/useDarkMode";
 import { api, type SessionItem } from "@/lib/api";
 import { useAgentStore } from "@/stores/agent";
 import { ConnectionBanner } from "@/components/layout/ConnectionBanner";
+import { ResizeHandle } from "@/components/panels/ResizeHandle";
 import { SUPPORTED_LANGUAGES } from "@/i18n";
+
+const SIDEBAR_WIDTH_KEY = "vibe.sidebar-width";
+const SIDEBAR_MIN_WIDTH = 180;
+const SIDEBAR_MAX_WIDTH = 480;
+const SIDEBAR_DEFAULT_WIDTH = 238;
+
+function readSidebarWidth() {
+  const stored = Number(window.localStorage.getItem(SIDEBAR_WIDTH_KEY));
+  if (!Number.isFinite(stored) || stored <= 0) return SIDEBAR_DEFAULT_WIDTH;
+  return Math.min(SIDEBAR_MAX_WIDTH, Math.max(SIDEBAR_MIN_WIDTH, stored));
+}
 
 // APP_VERSION is sourced from i18n locale files (app.version key) to keep a
 // single source of truth across the footer and every localised README.
@@ -28,6 +40,15 @@ export function Layout() {
   const [sessionsLoading, setSessionsLoading] = useState(true);
   const sseStatus = useAgentStore(s => s.sseStatus);
   const sseRetryAttempt = useAgentStore(s => s.sseRetryAttempt);
+  const [sidebarWidth, setSidebarWidth] = useState(readSidebarWidth);
+
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(SIDEBAR_WIDTH_KEY, String(sidebarWidth));
+    } catch {
+      /* layout width simply is not persisted */
+    }
+  }, [sidebarWidth]);
   const [collapsed, setCollapsed] = useState(() => localStorage.getItem("qa-sidebar") === "collapsed");
 
   const activeSessionId = searchParams.get("session");
@@ -73,10 +94,13 @@ export function Layout() {
   return (
     <div className="flex h-screen overflow-hidden bg-background rtl:flex-row-reverse">
       {/* Sidebar */}
-      <aside className={cn(
-        "terminal-sidebar border-e bg-card/90 backdrop-blur-xl flex flex-col shrink-0 transition-[width] duration-200 overflow-visible",
-        collapsed ? "w-[58px]" : "w-[238px]"
-      )}>
+      <aside
+        style={collapsed ? undefined : { width: sidebarWidth }}
+        className={cn(
+          "terminal-sidebar border-e bg-card/90 backdrop-blur-xl flex flex-col shrink-0 overflow-visible",
+          collapsed ? "w-[58px] transition-[width] duration-200" : ""
+        )}
+      >
         {/* Brand */}
         <div className={cn("border-b border-border/70", collapsed ? "p-3 flex justify-center" : "px-4 py-5")}>
           <Link to="/" className={cn("flex items-center font-bold text-base tracking-tight", collapsed ? "justify-center" : "gap-2")}>
@@ -264,8 +288,22 @@ export function Layout() {
         </div>
       </aside>
 
+      {/* Sidebar resize grip (hidden while collapsed) */}
+      {!collapsed && (
+        <ResizeHandle
+          axis="x"
+          label="Resize sidebar"
+          onResize={(delta) =>
+            setSidebarWidth((width) =>
+              Math.min(SIDEBAR_MAX_WIDTH, Math.max(SIDEBAR_MIN_WIDTH, width + delta.x)),
+            )
+          }
+          className="relative z-10 -mx-1 flex w-2 shrink-0 items-center opacity-0 hover:opacity-100"
+        />
+      )}
+
       {/* Main */}
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex-1 flex flex-col overflow-hidden min-w-0">
         <ConnectionBanner status={sseStatus} retryAttempt={sseRetryAttempt} />
         <main className="flex-1 overflow-auto">
           <Outlet />

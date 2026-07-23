@@ -37,7 +37,8 @@ export default defineConfig(({ mode }) => {
       alias: { "@": path.resolve(rootDir, "./src") },
     },
     server: {
-      port: 5899,
+      // Honour PORT so supervisors/preview harnesses can assign a free port.
+      port: Number(process.env.PORT) || 5899,
       proxy: {
         ...Object.fromEntries(PROXY_PATHS.map((p) => [p, apiProxy])),
         // SPA RunDetail page — only the two-segment ``/runs/{id}``

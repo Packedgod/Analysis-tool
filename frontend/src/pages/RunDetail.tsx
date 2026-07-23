@@ -1,7 +1,7 @@
 import i18n from '@/i18n';
 import { useEffect, useRef, useState } from "react";
-import type { ReactNode } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { SectionBoard } from "@/components/panels/SectionBoard";
 import {
   AlertTriangle,
   ArrowLeft,
@@ -389,56 +389,77 @@ function RunCardTab({ card }: { card: RunCard }) {
         </section>
       )}
 
-      <div className="grid gap-4 xl:grid-cols-2">
-        <RunCardPanel title={i18n.t("runDetail.backtestSummary")} icon={Database}>
-          <KeyValueTable data={backtest} empty={i18n.t("runDetail.noBacktestSummary")} />
-        </RunCardPanel>
-        <RunCardPanel title={i18n.t("runDetail.reproducibility")} icon={Fingerprint}>
-          <KeyValueTable data={reproducibility} empty={i18n.t("runDetail.noReproducibilityHashes")} monospaceValues />
-        </RunCardPanel>
-      </div>
-
-      <div className="grid gap-4 xl:grid-cols-2">
-        <RunCardPanel title={i18n.t("runDetail.metrics")} icon={BarChart3}>
-          <KeyValueTable data={metrics} empty={i18n.t("runDetail.noScalarMetrics")} />
-        </RunCardPanel>
-        <RunCardPanel title={i18n.t("runDetail.validationPayload")} icon={ShieldCheck}>
-          {card.validation ? (
-            <pre className="max-h-80 overflow-auto rounded-md bg-muted/40 p-3 text-xs leading-relaxed">
-              {JSON.stringify(card.validation, null, 2)}
-            </pre>
-          ) : (
-            <p className="text-sm text-muted-foreground">{i18n.t("runDetail.noValidationPayload")}</p>
-          )}
-        </RunCardPanel>
-      </div>
-
-      <RunCardPanel title={i18n.t("runDetail.artifactChecksums")} icon={FileCheck2}>
-        {artifacts.length > 0 ? (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b text-left text-muted-foreground">
-                  <th className="py-2 pr-4">{i18n.t("runDetail.path")}</th>
-                  <th className="py-2 pr-4">{i18n.t("runDetail.size")}</th>
-                  <th className="py-2">{i18n.t("runDetail.sha256")}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {artifacts.map((artifact) => (
-                  <tr key={`${artifact.path}-${artifact.sha256}`} className="border-b last:border-0">
-                    <td className="py-2 pr-4 font-mono text-xs">{artifact.path}</td>
-                    <td className="py-2 pr-4 tabular-nums text-muted-foreground">{formatBytes(artifact.size_bytes)}</td>
-                    <td className="py-2 font-mono text-xs text-muted-foreground">{shortHash(artifact.sha256)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        ) : (
-          <p className="text-sm text-muted-foreground">{i18n.t("runDetail.noArtifactChecksums")}</p>
-        )}
-      </RunCardPanel>
+      <SectionBoard
+        layoutId="run-detail"
+        sections={[
+          {
+            id: "backtest",
+            title: i18n.t("runDetail.backtestSummary"),
+            icon: Database,
+            defaultSpan: 6,
+            content: <KeyValueTable data={backtest} empty={i18n.t("runDetail.noBacktestSummary")} />,
+          },
+          {
+            id: "reproducibility",
+            title: i18n.t("runDetail.reproducibility"),
+            icon: Fingerprint,
+            defaultSpan: 6,
+            content: (
+              <KeyValueTable data={reproducibility} empty={i18n.t("runDetail.noReproducibilityHashes")} monospaceValues />
+            ),
+          },
+          {
+            id: "metrics",
+            title: i18n.t("runDetail.metrics"),
+            icon: BarChart3,
+            defaultSpan: 6,
+            content: <KeyValueTable data={metrics} empty={i18n.t("runDetail.noScalarMetrics")} />,
+          },
+          {
+            id: "validation",
+            title: i18n.t("runDetail.validationPayload"),
+            icon: ShieldCheck,
+            defaultSpan: 6,
+            content: card.validation ? (
+              <pre className="max-h-80 overflow-auto rounded-md bg-muted/40 p-3 text-xs leading-relaxed">
+                {JSON.stringify(card.validation, null, 2)}
+              </pre>
+            ) : (
+              <p className="text-sm text-muted-foreground">{i18n.t("runDetail.noValidationPayload")}</p>
+            ),
+          },
+          {
+            id: "artifacts",
+            title: i18n.t("runDetail.artifactChecksums"),
+            icon: FileCheck2,
+            defaultSpan: 12,
+            content: artifacts.length > 0 ? (
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b text-left text-muted-foreground">
+                      <th className="py-2 pr-4">{i18n.t("runDetail.path")}</th>
+                      <th className="py-2 pr-4">{i18n.t("runDetail.size")}</th>
+                      <th className="py-2">{i18n.t("runDetail.sha256")}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {artifacts.map((artifact) => (
+                      <tr key={`${artifact.path}-${artifact.sha256}`} className="border-b last:border-0">
+                        <td className="py-2 pr-4 font-mono text-xs">{artifact.path}</td>
+                        <td className="py-2 pr-4 tabular-nums text-muted-foreground">{formatBytes(artifact.size_bytes)}</td>
+                        <td className="py-2 font-mono text-xs text-muted-foreground">{shortHash(artifact.sha256)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground">{i18n.t("runDetail.noArtifactChecksums")}</p>
+            ),
+          },
+        ]}
+      />
     </div>
   );
 }
@@ -449,18 +470,6 @@ function RunCardStat({ label, value, tone = "normal" }: { label: string; value: 
       <div className="text-xs text-muted-foreground">{label}</div>
       <div className={cn("mt-1 truncate text-sm font-medium", tone === "warning" ? "text-amber-700 dark:text-amber-300" : "")}>{value}</div>
     </div>
-  );
-}
-
-function RunCardPanel({ title, icon: Icon, children }: { title: string; icon: typeof FileCheck2; children: ReactNode }) {
-  return (
-    <section className="rounded-md border bg-card p-4">
-      <div className="mb-3 flex items-center gap-2 text-sm font-medium">
-        <Icon className="h-4 w-4 text-muted-foreground" />
-        {title}
-      </div>
-      {children}
-    </section>
   );
 }
 
