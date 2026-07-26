@@ -29,6 +29,16 @@ logger = logging.getLogger(__name__)
 _SUBCLASSES_CACHE: list[type[BaseTool]] | None = None
 _SHELL_TOOL_NAMES = {"bash", "background_run"}
 
+# Live-brokerage tools. The research-only build ships with the brokerage
+# subsystem disabled (VIBE_TRADING_ENABLE_BROKERAGE off by default), so these
+# are excluded from the tool registry unless the master switch is enabled.
+_BROKER_TOOL_NAMES = {
+    "trading_connections", "trading_select_connection", "trading_check",
+    "trading_account", "trading_positions", "trading_orders", "trading_quote",
+    "trading_history", "trading_place_order", "trading_cancel_order",
+    "propose_mandate_profiles",
+}
+
 
 def _discover_subclasses() -> list[type[BaseTool]]:
     """Import all modules in this package, then collect BaseTool subclasses.
@@ -132,11 +142,17 @@ def build_registry(
     # Tools that need the host session id injected: they create or mutate the
     # session's research goal, and the LLM never knows the session id.
     session_injected_classes = goal_tool_classes | {RunResearchAutopilotTool}
+    from src.config.accessor import brokerage_enabled
+
+    brokerage_on = brokerage_enabled()
     registry = ToolRegistry()
     for cls in _discover_subclasses():
         try:
             if cls.name in _SHELL_TOOL_NAMES and not include_shell_tools:
                 logger.info("Tool %s disabled by shell tool policy", cls.name)
+                continue
+            if cls.name in _BROKER_TOOL_NAMES and not brokerage_on:
+                logger.info("Tool %s excluded: live-brokerage disabled", cls.name)
                 continue
             if not cls.check_available():
                 logger.info("Tool %s unavailable, skipping", cls.name)

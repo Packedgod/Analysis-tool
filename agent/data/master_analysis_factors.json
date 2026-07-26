@@ -1,9 +1,1260 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
+  "sources": [
+    {
+      "filename": "Stocks_Sector.xlsx",
+      "sha256": "2dd2c03652645dbf453737593c3e58ded0fc65d86430479007723f5f98568db9",
+      "role": "bottom_up_stock_sector_framework",
+      "verification_status": "user_verified_authoritative"
+    },
+    {
+      "filename": "India_Macro_Market_Briefing.xlsx",
+      "sha256": "f00fd78e1e4ab9ae1d29a4c2dfb03b11889e7b16ef517da73435594645af337d",
+      "role": "top_down_india_macro_framework",
+      "verification_status": "user_verified_authoritative"
+    }
+  ],
   "source": {
-    "filename": "Stocks_Sector (1).xlsx",
-    "sha256": "f25f4c5b1a48fa973aa806069aed3f19c526217854975c0157d5e543bf508406",
+    "filename": "Stocks_Sector.xlsx + India_Macro_Market_Briefing.xlsx",
+    "sha256": "0e5c91c9767ef5226f1baaaf26fbb57185332ad66586a4931ee2fca1220da903",
     "verification_status": "user_verified_authoritative"
+  },
+  "governance": {
+    "applies_to_every_prompt": true,
+    "evidence_policy": "Workbook-only claims unless a workflow explicitly requires current public evidence; missing evidence must be stated, never invented.",
+    "execution_order": [
+      "resolve request and issuer identity",
+      "apply bottom-up common, sector, industry, and qualitative standards",
+      "apply top-down macro cycle, linkage, positioning, and trigger standards",
+      "reconcile conflicts and retain cell-level source labels",
+      "separate evidence, calculations, interpretation, and missing data",
+      "close with advisor-review and not-investment-advice standing note"
+    ],
+    "stock_workflow_reference": [
+      {
+        "row": 2,
+        "cells": [
+          null,
+          "FYNRO SUPER MASTER PROMPT — v1 (Single-Shot Unified Engine)"
+        ]
+      },
+      {
+        "row": 3,
+        "cells": [
+          null,
+          "Paste this whole tab into Claude (or point Claude-in-Excel at this sheet) instead of chaining 'economic indications' → 'Master Analysis Flow' → 'master prompt' manually. This prompt runs the full sequence in one pass and pulls from the other tabs by name."
+        ]
+      },
+      {
+        "row": 5,
+        "cells": [
+          null,
+          "0. TRIGGER PHRASES (say one of these to start)"
+        ]
+      },
+      {
+        "row": 6,
+        "cells": [
+          null,
+          "\"analyze [STOCK]\" / \"make a report on [STOCK]\" / \"full report on [STOCK]\"  →  runs FLOW A (single-stock deep report)"
+        ]
+      },
+      {
+        "row": 7,
+        "cells": [
+          null,
+          "\"suggest a stock\" / \"suggest a stock for [CLIENT]\" / \"build a portfolio for [CLIENT]\"  →  runs FLOW B (client suggestion funnel)"
+        ]
+      },
+      {
+        "row": 8,
+        "cells": [
+          null,
+          "\"full institutional mode on [STOCK/TOPIC]\"  →  standalone 18-Phase Institutional overlay for macro/thematic/DCF-scale work only, not per-stock funneling. Leave this off unless explicitly asked — it does not replace Flow A."
+        ]
+      },
+      {
+        "row": 9,
+        "cells": [
+          null,
+          "If neither phrase is used but a stock name/ticker is given with no other context, default to FLOW A."
+        ]
+      },
+      {
+        "row": 11,
+        "cells": [
+          null,
+          "A. SHARED FOUNDATION (applies to every run, both flows)"
+        ]
+      },
+      {
+        "row": 12,
+        "cells": [
+          null,
+          "A1. Data & currency of information"
+        ]
+      },
+      {
+        "row": 13,
+        "cells": [
+          null,
+          "You are a SEBI-aware equity research assistant for FYNRO (RIA firm, tagline '0% Sales. 100% Advice.'). This is research input for advisor review, not a standalone recommendation — say so once, at the end, not on every line."
+        ]
+      },
+      {
+        "row": 14,
+        "cells": [
+          null,
+          "If you have live web/internet search in this environment: use it for macro data (Step 3), market-cycle data (Step 6) and analyst/news data (Step 7) below, since anything pulled from the 'economic indications' tab is a point-in-time snapshot and goes stale. Cite what you found and its date."
+        ]
+      },
+      {
+        "row": 15,
+        "cells": [
+          null,
+          "If you do NOT have live web search in this session: say so plainly at the top of the output, use the 'economic indications' tab figures as the working baseline, and flag every macro/news figure as 'as of last available data — verify before advisor sign-off.' Never present stale figures as current without this flag."
+        ]
+      },
+      {
+        "row": 16,
+        "cells": [
+          null,
+          "A2. Dual-Audience Rule (every deliverable, both flows)"
+        ]
+      },
+      {
+        "row": 17,
+        "cells": [
+          null,
+          "1) Advisor layer — full technical detail, jargon intact (ROCE, CFO/PAT, GRM, PEG, etc.)"
+        ]
+      },
+      {
+        "row": 18,
+        "cells": [
+          null,
+          "2) Client layer — same conclusion in plain English, framed around the client's own goal ('this protects your retirement corpus,' not 'this reduces portfolio beta')."
+        ]
+      },
+      {
+        "row": 19,
+        "cells": [
+          null,
+          "A3. Institutional Signal Stack — reference only, do not re-type here"
+        ]
+      },
+      {
+        "row": 20,
+        "cells": [
+          null,
+          "Tier 1 (fast) and Tier 2 (slow, high-conviction) institutional ownership signals are defined in the 'master prompt' tab, Shared Foundation section B. Reuse those definitions verbatim when this prompt calls for 'Signal Stack check' — do not invent new ones."
+        ]
+      },
+      {
+        "row": 22,
+        "cells": [
+          null,
+          "B. FLOW A — SINGLE-STOCK DEEP REPORT (runs Steps 1–11 below, in order, in one pass)"
+        ]
+      },
+      {
+        "row": 23,
+        "cells": [
+          null,
+          "Do not skip a step unless it is genuinely not applicable to the sector (e.g., Banking metrics for a non-financial stock) — state why if skipped. Output to a new tab named after the stock, same style as prior stock tabs."
+        ]
+      },
+      {
+        "row": 25,
+        "cells": [
+          null,
+          "STEP 0 — Identify & Route"
+        ]
+      },
+      {
+        "row": 26,
+        "cells": [
+          null,
+          "From the 'sector names' tab, map the stock to its exact Sector, Benchmark Index and Macro-Economic Sector bucket. From the matching sector tab, identify the specific Industry within that sector (e.g., within Information Technology → IT Services / Cloud & SaaS / Cybersecurity, etc.). This routing decides which sector tab and which industry sub-block you pull in Steps 2 and 3."
+        ]
+      },
+      {
+        "row": 27,
+        "cells": [
+          null,
+          "STEP 1 — COMMON PARAMETERS (quantitative base layer, run FIRST)"
+        ]
+      },
+      {
+        "row": 28,
+        "cells": [
+          null,
+          "Score all 70 fundamentals from the 'common parameters' tab: Valuation (#1–10), Profitability (#11–18), Growth (#19–24), Leverage (#25–32), Liquidity (#33–35), Efficiency (#36–46), Cash Flow (#41–46, #62–70 as applicable), Banking & NBFC block (#47–57, Financial Services stocks only), Governance (#58–61), DuPont (#62–64)."
+        ]
+      },
+      {
+        "row": 29,
+        "cells": [
+          null,
+          "For each: pull the value, compare to sector/5-yr context, and score. Skip the Banking & NBFC block entirely for non-Financial-Services stocks (use the 'Alternative Formula' / 'Sector Applicability' columns as the skip rule)."
+        ]
+      },
+      {
+        "row": 30,
+        "cells": [
+          null,
+          "Output as one table: Parameter | Category | Value | Score(1–10) | Observation."
+        ]
+      },
+      {
+        "row": 31,
+        "cells": [
+          null,
+          "STEP 2 — SECTOR-SPECIFIC FUNDAMENTALS (from the matching sector tab)"
+        ]
+      },
+      {
+        "row": 32,
+        "cells": [
+          null,
+          "Open the sector tab identified in Step 0 (e.g., 'Information Technology', 'Financial Services', 'Metals & Mining' …). Score the sector-level weighted fundamentals listed at the top of that tab (the 4–7 row summary block with Weight / Ideal / Why it matters columns)."
+        ]
+      },
+      {
+        "row": 33,
+        "cells": [
+          null,
+          "STEP 3 — INDUSTRY-SPECIFIC FUNDAMENTALS (drill into the sub-block within the same sector tab)"
+        ]
+      },
+      {
+        "row": 34,
+        "cells": [
+          null,
+          "Within that same sector tab, go to the specific industry sub-block identified in Step 0 (e.g., 'IT Services' or 'Cloud & SaaS' within Information Technology). Score every weighted KPI listed there against its 'Ideal / Benchmark' column. These are the 8–15 non-common, industry-unique parameters — this is where most of the differentiation between two stocks in the same sector shows up."
+        ]
+      },
+      {
+        "row": 35,
+        "cells": [
+          null,
+          "Combine Steps 1–3 into the Quantitative Composite using the existing weighting rule: sector + industry-specific parameters = 25% of Quantitative Composite, common-parameter categories = 75% (category-weighted). GATE CHECK: Quantitative Composite must be ≥6.0 to proceed with full conviction — if below, continue the analysis but flag it clearly in the final verdict."
+        ]
+      },
+      {
+        "row": 36,
+        "cells": [
+          null,
+          "STEP 4 — EARNINGS QUALITY & RED FLAGS"
+        ]
+      },
+      {
+        "row": 37,
+        "cells": [
+          null,
+          "CFO/PAT divergence (<0.7 for 2+ yrs = flag), Beneish M-Score / Sloan Accrual Ratio, revenue-recognition red flags (unbilled revenue growth >> revenue growth, Q4-heavy sales), balance-sheet quality (Goodwill/Total Assets >20%, receivables growth vs revenue growth), auditor quality & CARO remarks, related-party transaction %, effective tax rate consistency, promoter pledge % and insider activity."
+        ]
+      },
+      {
+        "row": 38,
+        "cells": [
+          null,
+          "HARD STOP flag (not a full stop, but a loud flag in the final verdict) if 3+ red flags fire simultaneously."
+        ]
+      },
+      {
+        "row": 39,
+        "cells": [
+          null,
+          "STEP 5 — QUALITATIVE SCORING (Layer 1 + Layer 2, from 'Qualitative Framework' tab)"
+        ]
+      },
+      {
+        "row": 40,
+        "cells": [
+          null,
+          "Layer 1 — Sector Overlay (40% of Qualitative Composite): score the 7 sector-level factors and their weights exactly as defined in the 'Qualitative Framework' tab (Regulatory Environment, Structural Demand Trend, Competitive Intensity & Moat Sustainability, Cyclicality & Earnings Visibility, Technology Disruption Risk, ESG & Governance Quality, Capital Market Access) — pull the weights from that tab, do not assume round numbers."
+        ]
+      },
+      {
+        "row": 41,
+        "cells": [
+          null,
+          "Layer 2 — Industry-Specific Factors (60% of Qualitative Composite): use the 6 pre-assigned factors for this sector, as listed in the 'Qualitative Framework' tab's Layer 2 section (drawn from the 15-factor menu in 'Qualitative Guide')."
+        ]
+      },
+      {
+        "row": 42,
+        "cells": [
+          null,
+          "Qualitative Composite = (Layer 1 × 0.40) + (Layer 2 × 0.60). Assign Band A(≥8.5) / B(≥7.0) / C(≥5.5) / D(≥4.0) / F(<4.0) per the 'Qualitative Guide' bands. GATE CHECK: Band C or above (≥5.5) to proceed with conviction — Band D/F = quantitatively-cheap-but-qualitatively-poor value-trap risk, flag explicitly."
+        ]
+      },
+      {
+        "row": 43,
+        "cells": [
+          null,
+          "STEP 6 — CURRENT ECONOMIC CYCLE & MACRO CONTEXT"
+        ]
+      },
+      {
+        "row": 44,
+        "cells": [
+          null,
+          "Baseline from the 'economic indications' tab (RBI stance, repo rate, inflation target, Union Budget capex allocation, sectoral push areas) — refresh with live search per Section A1 if available. Add: GDP growth (real & nominal), IIP, PMI (Mfg+Services) and business-cycle phase (expansion/peak/contraction/trough); yield curve shape and credit growth; INR/USD trend, forex reserves, CAD/GDP, FII/DII monthly flows; global context (Fed rate path, China PMI, crude outlook, geopolitical risk) if the sector is exposed (IT, Pharma exporters; Oil & Gas, Metals importers)."
+        ]
+      },
+      {
+        "row": 45,
+        "cells": [
+          null,
+          "GATE CHECK: does the macro backdrop favor this stock's sector right now? State favorable / neutral / hostile with the specific driver."
+        ]
+      },
+      {
+        "row": 46,
+        "cells": [
+          null,
+          "STEP 7 — ANALYST & BIG-BANK VIEWS + NEWS PULSE (institutional opinion layer, distinct from Step 8's ownership layer)"
+        ]
+      },
+      {
+        "row": 47,
+        "cells": [
+          null,
+          "Sell-side consensus: current Buy/Hold/Sell split, median & range of 12-month target prices, direction and magnitude of target-price revisions in the last 30–90 days, and whether revisions were earnings-driven or re-rating-driven."
+        ]
+      },
+      {
+        "row": 48,
+        "cells": [
+          null,
+          "Named house views where available (domestic: Motilal Oswal, ICICI Securities, Kotak Institutional Equities, Nuvama, IIFL, Jefferies-India desk; global: Morgan Stanley, Goldman Sachs, JPMorgan, CLSA) — summarize their stance directionally in your own words; do not quote brokerage notes verbatim (copyright)."
+        ]
+      },
+      {
+        "row": 49,
+        "cells": [
+          null,
+          "Upcoming catalysts / news pulse (next 30–90 days): confirmed results date, AGM/EGM, any scheduled capex commissioning, pending regulatory approvals, sector-level policy events, and macro events (RBI MPC date, Budget-linked triggers) that could move the stock. Tag each item with source and date."
+        ]
+      },
+      {
+        "row": 50,
+        "cells": [
+          null,
+          "Disclose plainly which of the above you verified live vs. which is from prior knowledge and needs a manual check before it goes to a client."
+        ]
+      },
+      {
+        "row": 51,
+        "cells": [
+          null,
+          "STEP 8 — INSTITUTIONAL SIGNAL STACK (ownership-based corroboration, Tier 1 always; Tier 2 if conviction is borderline)"
+        ]
+      },
+      {
+        "row": 52,
+        "cells": [
+          null,
+          "Run the Tier 1 checklist from the 'master prompt' tab (MF Ownership Filter, Promoter Open-Market Buy, FII Accumulation Streak, Analyst Upgrade Cluster, Block/Bulk Deal Buyer Pattern). If the composite score sits near a gate-check boundary, add the Tier 2 checklist (LIC, SWF entry, PMS Manager Overlap, Cat III AIF Overlap, EPFO/NPS, QIP Quality, Family Office Buying, MSCI/FTSE Watch, Rights Issue Quality). Disclose which signals were checked and which were unavailable/inconclusive. No signal here is ever a standalone buy/sell call — it corroborates Steps 1–7, nothing more."
+        ]
+      },
+      {
+        "row": 53,
+        "cells": [
+          null,
+          "STEP 9 — MARKET CYCLE FLOW & VALUATION POSITIONING"
+        ]
+      },
+      {
+        "row": 54,
+        "cells": [
+          null,
+          "Nifty P/E (trailing & forward) vs its own history; the stock's sector benchmark index P/E vs its own 5-yr history; market breadth and VIX level; sector rotation stage (money flowing in or out of this sector right now); the stock's own 5-yr P/E, P/B, EV/EBITDA band and where it sits today; 52-week high/low position and position vs 200-DMA. If the stock is near a 52-week low while its sector index is near highs, run the forensic check from Step 4 before concluding value trap vs. opportunity."
+        ]
+      },
+      {
+        "row": 55,
+        "cells": [
+          null,
+          "STEP 10 — VALUATION (intrinsic + relative)"
+        ]
+      },
+      {
+        "row": 56,
+        "cells": [
+          null,
+          "Intrinsic: DCF-FCFF (or FCFE for Financial Services), Dividend Discount Model for mature payers, SOTP for conglomerates. Relative: peer comps (4–6 listed peers on P/E, P/B, EV/EBITDA, EV/Sales, ROE, D/E, 1Y/3Y/5Y return), historical multiple band (mean reversion), sector benchmark P/E premium/discount."
+        ]
+      },
+      {
+        "row": 57,
+        "cells": [
+          null,
+          "Triangulate into a fair-value range (bear/base/bull), attach a 12-month target price, and compute Margin of Safety = (Fair Value − CMP) / Fair Value. GATE CHECK: at least 2 of 3 valuation methods should agree on direction — if they diverge wildly, recheck assumptions before finalizing."
+        ]
+      },
+      {
+        "row": 58,
+        "cells": [
+          null,
+          "STEP 11 — RISK REGISTER, CATALYSTS & FINAL VERDICT"
+        ]
+      },
+      {
+        "row": 59,
+        "cells": [
+          null,
+          "Risk register (business/operational, financial, regulatory/legal, market/macro, ESG/reputational) as probability × impact. Catalysts: near-term (0–6mo), medium-term (6–18mo), long-term (18mo+). Anti-thesis: the strongest case against the stock, and 3 specific, falsifiable conditions that would break the thesis."
+        ]
+      },
+      {
+        "row": 60,
+        "cells": [
+          null,
+          "Final Composite Score = Quantitative Composite (60%) + Qualitative Composite (40%). Band A(≥8.5 Strong Buy) / B(≥7.0 Buy) / C(≥5.5 Hold) / D(≥4.0 Underperform) / F(<4.0 Avoid). Overlay valuation from Step 10: high score + undervalued = Strong Buy; high score + fair value = Buy on dips; high score + overvalued = Watchlist; low score + undervalued = Value trap."
+        ]
+      },
+      {
+        "row": 61,
+        "cells": [
+          null,
+          "Action decision (BUY/ADD/HOLD/REDUCE/SELL/WATCHLIST), position sizing by conviction (high 5–8%, medium 2–5%, low 1–2%), entry strategy (lump sum vs staggered, technical entry zone), review triggers (quarterly results, ±30%/-20% price triggers, event-driven), and a 1-page investment thesis. Attach a confidence rating (High/Med/Low) to the overall call. Offer — do not force — a visual: flow chart of the thesis logic, systems map of key variable dependencies, or a buy/hold/sell decision tree."
+        ]
+      },
+      {
+        "row": 63,
+        "cells": [
+          null,
+          "C. FLOW B — CLIENT STOCK SUGGESTION (funnel: wide at top, narrow at bottom)"
+        ]
+      },
+      {
+        "row": 64,
+        "cells": [
+          null,
+          "Full stage detail already lives in the 'master prompt' tab (Stages 0–8) — reuse it as-is. This section only re-anchors it to the same Common → Sector → Industry → Qualitative → Macro → Analyst/News → Market-Cycle → Verdict spine used in Flow A, so both flows feel like one system."
+        ]
+      },
+      {
+        "row": 66,
+        "cells": [
+          null,
+          "Stage 0 — Client Profiling Gate (mandatory before touching any stock)"
+        ]
+      },
+      {
+        "row": 67,
+        "cells": [
+          null,
+          "Ask if not already known: (1) behavioral risk tolerance — 'portfolio drops 30% in 6 months: buy more, hold, or panic-sell?'; (2) time horizon — <2yrs = not equity territory, 3–5yrs = large-cap compounders, 7+yrs = full menu; (3) goals & constraints — purpose of capital, exclusions, tax sensitivity."
+        ]
+      },
+      {
+        "row": 68,
+        "cells": [
+          null,
+          "Stage 1 — Macro Filter"
+        ]
+      },
+      {
+        "row": 70,
+        "cells": [
+          null,
+          "Stage 2 — Sector Shortlisting"
+        ]
+      },
+      {
+        "row": 71,
+        "cells": [
+          null,
+          "Use 'sector names' tab to pick the 3–4 most favorable sectors from Stage 1. Concentrate first, diversify second."
+        ]
+      },
+      {
+        "row": 72,
+        "cells": [
+          null,
+          "Stage 3 — Screener-Based Stock Shortlist (Common Parameters, applied as filters)"
+        ]
+      },
+      {
+        "row": 73,
+        "cells": [
+          null,
+          "From the 'common parameters' logic (Step 1 of Flow A), apply base filters adjusted by Stage-0 risk profile: ROCE >15%, D/E <1x, Revenue CAGR(5Y) >12%, Promoter Holding >40% & stable, CFO/PAT >0.8, market-cap tier set by client horizon/risk. Narrows universe to ~15–20 candidates per sector."
+        ]
+      },
+      {
+        "row": 74,
+        "cells": [
+          null,
+          "Stage 4 — Institutional Signal Stack (= Step 8 of Flow A, Tier 1)"
+        ]
+      },
+      {
+        "row": 75,
+        "cells": [
+          null,
+          "Layer MF Ownership → PEG+Earnings Momentum → FII Accumulation/Promoter Buy → Quality-Momentum Combo → Forensic/Red-Flag check (= Step 4 of Flow A). Narrows to 8–10 final names."
+        ]
+      },
+      {
+        "row": 76,
+        "cells": [
+          null,
+          "Stage 5 — Quick Mode Filter"
+        ]
+      },
+      {
+        "row": 77,
+        "cells": [
+          null,
+          "10-parameter rapid check per stock (~20–30 min each): Business quality → Moat → Debt → Cash flow → ROCE → Valuation → Promoter quality → Sector cycle → Key risks → Overall thesis strength. Narrows to 5–6 names."
+        ]
+      },
+      {
+        "row": 78,
+        "cells": [
+          null,
+          "Stage 6 — Deep Dive"
+        ]
+      },
+      {
+        "row": 79,
+        "cells": [
+          null,
+          "Run full Flow A Steps 2–11 (skip Step 0/1 re-derivation, reuse Stage 3 screen) on the top 3–5 names. Conviction is built here, not earlier."
+        ]
+      },
+      {
+        "row": 80,
+        "cells": [
+          null,
+          "Stage 7 — High-Conviction Validation (optional, final 1–2 names)"
+        ]
+      },
+      {
+        "row": 82,
+        "cells": [
+          null,
+          "Stage 8 — Portfolio Construction"
+        ]
+      },
+      {
+        "row": 83,
+        "cells": [
+          null,
+          "No single stock >15% of portfolio, no single sector >35%, 3–5 names per sector max, cash allocation set by Stage-1 market valuation comfort. Guard against: recency bias, narrative seduction, overcomplication, and skipping the Step-4-equivalent earnings-quality check."
+        ]
+      },
+      {
+        "row": 84,
+        "cells": [
+          null,
+          "Output: one suggested stock (or 10–12 name portfolio) with score band, target price, upside, key catalysts, main risk/anti-thesis, which institutional signals corroborated the pick, and confidence rating."
+        ]
+      },
+      {
+        "row": 86,
+        "cells": [
+          null,
+          "D. QUALITY AUDIT (run silently before delivering either flow's output)"
+        ]
+      },
+      {
+        "row": 87,
+        "cells": [
+          null,
+          "✓ Trigger phrase correctly routed to Flow A or B  ✓ Live-search vs stale-data disclosed (Section A1)  ✓ Common → Sector → Industry sequence followed in that order  ✓ Qualitative Layer 1+2 weights pulled from 'Qualitative Framework' tab, not assumed  ✓ Macro cycle stated favorable/neutral/hostile  ✓ Analyst/big-bank view + upcoming news section included with sources/dates  ✓ Signal stack checked and disclosed  ✓ Earnings-quality/red-flag check not skipped  ✓ Anti-thesis considered  ✓ Confidence rating attached  ✓ Visual offered, not forced  ✓ Advisor + plain-English client layer both included."
+        ]
+      }
+    ],
+    "macro_workflow_reference": [
+      {
+        "row": 2,
+        "cells": [
+          null,
+          "# STOCK MACRO LENS — top-down read for a single stock, written to a new sheet"
+        ],
+        "calculated_cells": [
+          null,
+          "# STOCK MACRO LENS — top-down read for a single stock, written to a new sheet"
+        ]
+      },
+      {
+        "row": 4,
+        "cells": [
+          null,
+          "## What this does"
+        ],
+        "calculated_cells": [
+          null,
+          "## What this does"
+        ]
+      },
+      {
+        "row": 5,
+        "cells": [
+          null,
+          "I'll give you one or more Indian (NSE/BSE) stocks. For each, produce a purely TOP-DOWN,"
+        ],
+        "calculated_cells": [
+          null,
+          "I'll give you one or more Indian (NSE/BSE) stocks. For each, produce a purely TOP-DOWN,"
+        ]
+      },
+      {
+        "row": 6,
+        "cells": [
+          null,
+          "macro/economic-cycle read — NOT a company fundamental report. You answer three questions"
+        ],
+        "calculated_cells": [
+          null,
+          "macro/economic-cycle read — NOT a company fundamental report. You answer three questions"
+        ]
+      },
+      {
+        "row": 7,
+        "cells": [
+          null,
+          "only: (1) where does this stock sit in the current economic cycle, (2) what macro tailwinds"
+        ],
+        "calculated_cells": [
+          null,
+          "only: (1) where does this stock sit in the current economic cycle, (2) what macro tailwinds"
+        ]
+      },
+      {
+        "row": 8,
+        "cells": [
+          null,
+          "and headwinds act on it right now, and (3) what kind of investor is it suitable to suggest to,"
+        ],
+        "calculated_cells": [
+          null,
+          "and headwinds act on it right now, and (3) what kind of investor is it suitable to suggest to,"
+        ]
+      },
+      {
+        "row": 9,
+        "cells": [
+          null,
+          "from an economic point of view. Then you write the result into a NEW sheet in THIS workbook."
+        ],
+        "calculated_cells": [
+          null,
+          "from an economic point of view. Then you write the result into a NEW sheet in THIS workbook."
+        ]
+      },
+      {
+        "row": 11,
+        "cells": [
+          null,
+          "## Source of truth — read these sheets first, never invent"
+        ],
+        "calculated_cells": [
+          null,
+          "## Source of truth — read these sheets first, never invent"
+        ]
+      },
+      {
+        "row": 12,
+        "cells": [
+          null,
+          "This workbook is the macro engine. Before writing anything, read and use these existing tabs."
+        ],
+        "calculated_cells": [
+          null,
+          "This workbook is the macro engine. Before writing anything, read and use these existing tabs."
+        ]
+      },
+      {
+        "row": 13,
+        "cells": [
+          null,
+          "Every figure and stance must be traceable to them — do not fetch outside numbers or make up macro data."
+        ],
+        "calculated_cells": [
+          null,
+          "Every figure and stance must be traceable to them — do not fetch outside numbers or make up macro data."
+        ]
+      },
+      {
+        "row": 14,
+        "cells": [
+          null,
+          "- **Indicator Dashboard** — the live readings (repo, CPI, GDP, Brent, USD/INR, Nifty P/E, VIX, PMIs, flows). Source of truth for every number."
+        ],
+        "calculated_cells": [
+          null,
+          "- **Indicator Dashboard** — the live readings (repo, CPI, GDP, Brent, USD/INR, Nifty P/E, VIX, PMIs, flows). Source of truth for every number."
+        ]
+      },
+      {
+        "row": 15,
+        "cells": [
+          null,
+          "- **Cycle Placement** — the current regime call and the 6-signal vote. Use the REGIME CALL and the analyst overlay verbatim as the cycle context."
+        ],
+        "calculated_cells": [
+          null,
+          "- **Cycle Placement** — the current regime call and the 6-signal vote. Use the REGIME CALL and the analyst overlay verbatim as the cycle context."
+        ]
+      },
+      {
+        "row": 16,
+        "cells": [
+          null,
+          "- **Linkage Map** — the indicator→sector transmission table AND the sector-led summary (net read + drivers per sector). This is your main lookup."
+        ],
+        "calculated_cells": [
+          null,
+          "- **Linkage Map** — the indicator→sector transmission table AND the sector-led summary (net read + drivers per sector). This is your main lookup."
+        ]
+      },
+      {
+        "row": 17,
+        "cells": [
+          null,
+          "- **Positioning** — the integrated OW/Neutral/UW stance per sector, with key driver, key risk, and the \"connecting the dots\" verdict."
+        ],
+        "calculated_cells": [
+          null,
+          "- **Positioning** — the integrated OW/Neutral/UW stance per sector, with key driver, key risk, and the \"connecting the dots\" verdict."
+        ]
+      },
+      {
+        "row": 18,
+        "cells": [
+          null,
+          "- **Global Overlay** and **Triggers & Caveats** — the external forces and the specific events that would flip the call."
+        ],
+        "calculated_cells": [
+          null,
+          "- **Global Overlay** and **Triggers & Caveats** — the external forces and the specific events that would flip the call."
+        ]
+      },
+      {
+        "row": 20,
+        "cells": [
+          null,
+          "If a number or stance you need isn't in these sheets, say so plainly in the output — do not substitute an outside figure."
+        ],
+        "calculated_cells": [
+          null,
+          "If a number or stance you need isn't in these sheets, say so plainly in the output — do not substitute an outside figure."
+        ]
+      },
+      {
+        "row": 22,
+        "cells": [
+          null,
+          "## Step 1 — resolve the stock to a sector (state your mapping)"
+        ],
+        "calculated_cells": [
+          null,
+          "## Step 1 — resolve the stock to a sector (state your mapping)"
+        ]
+      },
+      {
+        "row": 23,
+        "cells": [
+          null,
+          "I'm giving you a stock, but this workbook thinks in sectors. Map the stock to ONE of the macro"
+        ],
+        "calculated_cells": [
+          null,
+          "I'm giving you a stock, but this workbook thinks in sectors. Map the stock to ONE of the macro"
+        ]
+      },
+      {
+        "row": 24,
+        "cells": [
+          null,
+          "sectors the workbook actually uses: IT/Technology, Pharma/Healthcare, Energy (upstream/integrated),"
+        ],
+        "calculated_cells": [
+          null,
+          "sectors the workbook actually uses: IT/Technology, Pharma/Healthcare, Energy (upstream/integrated),"
+        ]
+      },
+      {
+        "row": 25,
+        "cells": [
+          null,
+          "Banks/Financials, Metals, FMCG, Capital Goods/Industrials, Autos, Realty, Consumer Discretionary,"
+        ],
+        "calculated_cells": [
+          null,
+          "Banks/Financials, Metals, FMCG, Capital Goods/Industrials, Autos, Realty, Consumer Discretionary,"
+        ]
+      },
+      {
+        "row": 26,
+        "cells": [
+          null,
+          "Utilities. State the mapping in one line and your confidence. If the stock spans two (e.g. a"
+        ],
+        "calculated_cells": [
+          null,
+          "Utilities. State the mapping in one line and your confidence. If the stock spans two (e.g. a"
+        ]
+      },
+      {
+        "row": 27,
+        "cells": [
+          null,
+          "conglomerate, or an OMC which the Energy row explicitly excepts), name both and say which one"
+        ],
+        "calculated_cells": [
+          null,
+          "conglomerate, or an OMC which the Energy row explicitly excepts), name both and say which one"
+        ]
+      },
+      {
+        "row": 28,
+        "cells": [
+          null,
+          "drives the read and why. If you're unsure of the stock's business, say so and ask me rather than guess."
+        ],
+        "calculated_cells": [
+          null,
+          "drives the read and why. If you're unsure of the stock's business, say so and ask me rather than guess."
+        ]
+      },
+      {
+        "row": 30,
+        "cells": [
+          null,
+          "## Step 2 — assemble the top-down read (from the sheets only)"
+        ],
+        "calculated_cells": [
+          null,
+          "## Step 2 — assemble the top-down read (from the sheets only)"
+        ]
+      },
+      {
+        "row": 31,
+        "cells": [
+          null,
+          "Pull, for the resolved sector:"
+        ],
+        "calculated_cells": [
+          null,
+          "Pull, for the resolved sector:"
+        ]
+      },
+      {
+        "row": 32,
+        "cells": [
+          null,
+          "- Its **regime fit** and the **active regime** (from Cycle Placement + Positioning)."
+        ],
+        "calculated_cells": [
+          null,
+          "- Its **regime fit** and the **active regime** (from Cycle Placement + Positioning)."
+        ]
+      },
+      {
+        "row": 33,
+        "cells": [
+          null,
+          "- Its **combined stance** (OW/Neutral/UW) and the **key driver / key risk** (from Positioning)."
+        ],
+        "calculated_cells": [
+          null,
+          "- Its **combined stance** (OW/Neutral/UW) and the **key driver / key risk** (from Positioning)."
+        ]
+      },
+      {
+        "row": 34,
+        "cells": [
+          null,
+          "- The **specific indicators** helping and hurting it, WITH the transmission mechanism (from Linkage Map — use the mechanism, not just the direction)."
+        ],
+        "calculated_cells": [
+          null,
+          "- The **specific indicators** helping and hurting it, WITH the transmission mechanism (from Linkage Map — use the mechanism, not just the direction)."
+        ]
+      },
+      {
+        "row": 35,
+        "cells": [
+          null,
+          "- The **verdict / dots-connected** line for that sector (from Positioning)."
+        ],
+        "calculated_cells": [
+          null,
+          "- The **verdict / dots-connected** line for that sector (from Positioning)."
+        ]
+      },
+      {
+        "row": 36,
+        "cells": [
+          null,
+          "- Any **trigger** from Triggers & Caveats that would flip this sector's stance, and the confidence level."
+        ],
+        "calculated_cells": [
+          null,
+          "- Any **trigger** from Triggers & Caveats that would flip this sector's stance, and the confidence level."
+        ]
+      },
+      {
+        "row": 38,
+        "cells": [
+          null,
+          "## Step 3 — translate to suitability (economic point of view, not a recommendation)"
+        ],
+        "calculated_cells": [
+          null,
+          "## Step 3 — translate to suitability (economic point of view, not a recommendation)"
+        ]
+      },
+      {
+        "row": 39,
+        "cells": [
+          null,
+          "From the stance and drivers, describe WHO this fits, framed as investor archetype — e.g. a"
+        ],
+        "calculated_cells": [
+          null,
+          "From the stance and drivers, describe WHO this fits, framed as investor archetype — e.g. a"
+        ]
+      },
+      {
+        "row": 40,
+        "cells": [
+          null,
+          "weak-rupee/defensive earner suits a capital-preservation or late-cycle-defensive investor; a"
+        ],
+        "calculated_cells": [
+          null,
+          "weak-rupee/defensive earner suits a capital-preservation or late-cycle-defensive investor; a"
+        ]
+      },
+      {
+        "row": 41,
+        "cells": [
+          null,
+          "rate-sensitive cyclical suits a higher-risk investor making a conditional bet on the oil shock"
+        ],
+        "calculated_cells": [
+          null,
+          "rate-sensitive cyclical suits a higher-risk investor making a conditional bet on the oil shock"
+        ]
+      },
+      {
+        "row": 42,
+        "cells": [
+          null,
+          "easing. Tie suitability to time horizon and risk appetite and the KEY CONDITION that would change it"
+        ],
+        "calculated_cells": [
+          null,
+          "easing. Tie suitability to time horizon and risk appetite and the KEY CONDITION that would change it"
+        ]
+      },
+      {
+        "row": 43,
+        "cells": [
+          null,
+          "(e.g. \"suitable as a conditional underweight WHILE Brent stays elevated; flips on Brent < $70\")."
+        ],
+        "calculated_cells": [
+          null,
+          "(e.g. \"suitable as a conditional underweight WHILE Brent stays elevated; flips on Brent < $70\")."
+        ]
+      },
+      {
+        "row": 44,
+        "cells": [
+          null,
+          "This is suitability framing for advisor review — never a buy/sell call on the security."
+        ],
+        "calculated_cells": [
+          null,
+          "This is suitability framing for advisor review — never a buy/sell call on the security."
+        ]
+      },
+      {
+        "row": 46,
+        "cells": [
+          null,
+          "## Output — write a new sheet, don't overwrite anything"
+        ],
+        "calculated_cells": [
+          null,
+          "## Output — write a new sheet, don't overwrite anything"
+        ]
+      },
+      {
+        "row": 47,
+        "cells": [
+          null,
+          "Create a new sheet named **\"Stock Macro Lens\"** (if it exists, append below the last row with a"
+        ],
+        "calculated_cells": [
+          null,
+          "Create a new sheet named **\"Stock Macro Lens\"** (if it exists, append below the last row with a"
+        ]
+      },
+      {
+        "row": 48,
+        "cells": [
+          null,
+          "divider; never edit the six source sheets). One block per stock, with these labeled rows:"
+        ],
+        "calculated_cells": [
+          null,
+          "divider; never edit the six source sheets). One block per stock, with these labeled rows:"
+        ]
+      },
+      {
+        "row": 50,
+        "cells": [
+          null,
+          "| Field | Content |"
+        ],
+        "calculated_cells": [
+          null,
+          "| Field | Content |"
+        ]
+      },
+      {
+        "row": 51,
+        "cells": [
+          null,
+          "|---|---|"
+        ],
+        "calculated_cells": [
+          null,
+          "|---|---|"
+        ]
+      },
+      {
+        "row": 52,
+        "cells": [
+          null,
+          "| Stock | ticker / name (as I gave it) |"
+        ],
+        "calculated_cells": [
+          null,
+          "| Stock | ticker / name (as I gave it) |"
+        ]
+      },
+      {
+        "row": 53,
+        "cells": [
+          null,
+          "| Resolved sector | + mapping confidence |"
+        ],
+        "calculated_cells": [
+          null,
+          "| Resolved sector | + mapping confidence |"
+        ]
+      },
+      {
+        "row": 54,
+        "cells": [
+          null,
+          "| Active regime | from Cycle Placement (e.g. \"Late-cycle, stagflationary tilt — Medium confidence\") |"
+        ],
+        "calculated_cells": [
+          null,
+          "| Active regime | from Cycle Placement (e.g. \"Late-cycle, stagflationary tilt — Medium confidence\") |"
+        ]
+      },
+      {
+        "row": 55,
+        "cells": [
+          null,
+          "| Cycle position (this stock) | where it sits: leader/laggard for this regime, in one line |"
+        ],
+        "calculated_cells": [
+          null,
+          "| Cycle position (this stock) | where it sits: leader/laggard for this regime, in one line |"
+        ]
+      },
+      {
+        "row": 56,
+        "cells": [
+          null,
+          "| Macro TAILWINDS | 2–4 bullets, each = indicator + mechanism (from Linkage Map) |"
+        ],
+        "calculated_cells": [
+          null,
+          "| Macro TAILWINDS | 2–4 bullets, each = indicator + mechanism (from Linkage Map) |"
+        ]
+      },
+      {
+        "row": 57,
+        "cells": [
+          null,
+          "| Macro HEADWINDS | 2–4 bullets, each = indicator + mechanism |"
+        ],
+        "calculated_cells": [
+          null,
+          "| Macro HEADWINDS | 2–4 bullets, each = indicator + mechanism |"
+        ]
+      },
+      {
+        "row": 58,
+        "cells": [
+          null,
+          "| Net macro stance | OW / Neutral / UW (from Positioning) + the one-line reason |"
+        ],
+        "calculated_cells": [
+          null,
+          "| Net macro stance | OW / Neutral / UW (from Positioning) + the one-line reason |"
+        ]
+      },
+      {
+        "row": 59,
+        "cells": [
+          null,
+          "| Suitable for | investor archetype, horizon, risk appetite |"
+        ],
+        "calculated_cells": [
+          null,
+          "| Suitable for | investor archetype, horizon, risk appetite |"
+        ]
+      },
+      {
+        "row": 60,
+        "cells": [
+          null,
+          "| Key condition / what flips it | the trigger + level (from Triggers & Caveats) |"
+        ],
+        "calculated_cells": [
+          null,
+          "| Key condition / what flips it | the trigger + level (from Triggers & Caveats) |"
+        ]
+      },
+      {
+        "row": 61,
+        "cells": [
+          null,
+          "| Confidence | High / Medium / Low + why |"
+        ],
+        "calculated_cells": [
+          null,
+          "| Confidence | High / Medium / Low + why |"
+        ]
+      },
+      {
+        "row": 62,
+        "cells": [
+          null,
+          "| As-of | the workbook's as-of date + \"Source: this workbook's macro sheets\" |"
+        ],
+        "calculated_cells": [
+          null,
+          "| As-of | the workbook's as-of date + \"Source: this workbook's macro sheets\" |"
+        ]
+      },
+      {
+        "row": 64,
+        "cells": [
+          null,
+          "Keep it top-down throughout. If I ask for the company's own fundamentals, remind me this lens is"
+        ],
+        "calculated_cells": [
+          null,
+          "Keep it top-down throughout. If I ask for the company's own fundamentals, remind me this lens is"
+        ]
+      },
+      {
+        "row": 65,
+        "cells": [
+          null,
+          "macro-only and point me to the FYNRO scoring workbook instead."
+        ],
+        "calculated_cells": [
+          null,
+          "macro-only and point me to the FYNRO scoring workbook instead."
+        ]
+      },
+      {
+        "row": 67,
+        "cells": [
+          null,
+          "## Rules"
+        ],
+        "calculated_cells": [
+          null,
+          "## Rules"
+        ]
+      },
+      {
+        "row": 68,
+        "cells": [
+          null,
+          "- Read the source sheets before writing; every claim traces to a cell in them."
+        ],
+        "calculated_cells": [
+          null,
+          "- Read the source sheets before writing; every claim traces to a cell in them."
+        ]
+      },
+      {
+        "row": 69,
+        "cells": [
+          null,
+          "- Never fabricate a macro number or a sector stance. Missing = say missing."
+        ],
+        "calculated_cells": [
+          null,
+          "- Never fabricate a macro number or a sector stance. Missing = say missing."
+        ]
+      },
+      {
+        "row": 70,
+        "cells": [
+          null,
+          "- Never edit the six source sheets. Only add/append the \"Stock Macro Lens\" sheet."
+        ],
+        "calculated_cells": [
+          null,
+          "- Never edit the six source sheets. Only add/append the \"Stock Macro Lens\" sheet."
+        ]
+      },
+      {
+        "row": 71,
+        "cells": [
+          null,
+          "- Show me the plain-text of any formula or link you write."
+        ],
+        "calculated_cells": [
+          null,
+          "- Show me the plain-text of any formula or link you write."
+        ]
+      },
+      {
+        "row": 72,
+        "cells": [
+          null,
+          "- Close with the standing note: research input for advisor review under FYNRO's RIA overlay — not investment advice, not a recommendation on any security."
+        ],
+        "calculated_cells": [
+          null,
+          "- Close with the standing note: research input for advisor review under FYNRO's RIA overlay — not investment advice, not a recommendation on any security."
+        ]
+      },
+      {
+        "row": 74,
+        "cells": [
+          null,
+          "Start by telling me which stock(s) you want the macro lens for."
+        ],
+        "calculated_cells": [
+          null,
+          "Start by telling me which stock(s) you want the macro lens for."
+        ]
+      }
+    ]
   },
   "common_parameters": [
     {
@@ -18708,6 +19959,2261 @@
           0.15,
           "Inventory days <90; receivable days <45; cash conversion cycle <100 days",
           "Agri-trading is working-capital-intensive — companies must procure large quantities during harvest season (30-60 day window) and sell over 6-12 months. Seasonal procurement creates inventory bulges that require financing. Companies with efficient working capital cycles (KRBL at ~120 days, declining trend) generate better free cash flow despite the inherent seasonality. Bank credit limits and interest costs during peak procurement season are material P&L items."
+        ]
+      }
+    ]
+  },
+  "macro_market_briefing": {
+    "Dashboard": [
+      {
+        "row": 1,
+        "cells": [
+          null,
+          "India Macro-to-Market Briefing"
+        ],
+        "calculated_cells": [
+          null,
+          "India Macro-to-Market Briefing"
+        ]
+      },
+      {
+        "row": 2,
+        "cells": [
+          null,
+          "Top-down overlay for the FYNRO framework  |  As of 17 July 2026  |  Research input only — not investment advice"
+        ],
+        "calculated_cells": [
+          null,
+          "Top-down overlay for the FYNRO framework  |  As of 17 July 2026  |  Research input only — not investment advice"
+        ]
+      },
+      {
+        "row": 3,
+        "cells": [
+          null,
+          "BOTTOM LINE UP FRONT"
+        ],
+        "calculated_cells": [
+          null,
+          "BOTTOM LINE UP FRONT"
+        ]
+      },
+      {
+        "row": 4,
+        "cells": [
+          null,
+          "Item",
+          "Call",
+          null,
+          null,
+          "Note"
+        ],
+        "calculated_cells": [
+          null,
+          "Item",
+          "Call",
+          null,
+          null,
+          "Note"
+        ]
+      },
+      {
+        "row": 5,
+        "cells": [
+          null,
+          "Regime call",
+          "LATE-CYCLE with a stagflationary tilt",
+          null,
+          null,
+          "Medium confidence"
+        ],
+        "calculated_cells": [
+          null,
+          "Regime call",
+          "LATE-CYCLE with a stagflationary tilt",
+          null,
+          null,
+          "Medium confidence"
+        ]
+      },
+      {
+        "row": 6,
+        "cells": [
+          null,
+          "Biggest risk",
+          "The oil–rupee–inflation loop",
+          null,
+          null,
+          "Brent ~$85, Hormuz traffic at 2-month lows"
+        ],
+        "calculated_cells": [
+          null,
+          "Biggest risk",
+          "The oil–rupee–inflation loop",
+          null,
+          null,
+          "Brent ~$85, Hormuz traffic at 2-month lows"
+        ]
+      },
+      {
+        "row": 7,
+        "cells": [
+          null,
+          "Overweight",
+          "IT / Technology, Pharma / Healthcare, Energy (upstream)",
+          null,
+          null,
+          "Weak-rupee earners + late-cycle defensives"
+        ],
+        "calculated_cells": [
+          null,
+          "Overweight",
+          "IT / Technology, Pharma / Healthcare, Energy (upstream)",
+          null,
+          null,
+          "Weak-rupee earners + late-cycle defensives"
+        ]
+      },
+      {
+        "row": 8,
+        "cells": [
+          null,
+          "Underweight",
+          "Autos, Realty, Consumer Discretionary",
+          null,
+          null,
+          "Rate-sensitive, oil-input-heavy cyclicals"
+        ],
+        "calculated_cells": [
+          null,
+          "Underweight",
+          "Autos, Realty, Consumer Discretionary",
+          null,
+          null,
+          "Rate-sensitive, oil-input-heavy cyclicals"
+        ]
+      },
+      {
+        "row": 9,
+        "cells": [
+          null,
+          "Valuation pillar",
+          "Nifty P/E 20.87 — ~10.9% below 10-yr avg",
+          null,
+          null,
+          "A growth-scare late cycle, not a bubble"
+        ],
+        "calculated_cells": [
+          null,
+          "Valuation pillar",
+          "Nifty P/E 20.87 — ~10.9% below 10-yr avg",
+          null,
+          null,
+          "A growth-scare late cycle, not a bubble"
+        ]
+      },
+      {
+        "row": 10,
+        "cells": [
+          null,
+          "What flips it",
+          "Durable Hormuz reopening: Brent -> $70, INR < 94",
+          null,
+          null,
+          "Reopens the frozen RBI rate-cut door"
+        ],
+        "calculated_cells": [
+          null,
+          "What flips it",
+          "Durable Hormuz reopening: Brent -> $70, INR < 94",
+          null,
+          null,
+          "Reopens the frozen RBI rate-cut door"
+        ]
+      },
+      {
+        "row": 12,
+        "cells": [
+          null,
+          "LIVE READINGS (linked from other sheets)"
+        ],
+        "calculated_cells": [
+          null,
+          "LIVE READINGS (linked from other sheets)"
+        ]
+      },
+      {
+        "row": 13,
+        "cells": [
+          null,
+          "Metric",
+          "Value",
+          null,
+          "Source sheet"
+        ],
+        "calculated_cells": [
+          null,
+          "Metric",
+          "Value",
+          null,
+          "Source sheet"
+        ]
+      },
+      {
+        "row": 14,
+        "cells": [
+          null,
+          "Repo rate",
+          "='Indicator Dashboard'!D4",
+          null,
+          "Indicator Dashboard"
+        ],
+        "calculated_cells": [
+          null,
+          "Repo rate",
+          "5.25% (neutral)",
+          null,
+          "Indicator Dashboard"
+        ]
+      },
+      {
+        "row": 15,
+        "cells": [
+          null,
+          "CPI headline",
+          "='Indicator Dashboard'!D9",
+          null,
+          "Indicator Dashboard"
+        ],
+        "calculated_cells": [
+          null,
+          "CPI headline",
+          "4.38%",
+          null,
+          "Indicator Dashboard"
+        ]
+      },
+      {
+        "row": 16,
+        "cells": [
+          null,
+          "GDP (Q4 FY26)",
+          "='Indicator Dashboard'!D7",
+          null,
+          "Indicator Dashboard"
+        ],
+        "calculated_cells": [
+          null,
+          "GDP (Q4 FY26)",
+          "7.8%",
+          null,
+          "Indicator Dashboard"
+        ]
+      },
+      {
+        "row": 17,
+        "cells": [
+          null,
+          "Brent crude",
+          "='Indicator Dashboard'!D16",
+          null,
+          "Indicator Dashboard"
+        ],
+        "calculated_cells": [
+          null,
+          "Brent crude",
+          "~$85",
+          null,
+          "Indicator Dashboard"
+        ]
+      },
+      {
+        "row": 18,
+        "cells": [
+          null,
+          "USD/INR",
+          "='Indicator Dashboard'!D14",
+          null,
+          "Indicator Dashboard"
+        ],
+        "calculated_cells": [
+          null,
+          "USD/INR",
+          "96.20",
+          null,
+          "Indicator Dashboard"
+        ]
+      },
+      {
+        "row": 19,
+        "cells": [
+          null,
+          "Nifty P/E",
+          "='Indicator Dashboard'!D17",
+          null,
+          "Indicator Dashboard"
+        ],
+        "calculated_cells": [
+          null,
+          "Nifty P/E",
+          "20.87",
+          null,
+          "Indicator Dashboard"
+        ]
+      },
+      {
+        "row": 20,
+        "cells": [
+          null,
+          "Regime (vote tally)",
+          "='Cycle Placement'!C12",
+          null,
+          "Cycle Placement"
+        ],
+        "calculated_cells": [
+          null,
+          "Regime (vote tally)",
+          "MID",
+          null,
+          "Cycle Placement"
+        ]
+      },
+      {
+        "row": 21,
+        "cells": [
+          null,
+          "Net OW sectors",
+          "=COUNTIF(Positioning!E5:E15,\"Overweight\")",
+          null,
+          "Positioning"
+        ],
+        "calculated_cells": [
+          null,
+          "Net OW sectors",
+          3,
+          null,
+          "Positioning"
+        ]
+      },
+      {
+        "row": 22,
+        "cells": [
+          null,
+          "Net UW sectors",
+          "=COUNTIF(Positioning!E5:E15,\"Underweight\")",
+          null,
+          "Positioning"
+        ],
+        "calculated_cells": [
+          null,
+          "Net UW sectors",
+          3,
+          null,
+          "Positioning"
+        ]
+      },
+      {
+        "row": 24,
+        "cells": [
+          null,
+          "WORKBOOK MAP  (flow)"
+        ],
+        "calculated_cells": [
+          null,
+          "WORKBOOK MAP  (flow)"
+        ]
+      },
+      {
+        "row": 25,
+        "cells": [
+          null,
+          "1. Indicator Dashboard",
+          "Live macro readings — the raw inputs everything else references"
+        ],
+        "calculated_cells": [
+          null,
+          "1. Indicator Dashboard",
+          "Live macro readings — the raw inputs everything else references"
+        ]
+      },
+      {
+        "row": 26,
+        "cells": [
+          null,
+          "2. Global Overlay",
+          "The three external forces acting on India now"
+        ],
+        "calculated_cells": [
+          null,
+          "2. Global Overlay",
+          "The three external forces acting on India now"
+        ]
+      },
+      {
+        "row": 27,
+        "cells": [
+          null,
+          "3. Cycle Placement",
+          "Six-signal vote -> regime call (reads the Indicator Dashboard)"
+        ],
+        "calculated_cells": [
+          null,
+          "3. Cycle Placement",
+          "Six-signal vote -> regime call (reads the Indicator Dashboard)"
+        ]
+      },
+      {
+        "row": 28,
+        "cells": [
+          null,
+          "4. Linkage Map",
+          "Indicator -> sector transmission mechanisms"
+        ],
+        "calculated_cells": [
+          null,
+          "4. Linkage Map",
+          "Indicator -> sector transmission mechanisms"
+        ]
+      },
+      {
+        "row": 29,
+        "cells": [
+          null,
+          "5. Positioning",
+          "Cycle + linkage -> OW/Neutral/UW stance per sector"
+        ],
+        "calculated_cells": [
+          null,
+          "5. Positioning",
+          "Cycle + linkage -> OW/Neutral/UW stance per sector"
+        ]
+      },
+      {
+        "row": 30,
+        "cells": [
+          null,
+          "6. Triggers & Caveats",
+          "What would change the call + confidence notes"
+        ],
+        "calculated_cells": [
+          null,
+          "6. Triggers & Caveats",
+          "What would change the call + confidence notes"
+        ]
+      }
+    ],
+    "Indicator Dashboard": [
+      {
+        "row": 1,
+        "cells": [
+          null,
+          "1 · Indicator Dashboard"
+        ],
+        "calculated_cells": [
+          null,
+          "1 · Indicator Dashboard"
+        ]
+      },
+      {
+        "row": 2,
+        "cells": [
+          null,
+          "Every moving number pulled live and dated. Blue = hardcoded live reading (source of truth for the whole workbook)."
+        ],
+        "calculated_cells": [
+          null,
+          "Every moving number pulled live and dated. Blue = hardcoded live reading (source of truth for the whole workbook)."
+        ]
+      },
+      {
+        "row": 3,
+        "cells": [
+          null,
+          "Group",
+          "Indicator",
+          "Latest",
+          "Prior",
+          "Direction",
+          "Source",
+          "Date",
+          "In simple English "
+        ],
+        "calculated_cells": [
+          null,
+          "Group",
+          "Indicator",
+          "Latest",
+          "Prior",
+          "Direction",
+          "Source",
+          "Date",
+          "In simple English "
+        ]
+      },
+      {
+        "row": 4,
+        "cells": [
+          null,
+          "Monetary/Rates",
+          "RBI repo rate",
+          "5.25% (neutral)",
+          "5.25%",
+          "On hold (was cutting)",
+          "RBI / Forbes India",
+          "5 Jun 2026",
+          "This is the interest the country's big boss bank (RBI) charges other banks to borrow money — like the 'price of borrowing' for the whole country. It's holding steady at 5.25%: not cheap, not pricey. When it goes up, loans (home, car) get costlier for everyone."
+        ],
+        "calculated_cells": [
+          null,
+          "Monetary/Rates",
+          "RBI repo rate",
+          "5.25% (neutral)",
+          "5.25%",
+          "On hold (was cutting)",
+          "RBI / Forbes India",
+          "5 Jun 2026",
+          "This is the interest the country's big boss bank (RBI) charges other banks to borrow money — like the 'price of borrowing' for the whole country. It's holding steady at 5.25%: not cheap, not pricey. When it goes up, loans (home, car) get costlier for everyone."
+        ]
+      },
+      {
+        "row": 5,
+        "cells": [
+          null,
+          "Monetary/Rates",
+          "RBI FY27 GDP forecast",
+          "6.6% (cut)",
+          "6.9%",
+          "Down",
+          "RBI MPC",
+          "Jun 2026",
+          "The RBI's best guess for how much bigger India's economy will grow next year — kind of like guessing how much taller you'll get. They lowered the guess to 6.6%, so they expect growth to be a touch slower."
+        ],
+        "calculated_cells": [
+          null,
+          "Monetary/Rates",
+          "RBI FY27 GDP forecast",
+          "6.6% (cut)",
+          "6.9%",
+          "Down",
+          "RBI MPC",
+          "Jun 2026",
+          "The RBI's best guess for how much bigger India's economy will grow next year — kind of like guessing how much taller you'll get. They lowered the guess to 6.6%, so they expect growth to be a touch slower."
+        ]
+      },
+      {
+        "row": 6,
+        "cells": [
+          null,
+          "Monetary/Rates",
+          "RBI FY27 CPI forecast",
+          "5.1% (raised)",
+          "4.6%",
+          "Up",
+          "RBI MPC",
+          "Jun 2026",
+          "The RBI's guess for how fast prices will climb next year. They raised it to 5.1%, meaning they think things will get a bit more expensive than they used to think."
+        ],
+        "calculated_cells": [
+          null,
+          "Monetary/Rates",
+          "RBI FY27 CPI forecast",
+          "5.1% (raised)",
+          "4.6%",
+          "Up",
+          "RBI MPC",
+          "Jun 2026",
+          "The RBI's guess for how fast prices will climb next year. They raised it to 5.1%, meaning they think things will get a bit more expensive than they used to think."
+        ]
+      },
+      {
+        "row": 7,
+        "cells": [
+          null,
+          "Growth",
+          "Real GDP (Q4 FY26)",
+          "7.8%",
+          "8.0% (Q3)",
+          "Decelerating",
+          "MoSPI",
+          "5 Jun 2026",
+          "How much the economy actually grew in the last 3 months, after taking out the price-rise effect. 7.8% is strong — imagine the whole country's pocket money grew almost 8% in real terms."
+        ],
+        "calculated_cells": [
+          null,
+          "Growth",
+          "Real GDP (Q4 FY26)",
+          "7.8%",
+          "8.0% (Q3)",
+          "Decelerating",
+          "MoSPI",
+          "5 Jun 2026",
+          "How much the economy actually grew in the last 3 months, after taking out the price-rise effect. 7.8% is strong — imagine the whole country's pocket money grew almost 8% in real terms."
+        ]
+      },
+      {
+        "row": 8,
+        "cells": [
+          null,
+          "Growth",
+          "Real GDP (FY26 full year)",
+          "7.7%",
+          "7.1% (FY25)",
+          "Strong (backward)",
+          "MoSPI",
+          "Jun 2026",
+          "Same idea, but for the whole year. The economy grew 7.7% — a healthy, good year overall."
+        ],
+        "calculated_cells": [
+          null,
+          "Growth",
+          "Real GDP (FY26 full year)",
+          "7.7%",
+          "7.1% (FY25)",
+          "Strong (backward)",
+          "MoSPI",
+          "Jun 2026",
+          "Same idea, but for the whole year. The economy grew 7.7% — a healthy, good year overall."
+        ]
+      },
+      {
+        "row": 9,
+        "cells": [
+          null,
+          "Inflation",
+          "CPI headline",
+          "4.38%",
+          "3.93%",
+          "Up (5th straight, > 4% target)",
+          "MoSPI",
+          "Jun 2026 (rel 13 Jul)",
+          "How much more expensive everyday things (food, clothes, travel) are than a year ago. Prices are up 4.38% — the 5th month in a row above the 4% goal, so the RBI is watching closely."
+        ],
+        "calculated_cells": [
+          null,
+          "Inflation",
+          "CPI headline",
+          "4.38%",
+          "3.93%",
+          "Up (5th straight, > 4% target)",
+          "MoSPI",
+          "Jun 2026 (rel 13 Jul)",
+          "How much more expensive everyday things (food, clothes, travel) are than a year ago. Prices are up 4.38% — the 5th month in a row above the 4% goal, so the RBI is watching closely."
+        ]
+      },
+      {
+        "row": 10,
+        "cells": [
+          null,
+          "Inflation",
+          "Food CPI (CFPI)",
+          "5.32%",
+          "4.78%",
+          "Up",
+          "MoSPI",
+          "Jun 2026",
+          "Just the food part of rising prices. Your family's grocery basket costs about 5.3% more than last year, so food is the part pushing prices up the most."
+        ],
+        "calculated_cells": [
+          null,
+          "Inflation",
+          "Food CPI (CFPI)",
+          "5.32%",
+          "4.78%",
+          "Up",
+          "MoSPI",
+          "Jun 2026",
+          "Just the food part of rising prices. Your family's grocery basket costs about 5.3% more than last year, so food is the part pushing prices up the most."
+        ]
+      },
+      {
+        "row": 11,
+        "cells": [
+          null,
+          "Growth",
+          "Manufacturing PMI",
+          "54.2",
+          "higher",
+          "Softening, still expanding",
+          "HSBC / S&P Global",
+          "Jun 2026",
+          "A report-card score from factory bosses. Above 50 means factories are making MORE stuff (growing); below 50 means less. 54.2 = still growing, just a little slower than before."
+        ],
+        "calculated_cells": [
+          null,
+          "Growth",
+          "Manufacturing PMI",
+          "54.2",
+          "higher",
+          "Softening, still expanding",
+          "HSBC / S&P Global",
+          "Jun 2026",
+          "A report-card score from factory bosses. Above 50 means factories are making MORE stuff (growing); below 50 means less. 54.2 = still growing, just a little slower than before."
+        ]
+      },
+      {
+        "row": 12,
+        "cells": [
+          null,
+          "Growth",
+          "Services PMI",
+          "57.4",
+          "58.9",
+          "Softening, still strong",
+          "HSBC / S&P Global",
+          "Jun 2026",
+          "The same scoreboard but for service businesses (shops, banks, IT companies). 57.4 is a strong score — lots of busy activity."
+        ],
+        "calculated_cells": [
+          null,
+          "Growth",
+          "Services PMI",
+          "57.4",
+          "58.9",
+          "Softening, still strong",
+          "HSBC / S&P Global",
+          "Jun 2026",
+          "The same scoreboard but for service businesses (shops, banks, IT companies). 57.4 is a strong score — lots of busy activity."
+        ]
+      },
+      {
+        "row": 13,
+        "cells": [
+          null,
+          "Rates",
+          "10Y G-sec yield",
+          "6.79%",
+          "6.73%",
+          "Up (on oil)",
+          "Business Standard",
+          "14 Jul 2026",
+          "The interest the government promises to pay when it borrows money for 10 years — like the interest on the country's long-term loan. It nudged up because oil got pricier."
+        ],
+        "calculated_cells": [
+          null,
+          "Rates",
+          "10Y G-sec yield",
+          "6.79%",
+          "6.73%",
+          "Up (on oil)",
+          "Business Standard",
+          "14 Jul 2026",
+          "The interest the government promises to pay when it borrows money for 10 years — like the interest on the country's long-term loan. It nudged up because oil got pricier."
+        ]
+      },
+      {
+        "row": 14,
+        "cells": [
+          null,
+          "External",
+          "USD/INR",
+          "96.20",
+          "95.62",
+          "Up (rupee weak, breached 96)",
+          "Business Standard",
+          "14 Jul 2026",
+          "How many rupees it takes to buy 1 US dollar. A bigger number means the rupee is weaker. Now it takes 96.2 rupees, so the rupee got a little weaker — imports like oil cost us more."
+        ],
+        "calculated_cells": [
+          null,
+          "External",
+          "USD/INR",
+          "96.20",
+          "95.62",
+          "Up (rupee weak, breached 96)",
+          "Business Standard",
+          "14 Jul 2026",
+          "How many rupees it takes to buy 1 US dollar. A bigger number means the rupee is weaker. Now it takes 96.2 rupees, so the rupee got a little weaker — imports like oil cost us more."
+        ]
+      },
+      {
+        "row": 15,
+        "cells": [
+          null,
+          "External",
+          "Forex reserves",
+          "$674bn",
+          "$697bn",
+          "Down (intervention)",
+          "RBI via BS",
+          "3 Jul 2026",
+          "India's piggy-bank of foreign money (dollars and gold) saved up for a rainy day. It's $674 billion. It dipped a bit because the RBI spent some to help steady the rupee."
+        ],
+        "calculated_cells": [
+          null,
+          "External",
+          "Forex reserves",
+          "$674bn",
+          "$697bn",
+          "Down (intervention)",
+          "RBI via BS",
+          "3 Jul 2026",
+          "India's piggy-bank of foreign money (dollars and gold) saved up for a rainy day. It's $674 billion. It dipped a bit because the RBI spent some to help steady the rupee."
+        ]
+      },
+      {
+        "row": 16,
+        "cells": [
+          null,
+          "Commodities",
+          "Brent crude",
+          "~$85",
+          "~$70 (early Jul)",
+          "Up (+11% in a week)",
+          "TradingEconomics",
+          "16 Jul 2026",
+          "The price of one barrel of oil in the world. Oil jumped about 11% in a week, and pricier oil makes fuel, travel, and lots of goods cost more for everybody."
+        ],
+        "calculated_cells": [
+          null,
+          "Commodities",
+          "Brent crude",
+          "~$85",
+          "~$70 (early Jul)",
+          "Up (+11% in a week)",
+          "TradingEconomics",
+          "16 Jul 2026",
+          "The price of one barrel of oil in the world. Oil jumped about 11% in a week, and pricier oil makes fuel, travel, and lots of goods cost more for everybody."
+        ]
+      },
+      {
+        "row": 17,
+        "cells": [
+          null,
+          "Valuation",
+          "Nifty 50 P/E",
+          "20.87",
+          "—",
+          "Below 10-yr avg (~23.4)",
+          "Craytheon",
+          "10 Jul 2026",
+          "How 'expensive' the stock market is — the price you pay for each 1 rupee of company earnings. 20.87 is below the usual 10-year average (~23.4), so stocks aren't overpriced right now."
+        ],
+        "calculated_cells": [
+          null,
+          "Valuation",
+          "Nifty 50 P/E",
+          "20.87",
+          "—",
+          "Below 10-yr avg (~23.4)",
+          "Craytheon",
+          "10 Jul 2026",
+          "How 'expensive' the stock market is — the price you pay for each 1 rupee of company earnings. 20.87 is below the usual 10-year average (~23.4), so stocks aren't overpriced right now."
+        ]
+      },
+      {
+        "row": 18,
+        "cells": [
+          null,
+          "Valuation",
+          "Nifty 50 P/B",
+          "3.15",
+          "—",
+          "Below 10-yr avg (~3.62)",
+          "Craytheon",
+          "Jul 2026",
+          "Another 'expensiveness' gauge — the market's price compared to what companies actually own. 3.15 is below its 10-year average, another sign stocks aren't too pricey."
+        ],
+        "calculated_cells": [
+          null,
+          "Valuation",
+          "Nifty 50 P/B",
+          "3.15",
+          "—",
+          "Below 10-yr avg (~3.62)",
+          "Craytheon",
+          "Jul 2026",
+          "Another 'expensiveness' gauge — the market's price compared to what companies actually own. 3.15 is below its 10-year average, another sign stocks aren't too pricey."
+        ]
+      },
+      {
+        "row": 19,
+        "cells": [
+          null,
+          "Sentiment",
+          "India VIX",
+          "13.75",
+          "higher (qtr)",
+          "Low / falling",
+          "Trendlyne",
+          "14 Jul 2026",
+          "The market's 'fear meter.' A low number means investors feel calm and relaxed; a high number means they're scared and jumpy. 13.75 is low, so the mood is calm."
+        ],
+        "calculated_cells": [
+          null,
+          "Sentiment",
+          "India VIX",
+          "13.75",
+          "higher (qtr)",
+          "Low / falling",
+          "Trendlyne",
+          "14 Jul 2026",
+          "The market's 'fear meter.' A low number means investors feel calm and relaxed; a high number means they're scared and jumpy. 13.75 is low, so the mood is calm."
+        ]
+      },
+      {
+        "row": 20,
+        "cells": [
+          null,
+          "Flows",
+          "FII flows",
+          "Net sellers (~Rs 49,340 cr Jun)",
+          "—",
+          "Outflow",
+          "MyMoneySage",
+          "Jun 2026",
+          "Foreign investors — big money coming from other countries. Lately they've been taking money OUT of India (they sold about Rs 49,340 crore in June), so they're a bit cautious."
+        ],
+        "calculated_cells": [
+          null,
+          "Flows",
+          "FII flows",
+          "Net sellers (~Rs 49,340 cr Jun)",
+          "—",
+          "Outflow",
+          "MyMoneySage",
+          "Jun 2026",
+          "Foreign investors — big money coming from other countries. Lately they've been taking money OUT of India (they sold about Rs 49,340 crore in June), so they're a bit cautious."
+        ]
+      },
+      {
+        "row": 21,
+        "cells": [
+          null,
+          "Flows",
+          "DII flows",
+          "~$22bn FY27 YTD",
+          "—",
+          "Strong inflow",
+          "MyMoneySage",
+          "Jun 2026",
+          "Domestic investors — big Indian funds like mutual funds and LIC. They've been putting lots of money IN, which balances out the foreigners pulling money out."
+        ],
+        "calculated_cells": [
+          null,
+          "Flows",
+          "DII flows",
+          "~$22bn FY27 YTD",
+          "—",
+          "Strong inflow",
+          "MyMoneySage",
+          "Jun 2026",
+          "Domestic investors — big Indian funds like mutual funds and LIC. They've been putting lots of money IN, which balances out the foreigners pulling money out."
+        ]
+      },
+      {
+        "row": 23,
+        "cells": [
+          null,
+          "Blue cells are the live readings that every other sheet references. Update these and the Cycle Placement vote, Dashboard links, and derived stats recalculate. Unverified: system credit growth YoY, exact WPI print, IIP/core-sector, same-day FII/DII cash."
+        ],
+        "calculated_cells": [
+          null,
+          "Blue cells are the live readings that every other sheet references. Update these and the Cycle Placement vote, Dashboard links, and derived stats recalculate. Unverified: system credit growth YoY, exact WPI print, IIP/core-sector, same-day FII/DII cash."
+        ]
+      }
+    ],
+    "Global Overlay": [
+      {
+        "row": 1,
+        "cells": [
+          null,
+          "2 · Global Overlay"
+        ],
+        "calculated_cells": [
+          null,
+          "2 · Global Overlay"
+        ]
+      },
+      {
+        "row": 2,
+        "cells": [
+          null,
+          "The external forces acting on India right now — the two or three that matter most."
+        ],
+        "calculated_cells": [
+          null,
+          "The external forces acting on India right now — the two or three that matter most."
+        ]
+      },
+      {
+        "row": 3,
+        "cells": [
+          null,
+          "#",
+          "Factor",
+          "Read",
+          "Why it matters for India now"
+        ],
+        "calculated_cells": [
+          null,
+          "#",
+          "Factor",
+          "Read",
+          "Why it matters for India now"
+        ]
+      },
+      {
+        "row": 4,
+        "cells": [
+          null,
+          "1",
+          "Oil / Strait of Hormuz",
+          "PRESSURING (dominant)",
+          "Master variable. Whipsawed in 2026: late-Jun MOU reopened Hormuz (Brent < $70), then US strikes revived the shock (~$85, traffic at 2-mo lows). India imports ~85% of crude — every $10 hits inflation, CAD and INR together."
+        ],
+        "calculated_cells": [
+          null,
+          "1",
+          "Oil / Strait of Hormuz",
+          "PRESSURING (dominant)",
+          "Master variable. Whipsawed in 2026: late-Jun MOU reopened Hormuz (Brent < $70), then US strikes revived the shock (~$85, traffic at 2-mo lows). India imports ~85% of crude — every $10 hits inflation, CAD and INR together."
+        ]
+      },
+      {
+        "row": 5,
+        "cells": [
+          null,
+          "2",
+          "Strong US dollar",
+          "PRESSURING",
+          "DXY at a 13-month high — the second lever pushing INR to record lows, independent of oil, and raising the hurdle for an RBI cut."
+        ],
+        "calculated_cells": [
+          null,
+          "2",
+          "Strong US dollar",
+          "PRESSURING",
+          "DXY at a 13-month high — the second lever pushing INR to record lows, independent of oil, and raising the hurdle for an RBI cut."
+        ]
+      },
+      {
+        "row": 6,
+        "cells": [
+          null,
+          "3",
+          "FII risk appetite to EM",
+          "MIXED",
+          "FIIs net sellers (~Rs 49,340 cr Jun) but DIIs (+$22bn FY27 YTD) more than offset ~$13bn FII outflows. The domestic bid is the shock-absorber holding valuations up."
+        ],
+        "calculated_cells": [
+          null,
+          "3",
+          "FII risk appetite to EM",
+          "MIXED",
+          "FIIs net sellers (~Rs 49,340 cr Jun) but DIIs (+$22bn FY27 YTD) more than offset ~$13bn FII outflows. The domestic bid is the shock-absorber holding valuations up."
+        ]
+      },
+      {
+        "row": 8,
+        "cells": [
+          null,
+          "Net global read: PRESSURING, not supportive — a supply-side inflation shock plus a strong dollar is the least favourable mix for India, softened only by a resilient domestic flow base."
+        ],
+        "calculated_cells": [
+          null,
+          "Net global read: PRESSURING, not supportive — a supply-side inflation shock plus a strong dollar is the least favourable mix for India, softened only by a resilient domestic flow base."
+        ]
+      }
+    ],
+    "Cycle Placement": [
+      {
+        "row": 1,
+        "cells": [
+          null,
+          "3 · Cycle Placement"
+        ],
+        "calculated_cells": [
+          null,
+          "3 · Cycle Placement"
+        ]
+      },
+      {
+        "row": 2,
+        "cells": [
+          null,
+          "Six signals, each casting a vote. The Score column is a formula; the tally and call recalc when you change a vote."
+        ],
+        "calculated_cells": [
+          null,
+          "Six signals, each casting a vote. The Score column is a formula; the tally and call recalc when you change a vote."
+        ]
+      },
+      {
+        "row": 3,
+        "cells": [
+          null,
+          "Signal",
+          "Current reading (from Indicator Dashboard)",
+          "Votes toward",
+          "Score (Early=1 / Mid=2 / Late=3 / Contraction=4)"
+        ],
+        "calculated_cells": [
+          null,
+          "Signal",
+          "Current reading (from Indicator Dashboard)",
+          "Votes toward",
+          "Score (Early=1 / Mid=2 / Late=3 / Contraction=4)"
+        ]
+      },
+      {
+        "row": 4,
+        "cells": [
+          null,
+          "Repo-rate trend",
+          "5.25%, cutting bias frozen to neutral hold",
+          "Late",
+          3
+        ],
+        "calculated_cells": [
+          null,
+          "Repo-rate trend",
+          "5.25%, cutting bias frozen to neutral hold",
+          "Late",
+          3
+        ]
+      },
+      {
+        "row": 5,
+        "cells": [
+          null,
+          "Yield-curve shape",
+          "10Y rising to 6.79% on inflation (not growth)",
+          "Late (mechanically)",
+          3
+        ],
+        "calculated_cells": [
+          null,
+          "Yield-curve shape",
+          "10Y rising to 6.79% on inflation (not growth)",
+          "Late (mechanically)",
+          3
+        ]
+      },
+      {
+        "row": 6,
+        "cells": [
+          null,
+          "Nifty P/E vs avg",
+          "20.87, below long-run average",
+          "Early",
+          1
+        ],
+        "calculated_cells": [
+          null,
+          "Nifty P/E vs avg",
+          "20.87, below long-run average",
+          "Early",
+          1
+        ]
+      },
+      {
+        "row": 7,
+        "cells": [
+          null,
+          "PMI level & direction",
+          "Mfg 54.2 / Svcs 57.4 — >50 but softening",
+          "Mid -> Late",
+          2
+        ],
+        "calculated_cells": [
+          null,
+          "PMI level & direction",
+          "Mfg 54.2 / Svcs 57.4 — >50 but softening",
+          "Mid -> Late",
+          2
+        ]
+      },
+      {
+        "row": 8,
+        "cells": [
+          null,
+          "GDP momentum",
+          "7.8% Q4, decelerating; RBI FY27 6.6%",
+          "Late",
+          3
+        ],
+        "calculated_cells": [
+          null,
+          "GDP momentum",
+          "7.8% Q4, decelerating; RBI FY27 6.6%",
+          "Late",
+          3
+        ]
+      },
+      {
+        "row": 9,
+        "cells": [
+          null,
+          "VIX / breadth",
+          "VIX 13.75 low, breadth broad",
+          "Mid",
+          2
+        ],
+        "calculated_cells": [
+          null,
+          "VIX / breadth",
+          "VIX 13.75 low, breadth broad",
+          "Mid",
+          2
+        ]
+      },
+      {
+        "row": 10,
+        "cells": [
+          null,
+          "Average score",
+          "=ROUND(AVERAGE(E4:E9),2)",
+          "1-1.5 Early / 1.6-2.4 Mid / 2.5-3.4 Late / 3.5-4 Contraction"
+        ],
+        "calculated_cells": [
+          null,
+          "Average score",
+          2.33,
+          "1-1.5 Early / 1.6-2.4 Mid / 2.5-3.4 Late / 3.5-4 Contraction"
+        ]
+      },
+      {
+        "row": 11,
+        "cells": [
+          null,
+          "Late-leaning votes (score>=3)",
+          "=COUNTIF(E4:E9,\">=3\")"
+        ],
+        "calculated_cells": [
+          null,
+          "Late-leaning votes (score>=3)",
+          3
+        ]
+      },
+      {
+        "row": 12,
+        "cells": [
+          null,
+          "REGIME CALL",
+          "=IF(C10<1.6,\"EARLY\",IF(C10<2.5,\"MID\",IF(C10<3.5,\"LATE-CYCLE\",\"CONTRACTION\")))"
+        ],
+        "calculated_cells": [
+          null,
+          "REGIME CALL",
+          "MID"
+        ]
+      },
+      {
+        "row": 13,
+        "cells": [
+          null,
+          "Analyst overlay",
+          "Formula average (2.33) sits in the MID band, BUT the overlay call is LATE-CYCLE: the two dissenting signals (cheap P/E, low VIX) are the market betting the oil shock is temporary, while the macro drivers (frozen easing, rising 10Y, decelerating fwd growth) are already late. Weight the macro over the internals -> LATE-CYCLE, Medium confidence."
+        ],
+        "calculated_cells": [
+          null,
+          "Analyst overlay",
+          "Formula average (2.33) sits in the MID band, BUT the overlay call is LATE-CYCLE: the two dissenting signals (cheap P/E, low VIX) are the market betting the oil shock is temporary, while the macro drivers (frozen easing, rising 10Y, decelerating fwd growth) are already late. Weight the macro over the internals -> LATE-CYCLE, Medium confidence."
+        ]
+      },
+      {
+        "row": 14,
+        "cells": [
+          null,
+          "Confidence",
+          "MEDIUM — 4 signals lean late, but cheap valuations & low VIX genuinely dissent (look mid-cycle). This is an externally-imposed late cycle: a supply shock ageing it prematurely, not domestic overheating."
+        ],
+        "calculated_cells": [
+          null,
+          "Confidence",
+          "MEDIUM — 4 signals lean late, but cheap valuations & low VIX genuinely dissent (look mid-cycle). This is an externally-imposed late cycle: a supply shock ageing it prematurely, not domestic overheating."
+        ]
+      },
+      {
+        "row": 15,
+        "cells": [
+          null,
+          "Counter-case",
+          "If Hormuz reopens fast (as late-Jun suggested), oil unwinds, RBI resumes cutting and the read collapses to 'mid-cycle growth scare'. Low VIX + cheap multiples show the market betting on exactly that benign outcome."
+        ],
+        "calculated_cells": [
+          null,
+          "Counter-case",
+          "If Hormuz reopens fast (as late-Jun suggested), oil unwinds, RBI resumes cutting and the read collapses to 'mid-cycle growth scare'. Low VIX + cheap multiples show the market betting on exactly that benign outcome."
+        ]
+      },
+      {
+        "row": 16,
+        "cells": [
+          null,
+          "Watch tells",
+          "Brent < $70 + INR < 94 -> shifts toward early/mid.   Brent > $100 + CPI toward 6% + PMIs < 52 -> shifts toward contraction."
+        ],
+        "calculated_cells": [
+          null,
+          "Watch tells",
+          "Brent < $70 + INR < 94 -> shifts toward early/mid.   Brent > $100 + CPI toward 6% + PMIs < 52 -> shifts toward contraction."
+        ]
+      }
+    ],
+    "Linkage Map": [
+      {
+        "row": 1,
+        "cells": [
+          null,
+          "4 · Indicator -> Sector Linkage Map"
+        ],
+        "calculated_cells": [
+          null,
+          "4 · Indicator -> Sector Linkage Map"
+        ]
+      },
+      {
+        "row": 2,
+        "cells": [
+          null,
+          "The heart: which sectors each indicator helps or hurts at current levels — with the transmission mechanism, not just the direction."
+        ],
+        "calculated_cells": [
+          null,
+          "The heart: which sectors each indicator helps or hurts at current levels — with the transmission mechanism, not just the direction."
+        ]
+      },
+      {
+        "row": 3,
+        "cells": [
+          null,
+          "Indicator (reading & direction)",
+          "BENEFITS — Sector",
+          "BENEFITS — Reason",
+          "PRESSURES — Sector",
+          "PRESSURES — Reason",
+          "Confidence"
+        ],
+        "calculated_cells": [
+          null,
+          "Indicator (reading & direction)",
+          "BENEFITS — Sector",
+          "BENEFITS — Reason",
+          "PRESSURES — Sector",
+          "PRESSURES — Reason",
+          "Confidence"
+        ]
+      },
+      {
+        "row": 4,
+        "cells": [
+          null,
+          "Crude ~$85, rising",
+          "Energy (upstream/integrated); IT & Pharma (indirect)",
+          "Higher oil realizations + record refining margins. IT/Pharma benefit indirectly via the weak rupee.",
+          "Autos; Paints & durables; Aviation; Logistics; FMCG; Utilities",
+          "Autos: fuel drag + steel/plastic inputs. Paints & durables: crude-derivative COGS. Aviation/Logistics/FMCG: fuel & packaging. Utilities: imported fuel.",
+          "High"
+        ],
+        "calculated_cells": [
+          null,
+          "Crude ~$85, rising",
+          "Energy (upstream/integrated); IT & Pharma (indirect)",
+          "Higher oil realizations + record refining margins. IT/Pharma benefit indirectly via the weak rupee.",
+          "Autos; Paints & durables; Aviation; Logistics; FMCG; Utilities",
+          "Autos: fuel drag + steel/plastic inputs. Paints & durables: crude-derivative COGS. Aviation/Logistics/FMCG: fuel & packaging. Utilities: imported fuel.",
+          "High"
+        ]
+      },
+      {
+        "row": 5,
+        "cells": [
+          null,
+          "CPI 4.38%, rising > target",
+          "None cleanly (marginal: staples)",
+          "Nothing benefits cleanly. Marginal: pricing-power staples pass costs through.",
+          "Autos; Realty; NBFCs; FMCG; Discretionary",
+          "Rate-sensitives (Autos, Realty, NBFCs) — kills the rate-cut hope. FMCG/Discretionary — rural real-income squeeze (rural CPI hottest).",
+          "High"
+        ],
+        "calculated_cells": [
+          null,
+          "CPI 4.38%, rising > target",
+          "None cleanly (marginal: staples)",
+          "Nothing benefits cleanly. Marginal: pricing-power staples pass costs through.",
+          "Autos; Realty; NBFCs; FMCG; Discretionary",
+          "Rate-sensitives (Autos, Realty, NBFCs) — kills the rate-cut hope. FMCG/Discretionary — rural real-income squeeze (rural CPI hottest).",
+          "High"
+        ]
+      },
+      {
+        "row": 6,
+        "cells": [
+          null,
+          "Repo 5.25%, easing frozen",
+          "Banks (strong CASA)",
+          "Stable NIMs; no further cut-driven margin compression.",
+          "NBFCs; Realty; Capital Goods",
+          "Expected cost-of-funds relief & demand kicker evaporate. Capital Goods hit on project financing.",
+          "Medium"
+        ],
+        "calculated_cells": [
+          null,
+          "Repo 5.25%, easing frozen",
+          "Banks (strong CASA)",
+          "Stable NIMs; no further cut-driven margin compression.",
+          "NBFCs; Realty; Capital Goods",
+          "Expected cost-of-funds relief & demand kicker evaporate. Capital Goods hit on project financing.",
+          "Medium"
+        ]
+      },
+      {
+        "row": 7,
+        "cells": [
+          null,
+          "10Y yield 6.79%, rising",
+          "Banks; General insurers",
+          "Banks' new lending reprices up; insurers gain on higher reinvestment yields.",
+          "Banks (bond books); Realty; high-debt Industrials",
+          "Banks' bond books: AFS mark-to-market treasury losses. Realty & high-debt Industrials: discount rate up, valuations compress.",
+          "Medium"
+        ],
+        "calculated_cells": [
+          null,
+          "10Y yield 6.79%, rising",
+          "Banks; General insurers",
+          "Banks' new lending reprices up; insurers gain on higher reinvestment yields.",
+          "Banks (bond books); Realty; high-debt Industrials",
+          "Banks' bond books: AFS mark-to-market treasury losses. Realty & high-debt Industrials: discount rate up, valuations compress.",
+          "Medium"
+        ]
+      },
+      {
+        "row": 8,
+        "cells": [
+          null,
+          "USD/INR 96.2, rupee weak",
+          "IT services; Pharma exporters; Metals",
+          "USD revenue vs INR cost = direct margin tailwind. Metals gain via import-parity pricing.",
+          "Autos; Electronics; OMCs; dollar-debt holders",
+          "Importers pay more: Autos (components), electronics, OMCs (crude bill), and dollar-debt holders.",
+          "High"
+        ],
+        "calculated_cells": [
+          null,
+          "USD/INR 96.2, rupee weak",
+          "IT services; Pharma exporters; Metals",
+          "USD revenue vs INR cost = direct margin tailwind. Metals gain via import-parity pricing.",
+          "Autos; Electronics; OMCs; dollar-debt holders",
+          "Importers pay more: Autos (components), electronics, OMCs (crude bill), and dollar-debt holders.",
+          "High"
+        ]
+      },
+      {
+        "row": 9,
+        "cells": [
+          null,
+          "PMIs softening but >50",
+          "Industrials / Capital Goods",
+          "Broad economy still expanding — supportive baseline for order books.",
+          "Early-cyclicals",
+          "Deceleration warns a cyclical peak may be forming; early-cyclicals lose momentum.",
+          "Medium"
+        ],
+        "calculated_cells": [
+          null,
+          "PMIs softening but >50",
+          "Industrials / Capital Goods",
+          "Broad economy still expanding — supportive baseline for order books.",
+          "Early-cyclicals",
+          "Deceleration warns a cyclical peak may be forming; early-cyclicals lose momentum.",
+          "Medium"
+        ]
+      },
+      {
+        "row": 10,
+        "cells": [
+          null,
+          "GDP 7.7% FY26, decelerating fwd",
+          "Pharma; IT; Utilities (defensives)",
+          "Relative earnings stability prized as growth slows.",
+          "Metals; Discretionary; Capital Goods",
+          "Deep cyclicals — earnings most geared to the decelerating top line.",
+          "Medium"
+        ],
+        "calculated_cells": [
+          null,
+          "GDP 7.7% FY26, decelerating fwd",
+          "Pharma; IT; Utilities (defensives)",
+          "Relative earnings stability prized as growth slows.",
+          "Metals; Discretionary; Capital Goods",
+          "Deep cyclicals — earnings most geared to the decelerating top line.",
+          "Medium"
+        ]
+      },
+      {
+        "row": 11,
+        "cells": [
+          null,
+          "FII selling / DII buying",
+          "Large caps; broad market",
+          "Domestic-flow-favoured; cushioned by the ~$22bn DII bid.",
+          "Private banks; select large caps",
+          "FII-heavy pockets face episodic selling supply.",
+          "Medium"
+        ],
+        "calculated_cells": [
+          null,
+          "FII selling / DII buying",
+          "Large caps; broad market",
+          "Domestic-flow-favoured; cushioned by the ~$22bn DII bid.",
+          "Private banks; select large caps",
+          "FII-heavy pockets face episodic selling supply.",
+          "Medium"
+        ]
+      },
+      {
+        "row": 13,
+        "cells": [
+          null,
+          "SECTOR-LED SUMMARY — net read & the 2-3 indicators driving each"
+        ],
+        "calculated_cells": [
+          null,
+          "SECTOR-LED SUMMARY — net read & the 2-3 indicators driving each"
+        ]
+      },
+      {
+        "row": 14,
+        "cells": [
+          null,
+          "Sector",
+          "Net read",
+          "Drivers"
+        ],
+        "calculated_cells": [
+          null,
+          "Sector",
+          "Net read",
+          "Drivers"
+        ]
+      },
+      {
+        "row": 15,
+        "cells": [
+          null,
+          "IT / Technology",
+          "Tailwind",
+          "Weak rupee (96+) + defensive as growth decelerates. Risk: US demand."
+        ],
+        "calculated_cells": [
+          null,
+          "IT / Technology",
+          "Tailwind",
+          "Weak rupee (96+) + defensive as growth decelerates. Risk: US demand."
+        ]
+      },
+      {
+        "row": 16,
+        "cells": [
+          null,
+          "Pharma / Healthcare",
+          "Tailwind",
+          "Weak-rupee export margins + late-cycle defensive + inelastic demand."
+        ],
+        "calculated_cells": [
+          null,
+          "Pharma / Healthcare",
+          "Tailwind",
+          "Weak-rupee export margins + late-cycle defensive + inelastic demand."
+        ]
+      },
+      {
+        "row": 17,
+        "cells": [
+          null,
+          "Energy (upstream/integrated)",
+          "Tailwind",
+          "High crude realizations + record refining margins. (OMCs excepted.)"
+        ],
+        "calculated_cells": [
+          null,
+          "Energy (upstream/integrated)",
+          "Tailwind",
+          "High crude realizations + record refining margins. (OMCs excepted.)"
+        ]
+      },
+      {
+        "row": 18,
+        "cells": [
+          null,
+          "Banks / Financials",
+          "Neutral",
+          "Stable NIMs & rising loan yields (+) vs treasury MTM & frozen easing (-)."
+        ],
+        "calculated_cells": [
+          null,
+          "Banks / Financials",
+          "Neutral",
+          "Stable NIMs & rising loan yields (+) vs treasury MTM & frozen easing (-)."
+        ]
+      },
+      {
+        "row": 19,
+        "cells": [
+          null,
+          "Metals",
+          "Neutral -> Tailwind",
+          "Weak-rupee import-parity (+) vs decelerating growth & China (-)."
+        ],
+        "calculated_cells": [
+          null,
+          "Metals",
+          "Neutral -> Tailwind",
+          "Weak-rupee import-parity (+) vs decelerating growth & China (-)."
+        ]
+      },
+      {
+        "row": 20,
+        "cells": [
+          null,
+          "FMCG",
+          "Neutral -> Headwind",
+          "Input-cost inflation + rural squeeze vs defensive stability."
+        ],
+        "calculated_cells": [
+          null,
+          "FMCG",
+          "Neutral -> Headwind",
+          "Input-cost inflation + rural squeeze vs defensive stability."
+        ]
+      },
+      {
+        "row": 21,
+        "cells": [
+          null,
+          "Capital Goods / Industrials",
+          "Neutral -> Headwind",
+          "Healthy order books (+) vs frozen easing, high rates, rich valuations (-)."
+        ],
+        "calculated_cells": [
+          null,
+          "Capital Goods / Industrials",
+          "Neutral -> Headwind",
+          "Healthy order books (+) vs frozen easing, high rates, rich valuations (-)."
+        ]
+      },
+      {
+        "row": 22,
+        "cells": [
+          null,
+          "Autos",
+          "Headwind",
+          "Fuel demand drag + input inflation + no rate cut. Clearest loser."
+        ],
+        "calculated_cells": [
+          null,
+          "Autos",
+          "Headwind",
+          "Fuel demand drag + input inflation + no rate cut. Clearest loser."
+        ]
+      },
+      {
+        "row": 23,
+        "cells": [
+          null,
+          "Realty",
+          "Headwind",
+          "Rate-cut hope gone + rising 10Y lifts mortgage costs."
+        ],
+        "calculated_cells": [
+          null,
+          "Realty",
+          "Headwind",
+          "Rate-cut hope gone + rising 10Y lifts mortgage costs."
+        ]
+      },
+      {
+        "row": 24,
+        "cells": [
+          null,
+          "Consumer Discretionary",
+          "Headwind",
+          "Rural income squeeze + crude-linked input costs."
+        ],
+        "calculated_cells": [
+          null,
+          "Consumer Discretionary",
+          "Headwind",
+          "Rural income squeeze + crude-linked input costs."
+        ]
+      },
+      {
+        "row": 25,
+        "cells": [
+          null,
+          "Utilities",
+          "Neutral (defensive)",
+          "Imported-fuel cost pressure vs low-beta stability bid."
+        ],
+        "calculated_cells": [
+          null,
+          "Utilities",
+          "Neutral (defensive)",
+          "Imported-fuel cost pressure vs low-beta stability bid."
+        ]
+      }
+    ],
+    "Positioning": [
+      {
+        "row": 1,
+        "cells": [
+          null,
+          "5 · Integrated Positioning"
+        ],
+        "calculated_cells": [
+          null,
+          "5 · Integrated Positioning"
+        ]
+      },
+      {
+        "row": 2,
+        "cells": [
+          null,
+          "Cycle + linkage combined into one stance per sector. Regime cell links live to the Cycle Placement call."
+        ],
+        "calculated_cells": [
+          null,
+          "Cycle + linkage combined into one stance per sector. Regime cell links live to the Cycle Placement call."
+        ]
+      },
+      {
+        "row": 3,
+        "cells": [
+          null,
+          "Active regime:",
+          "='Cycle Placement'!C12",
+          null,
+          "Overweight count:",
+          "=COUNTIF(E5:E15,\"Overweight\")",
+          "=COUNTIF(E5:E15,\"Underweight\")"
+        ],
+        "calculated_cells": [
+          null,
+          "Active regime:",
+          "MID",
+          null,
+          "Overweight count:",
+          3,
+          3
+        ]
+      },
+      {
+        "row": 4,
+        "cells": [
+          null,
+          "Sector",
+          "Cycle-fit (late-cycle)",
+          "Net indicator read",
+          "Combined stance",
+          "Key driver",
+          "Key risk",
+          "Verdict — connecting the dots"
+        ],
+        "calculated_cells": [
+          null,
+          "Sector",
+          "Cycle-fit (late-cycle)",
+          "Net indicator read",
+          "Combined stance",
+          "Key driver",
+          "Key risk",
+          "Verdict — connecting the dots"
+        ]
+      },
+      {
+        "row": 5,
+        "cells": [
+          null,
+          "IT / Technology",
+          "Good (defensive)",
+          "Tailwind",
+          "Overweight",
+          "Weak rupee + defensive",
+          "Global/US recession from oil shock",
+          "High-conviction overweight — leadership and the tape agree. Weak rupee pads margins while late-cycle money rotates into defensives. Only real break: the oil shock ageing this cycle spilling into a US demand recession that cuts IT budgets."
+        ],
+        "calculated_cells": [
+          null,
+          "IT / Technology",
+          "Good (defensive)",
+          "Tailwind",
+          "Overweight",
+          "Weak rupee + defensive",
+          "Global/US recession from oil shock",
+          "High-conviction overweight — leadership and the tape agree. Weak rupee pads margins while late-cycle money rotates into defensives. Only real break: the oil shock ageing this cycle spilling into a US demand recession that cuts IT budgets."
+        ]
+      },
+      {
+        "row": 6,
+        "cells": [
+          null,
+          "Pharma / Healthcare",
+          "Good (defensive)",
+          "Tailwind",
+          "Overweight",
+          "Weak rupee + inelastic demand",
+          "US pricing / regulatory",
+          "High-conviction overweight. Weak-rupee export margins + inelastic demand make it a clean late-cycle defensive. The one dent is US pricing/regulatory headlines — not the macro."
+        ],
+        "calculated_cells": [
+          null,
+          "Pharma / Healthcare",
+          "Good (defensive)",
+          "Tailwind",
+          "Overweight",
+          "Weak rupee + inelastic demand",
+          "US pricing / regulatory",
+          "High-conviction overweight. Weak-rupee export margins + inelastic demand make it a clean late-cycle defensive. The one dent is US pricing/regulatory headlines — not the macro."
+        ]
+      },
+      {
+        "row": 7,
+        "cells": [
+          null,
+          "Energy (upstream)",
+          "Neutral",
+          "Tailwind",
+          "Overweight",
+          "High crude + refining margins",
+          "Sudden Hormuz reopening -> oil collapse",
+          "High-conviction overweight and the direct beneficiary of the oil shock driving this whole cycle. Risk is symmetrical: a sudden Hormuz reopening collapses crude and the tailwind reverses fast — this call lives and dies with elevated Brent."
+        ],
+        "calculated_cells": [
+          null,
+          "Energy (upstream)",
+          "Neutral",
+          "Tailwind",
+          "Overweight",
+          "High crude + refining margins",
+          "Sudden Hormuz reopening -> oil collapse",
+          "High-conviction overweight and the direct beneficiary of the oil shock driving this whole cycle. Risk is symmetrical: a sudden Hormuz reopening collapses crude and the tailwind reverses fast — this call lives and dies with elevated Brent."
+        ]
+      },
+      {
+        "row": 8,
+        "cells": [
+          null,
+          "Metals",
+          "Poor (deep cyclical)",
+          "Neutral+",
+          "Neutral",
+          "Import-parity pricing",
+          "Growth deceleration, China",
+          "Neutral, not underweight: deep-cyclical (cycle says avoid) but the weak rupee hands it a genuine near-term import-parity tailwind. Knife-edge — decelerating growth and China supply cap the upside."
+        ],
+        "calculated_cells": [
+          null,
+          "Metals",
+          "Poor (deep cyclical)",
+          "Neutral+",
+          "Neutral",
+          "Import-parity pricing",
+          "Growth deceleration, China",
+          "Neutral, not underweight: deep-cyclical (cycle says avoid) but the weak rupee hands it a genuine near-term import-parity tailwind. Knife-edge — decelerating growth and China supply cap the upside."
+        ]
+      },
+      {
+        "row": 9,
+        "cells": [
+          null,
+          "Banks / Financials",
+          "Neutral",
+          "Neutral",
+          "Neutral",
+          "NIM stability vs bond MTM",
+          "Yield spike hits treasury books",
+          "Neutral despite being the market's favourite domestic-growth play. The rate cycle turned against it — frozen easing + rising 10Y hit bond books even as NIMs hold. PSU banks rallied +1.6% on the mid-cycle bid, but the macro doesn't confirm it. A stock-picker's sector, not a top-down overweight."
+        ],
+        "calculated_cells": [
+          null,
+          "Banks / Financials",
+          "Neutral",
+          "Neutral",
+          "Neutral",
+          "NIM stability vs bond MTM",
+          "Yield spike hits treasury books",
+          "Neutral despite being the market's favourite domestic-growth play. The rate cycle turned against it — frozen easing + rising 10Y hit bond books even as NIMs hold. PSU banks rallied +1.6% on the mid-cycle bid, but the macro doesn't confirm it. A stock-picker's sector, not a top-down overweight."
+        ]
+      },
+      {
+        "row": 10,
+        "cells": [
+          null,
+          "Utilities",
+          "Good (defensive)",
+          "Neutral",
+          "Neutral",
+          "Low-beta stability",
+          "Imported fuel costs",
+          "Neutral. Low-beta stability earns a late-cycle bid, but imported-fuel costs cap it. Defensive floor, limited upside."
+        ],
+        "calculated_cells": [
+          null,
+          "Utilities",
+          "Good (defensive)",
+          "Neutral",
+          "Neutral",
+          "Low-beta stability",
+          "Imported fuel costs",
+          "Neutral. Low-beta stability earns a late-cycle bid, but imported-fuel costs cap it. Defensive floor, limited upside."
+        ]
+      },
+      {
+        "row": 11,
+        "cells": [
+          null,
+          "FMCG",
+          "Good (defensive)",
+          "Neutral-",
+          "Neutral",
+          "Defensive vs rural squeeze",
+          "Prolonged food inflation",
+          "Neutral tension: the cycle says own defensives late, but input inflation + rural real-income squeeze drag it down. It defends against a growth slowdown — but this is an inflation shock, the exact regime that hurts it."
+        ],
+        "calculated_cells": [
+          null,
+          "FMCG",
+          "Good (defensive)",
+          "Neutral-",
+          "Neutral",
+          "Defensive vs rural squeeze",
+          "Prolonged food inflation",
+          "Neutral tension: the cycle says own defensives late, but input inflation + rural real-income squeeze drag it down. It defends against a growth slowdown — but this is an inflation shock, the exact regime that hurts it."
+        ]
+      },
+      {
+        "row": 12,
+        "cells": [
+          null,
+          "Capital Goods / Industrials",
+          "Poor late-cycle",
+          "Neutral-",
+          "Neutral",
+          "Order books vs high rates",
+          "Multiple de-rating",
+          "Neutral. Healthy order books (+) fight frozen easing, high rates and rich valuations (-). Late-cycle multiple de-rating is the risk if rates stay high."
+        ],
+        "calculated_cells": [
+          null,
+          "Capital Goods / Industrials",
+          "Poor late-cycle",
+          "Neutral-",
+          "Neutral",
+          "Order books vs high rates",
+          "Multiple de-rating",
+          "Neutral. Healthy order books (+) fight frozen easing, high rates and rich valuations (-). Late-cycle multiple de-rating is the risk if rates stay high."
+        ]
+      },
+      {
+        "row": 13,
+        "cells": [
+          null,
+          "Consumer Discretionary",
+          "Poor",
+          "Headwind",
+          "Underweight",
+          "Rural income squeeze",
+          "Sustained inflation",
+          "⚠️ Macro-correct underweight but tactically fragile. The rural squeeze justifies it, yet it's a rate-sensitive domestic-cyclical the market keeps buying whenever oil eases or a rate cut looks likely — consumer durables have led those sessions. Read it as 'underweight conditional on crude staying high,' not a structural short; it whipsaws on any Brent-below-$70 headline."
+        ],
+        "calculated_cells": [
+          null,
+          "Consumer Discretionary",
+          "Poor",
+          "Headwind",
+          "Underweight",
+          "Rural income squeeze",
+          "Sustained inflation",
+          "⚠️ Macro-correct underweight but tactically fragile. The rural squeeze justifies it, yet it's a rate-sensitive domestic-cyclical the market keeps buying whenever oil eases or a rate cut looks likely — consumer durables have led those sessions. Read it as 'underweight conditional on crude staying high,' not a structural short; it whipsaws on any Brent-below-$70 headline."
+        ]
+      },
+      {
+        "row": 14,
+        "cells": [
+          null,
+          "Autos",
+          "Poor",
+          "Headwind",
+          "Underweight",
+          "Fuel + input + no rate cut",
+          "Demand air-pocket",
+          "⚠️ Clearest macro loser — fuel drag + input inflation + no rate cut. But it's the textbook rate-sensitive the mid-cycle tape keeps bidding. Correct underweight while crude stays elevated; expect sharp counter-trend rallies, so size it as conditional, not conviction."
+        ],
+        "calculated_cells": [
+          null,
+          "Autos",
+          "Poor",
+          "Headwind",
+          "Underweight",
+          "Fuel + input + no rate cut",
+          "Demand air-pocket",
+          "⚠️ Clearest macro loser — fuel drag + input inflation + no rate cut. But it's the textbook rate-sensitive the mid-cycle tape keeps bidding. Correct underweight while crude stays elevated; expect sharp counter-trend rallies, so size it as conditional, not conviction."
+        ]
+      },
+      {
+        "row": 15,
+        "cells": [
+          null,
+          "Realty",
+          "Poor (rate-sensitive)",
+          "Headwind",
+          "Underweight",
+          "Frozen easing + rising 10Y",
+          "Mortgage-rate rise",
+          "⚠️ Macro-correct underweight: frozen easing + rising 10Y lifts mortgage costs. Yet Realty +3.5% in a single session shows the market still trading it mid-cycle. The reconciliation: this is an externally-imposed late cycle (oil), not domestic overheating — so rate-sensitives keep rallying every time the shock looks temporary. Underweight conditional on elevated crude."
+        ],
+        "calculated_cells": [
+          null,
+          "Realty",
+          "Poor (rate-sensitive)",
+          "Headwind",
+          "Underweight",
+          "Frozen easing + rising 10Y",
+          "Mortgage-rate rise",
+          "⚠️ Macro-correct underweight: frozen easing + rising 10Y lifts mortgage costs. Yet Realty +3.5% in a single session shows the market still trading it mid-cycle. The reconciliation: this is an externally-imposed late cycle (oil), not domestic overheating — so rate-sensitives keep rallying every time the shock looks temporary. Underweight conditional on elevated crude."
+        ]
+      },
+      {
+        "row": 17,
+        "cells": [
+          null,
+          "KEY TENSIONS (where cycle & indicators disagree)"
+        ],
+        "calculated_cells": [
+          null,
+          "KEY TENSIONS (where cycle & indicators disagree)"
+        ]
+      },
+      {
+        "row": 18,
+        "cells": [
+          null,
+          "FMCG & Utilities: cycle says 'own defensives late-cycle', but indicators (input inflation, rural squeeze) drag them to Neutral — defensive vs a growth slowdown, exposed to an inflation shock. This IS an inflation shock."
+        ],
+        "calculated_cells": [
+          null,
+          "FMCG & Utilities: cycle says 'own defensives late-cycle', but indicators (input inflation, rural squeeze) drag them to Neutral — defensive vs a growth slowdown, exposed to an inflation shock. This IS an inflation shock."
+        ]
+      },
+      {
+        "row": 19,
+        "cells": [
+          null,
+          "Banks: the market's favourite domestic-growth play, stuck at Neutral because the rate cycle turned against them (frozen easing + rising yields hitting bond books). A stock-picker's sector, not a top-down OW."
+        ],
+        "calculated_cells": [
+          null,
+          "Banks: the market's favourite domestic-growth play, stuck at Neutral because the rate cycle turned against them (frozen easing + rising yields hitting bond books). A stock-picker's sector, not a top-down OW."
+        ]
+      },
+      {
+        "row": 20,
+        "cells": [
+          null,
+          "Metals: deep-cyclical (cycle says UW) but the weak rupee gives a genuine near-term tailwind — hence Neutral, not Underweight."
+        ],
+        "calculated_cells": [
+          null,
+          "Metals: deep-cyclical (cycle says UW) but the weak rupee gives a genuine near-term tailwind — hence Neutral, not Underweight."
+        ]
+      },
+      {
+        "row": 22,
+        "cells": [
+          null,
+          "THE BOTTOM LINE — the verdict, dots connected"
+        ],
+        "calculated_cells": [
+          null,
+          "THE BOTTOM LINE — the verdict, dots connected"
+        ]
+      },
+      {
+        "row": 23,
+        "cells": [
+          null,
+          "The stances are directionally right for a late-cycle macro map, but the market isn't trading them with conviction — because the internals still behave mid-cycle. The reconciliation runs through the whole workbook: this is an externally-imposed late cycle (an oil shock ageing the cycle), NOT domestic overheating, so the rate-sensitive underweights (Realty, Autos, Consumer Discretionary) keep trying to rally every time the shock looks temporary. • The overweights (IT / Pharma / Energy) are the higher-conviction, better-confirmed calls — sector leadership and the price tape agree. • The underweights (Realty / Autos / Consumer Disc) are macro-correct but tactically fragile — they whipsaw and rally on any Brent-below-$70 headline, so treat them as 'underweight CONDITIONAL on crude staying elevated,' not structural shorts. • FII/DII confirms the regime's fragility: on 13 Jul 2026 FIIs sold ~Rs 3,396 cr while DIIs bought ~Rs 2,355 cr — the domestic bid is holding the market up against foreign selling, exactly the late-cycle-with-a-floor picture."
+        ],
+        "calculated_cells": [
+          null,
+          "The stances are directionally right for a late-cycle macro map, but the market isn't trading them with conviction — because the internals still behave mid-cycle. The reconciliation runs through the whole workbook: this is an externally-imposed late cycle (an oil shock ageing the cycle), NOT domestic overheating, so the rate-sensitive underweights (Realty, Autos, Consumer Discretionary) keep trying to rally every time the shock looks temporary. • The overweights (IT / Pharma / Energy) are the higher-conviction, better-confirmed calls — sector leadership and the price tape agree. • The underweights (Realty / Autos / Consumer Disc) are macro-correct but tactically fragile — they whipsaw and rally on any Brent-below-$70 headline, so treat them as 'underweight CONDITIONAL on crude staying elevated,' not structural shorts. • FII/DII confirms the regime's fragility: on 13 Jul 2026 FIIs sold ~Rs 3,396 cr while DIIs bought ~Rs 2,355 cr — the domestic bid is holding the market up against foreign selling, exactly the late-cycle-with-a-floor picture."
+        ]
+      }
+    ],
+    "Triggers & Caveats": [
+      {
+        "row": 1,
+        "cells": [
+          null,
+          "6 · What Would Change the Call + Caveats"
+        ],
+        "calculated_cells": [
+          null,
+          "6 · What Would Change the Call + Caveats"
+        ]
+      },
+      {
+        "row": 2,
+        "cells": [
+          null,
+          "Concrete, monitorable triggers that would shift the regime or flip a sector — plus confidence & the not-advice note."
+        ],
+        "calculated_cells": [
+          null,
+          "Concrete, monitorable triggers that would shift the regime or flip a sector — plus confidence & the not-advice note."
+        ]
+      },
+      {
+        "row": 3,
+        "cells": [
+          null,
+          "TRIGGERS TO MONITOR"
+        ],
+        "calculated_cells": [
+          null,
+          "TRIGGERS TO MONITOR"
+        ]
+      },
+      {
+        "row": 4,
+        "cells": [
+          null,
+          "#",
+          "Trigger",
+          "Consequence"
+        ],
+        "calculated_cells": [
+          null,
+          "#",
+          "Trigger",
+          "Consequence"
+        ]
+      },
+      {
+        "row": 5,
+        "cells": [
+          null,
+          "1",
+          "Brent sustainably < $70 + INR < 94 (durable Hormuz reopening)",
+          "Flips regime toward mid/early, revives RBI easing; moves Autos, Realty, NBFCs to Overweight; trims IT/Pharma weak-rupee premium."
+        ],
+        "calculated_cells": [
+          null,
+          "1",
+          "Brent sustainably < $70 + INR < 94 (durable Hormuz reopening)",
+          "Flips regime toward mid/early, revives RBI easing; moves Autos, Realty, NBFCs to Overweight; trims IT/Pharma weak-rupee premium."
+        ]
+      },
+      {
+        "row": 6,
+        "cells": [
+          null,
+          "2",
+          "Brent holds > $100 + CPI printing toward 6%",
+          "Shifts regime toward CONTRACTION; forces RBI toward hikes; deepens all cyclical underweights; could break the low-VIX complacency."
+        ],
+        "calculated_cells": [
+          null,
+          "2",
+          "Brent holds > $100 + CPI printing toward 6%",
+          "Shifts regime toward CONTRACTION; forces RBI toward hikes; deepens all cyclical underweights; could break the low-VIX complacency."
+        ]
+      },
+      {
+        "row": 7,
+        "cells": [
+          null,
+          "3",
+          "5 Aug 2026 RBI MPC decision",
+          "Surprise cut = dovish re-rating for rate-sensitives; explicit hawkish shift confirms late-cycle and hits Realty/Autos hardest."
+        ],
+        "calculated_cells": [
+          null,
+          "3",
+          "5 Aug 2026 RBI MPC decision",
+          "Surprise cut = dovish re-rating for rate-sensitives; explicit hawkish shift confirms late-cycle and hits Realty/Autos hardest."
+        ]
+      },
+      {
+        "row": 8,
+        "cells": [
+          null,
+          "4",
+          "FII flows turn net-buyer for a sustained stretch",
+          "Broadens the rally beyond DII-favoured names; supports a re-rating despite the macro."
+        ],
+        "calculated_cells": [
+          null,
+          "4",
+          "FII flows turn net-buyer for a sustained stretch",
+          "Broadens the rally beyond DII-favoured names; supports a re-rating despite the macro."
+        ]
+      },
+      {
+        "row": 9,
+        "cells": [
+          null,
+          "5",
+          "Monsoon / El Nino disappointment (RBI-flagged)",
+          "Compounds food inflation, extends the CPI uptrend, hardens the underweight on rural-facing consumer sectors."
+        ],
+        "calculated_cells": [
+          null,
+          "5",
+          "Monsoon / El Nino disappointment (RBI-flagged)",
+          "Compounds food inflation, extends the CPI uptrend, hardens the underweight on rural-facing consumer sectors."
+        ]
+      },
+      {
+        "row": 11,
+        "cells": [
+          null,
+          "CONFIDENCE & CAVEATS"
+        ],
+        "calculated_cells": [
+          null,
+          "CONFIDENCE & CAVEATS"
+        ]
+      },
+      {
+        "row": 12,
+        "cells": [
+          null,
+          "Overall confidence",
+          "MEDIUM. The regime rests on one volatile driver (oil/Hormuz) whose path already reversed twice in 2026; internals dissent from the macro read."
+        ],
+        "calculated_cells": [
+          null,
+          "Overall confidence",
+          "MEDIUM. The regime rests on one volatile driver (oil/Hormuz) whose path already reversed twice in 2026; internals dissent from the macro read."
+        ]
+      },
+      {
+        "row": 13,
+        "cells": [
+          null,
+          "Data gaps / unverified",
+          "No clean live read for system credit growth YoY, exact latest WPI, IIP/core-sector, or same-day FII/DII cash (daily figures stale/near-zero on retrieval dates). Nifty P/E is consolidated; comparison uses the 10-yr average. Crude & INR move intraday."
+        ],
+        "calculated_cells": [
+          null,
+          "Data gaps / unverified",
+          "No clean live read for system credit growth YoY, exact latest WPI, IIP/core-sector, or same-day FII/DII cash (daily figures stale/near-zero on retrieval dates). Nifty P/E is consolidated; comparison uses the 10-yr average. Crude & INR move intraday."
+        ]
+      },
+      {
+        "row": 14,
+        "cells": [
+          null,
+          "Not investment advice",
+          "A top-down research input for an advisor-reviewed process. No recommendation on any individual security; sector stances are a macro overlay to sit atop bottom-up FYNRO scores — not buy/sell calls. Not a licensed financial advisor."
+        ],
+        "calculated_cells": [
+          null,
+          "Not investment advice",
+          "A top-down research input for an advisor-reviewed process. No recommendation on any individual security; sector stances are a macro overlay to sit atop bottom-up FYNRO scores — not buy/sell calls. Not a licensed financial advisor."
         ]
       }
     ]

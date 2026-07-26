@@ -33,8 +33,9 @@ def test_private_contract_makes_simulation_and_source_resolution_mandatory():
     assert "STCG" in prompt and "LTCG" in prompt
     assert "Never hard-code a tax rate" in prompt
     assert "get_master_analysis_factors" in prompt
-    assert "mandatory analysis key" in prompt
-    assert "User-requested factors supplement this master set" in prompt
+    assert "indivisible backend backbone" in prompt
+    assert "User-requested factors supplement this backbone" in prompt
+    assert "India_Macro_Market_Briefing.xlsx" in prompt
     assert "Historical Price Movement" not in prompt
     assert "historical price-movement chart" in prompt
 

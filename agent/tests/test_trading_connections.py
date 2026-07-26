@@ -121,32 +121,20 @@ def test_place_order_tool_treats_zero_unused_sizing_field_as_absent(
     assert calls[1]["notional"] == 50.0
 
 
-def test_live_broker_mcp_wrappers_are_hidden_from_agent_registry(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Connector-first registry must not expose broker-specific mcp_* tools."""
-    # The trading_* tools are gated behind the live-brokerage master switch
-    # (off by default). This test asserts on their registry presence, so it
-    # opts the subsystem in.
-    from src.config.accessor import reset_env_config
-
-    monkeypatch.setenv("VIBE_TRADING_ENABLE_BROKERAGE", "1")
-    reset_env_config()
+def test_live_broker_tools_and_wrappers_absent_from_agent_registry(monkeypatch: pytest.MonkeyPatch) -> None:
+    """This analysis-only fork removed brokerage: no trading_* tools and no
+    broker-specific mcp_* wrappers may ever appear in the agent registry."""
     server = SimpleNamespace(
         url="https://agent.robinhood.com/mcp/trading",
         enabled_tools=["get_positions"],
         auth=SimpleNamespace(cache_dir="/tmp/vibe-token"),
     )
     agent_config = SimpleNamespace(mcp_servers={"robinhood": server})
-    monkeypatch.setattr("src.live.registry.is_live_broker", lambda *_: True)
-    monkeypatch.setattr("src.live.registry.should_register_live_channel", lambda **_: True)
-
-    def fail_build_wrappers(*_, **__):
-        raise AssertionError("live broker wrappers should not be registered directly")
-
-    monkeypatch.setattr("src.tools.mcp.build_mcp_tool_wrappers", fail_build_wrappers)
 
     registry = build_registry(agent_config=agent_config, include_shell_tools=False)
 
-    assert "trading_positions" in registry.tool_names
+    assert "trading_positions" not in registry.tool_names
+    assert not any(name.startswith("trading_") for name in registry.tool_names)
     assert not any(name.startswith("mcp_robinhood_") for name in registry.tool_names)
 
 

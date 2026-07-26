@@ -43,10 +43,6 @@ def _clear_backend_env(monkeypatch):
     monkeypatch.delenv("VIBE_TRADING_SEARCH_BACKENDS", raising=False)
     monkeypatch.delenv("VIBE_TRADING_SEARCH_BING_FALLBACK", raising=False)
     monkeypatch.delenv("ALIYUN_IQS_API_KEY", raising=False)
-    monkeypatch.setattr(
-        "src.tools.web_search_tool._responses_api_search",
-        lambda *_args, **_kwargs: None,
-    )
 
 
 def test_returns_results_and_passes_backend_list(monkeypatch):
@@ -188,22 +184,23 @@ def test_network_failure_fast_fails_to_cn_fallback(monkeypatch):
     assert calls["ddgs"] == 1
 
 
-def test_network_failure_uses_configured_responses_search_last(monkeypatch):
-    """Hosted search provides independent egress after free engines fail."""
+def test_network_failure_falls_through_to_last_cn_backend(monkeypatch):
+    """When the first CN fallback is empty, the next one provides independent egress."""
     monkeypatch.setattr("src.tools.web_search_tool.time.sleep", lambda *_: None)
 
     def text_impl(query, max_results, **kwargs):
         raise RuntimeError("Connection timed out")
 
+    # sogou (the first fallback) yields nothing, so the chain must continue to
+    # bing_cn rather than stopping at the first empty backend.
     monkeypatch.setattr("src.tools.web_search_tool._sogou_search", lambda *_a, **_k: [])
-    monkeypatch.setattr("src.tools.web_search_tool._bing_cn_search", lambda *_a, **_k: [])
     monkeypatch.setattr(
-        "src.tools.web_search_tool._responses_api_search",
+        "src.tools.web_search_tool._bing_cn_search",
         lambda query, max_results=5: [
             {
                 "title": "Official result",
-                "url": "https://example.test/official",
-                "snippet": "Grounded result",
+                "href": "https://example.test/official",
+                "body": "Grounded result",
             }
         ],
     )
@@ -212,7 +209,7 @@ def test_network_failure_uses_configured_responses_search_last(monkeypatch):
         out = json.loads(WebSearchTool().execute(query="nifty"))
 
     assert out["status"] == "ok"
-    assert out["backends"] == "openai_responses_web_search"
+    assert out["backends"] == "bing_cn_fallback"
     assert out["results"][0]["url"] == "https://example.test/official"
 
 

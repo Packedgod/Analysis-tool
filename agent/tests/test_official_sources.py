@@ -181,7 +181,10 @@ def _patch_fetch(monkeypatch, pages: dict[str, _Resp]):
                 return resp
         raise RuntimeError("unreachable")
 
-    monkeypatch.setattr("backtest.loaders._http.throttled_get", fake_get)
+    # _verify_domain calls throttled_get via the name imported into _sources, so
+    # the patch must target that binding — patching backtest.loaders._http would
+    # leave the already-imported reference (and thus the real network call) live.
+    monkeypatch.setattr(_sources, "throttled_get", fake_get)
 
 
 def test_site_identity_confirms_the_real_issuer(monkeypatch) -> None:
@@ -240,7 +243,8 @@ def test_aggregators_are_never_official() -> None:
 @pytest.mark.parametrize(
     "url,expected",
     [
-        ("https://ril.com/reports/RIL-Integrated-Annual-Report-2016-17.pdf", 2016),
+        # Fiscal-year "2016-17" maps to the ENDING year (2017) by convention.
+        ("https://ril.com/reports/RIL-Integrated-Annual-Report-2016-17.pdf", 2017),
         ("https://x.com/ar/AnnualReport2016.pdf", 2016),
         ("https://x.com/investors/overview", None),
     ],
@@ -255,7 +259,7 @@ def test_tool_reports_unavailable_rather_than_guessing(monkeypatch) -> None:
     monkeypatch.setattr(
         _sources,
         "resolve_official_domain",
-        lambda c: {"status": "unavailable", "reason": "unconfirmed"},
+        lambda c, code="": {"status": "unavailable", "reason": "unconfirmed"},
     )
     out = json.loads(CompanyDocumentsTool().execute(company="Mystery Corp"))
     assert out["status"] == "unavailable"

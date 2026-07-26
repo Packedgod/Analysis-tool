@@ -494,20 +494,17 @@ def test_no_registered_tool_references_commit_mandate() -> None:
     assert not offenders, f"commit_mandate is reachable from the agent surface: {offenders}"
 
 
-def test_registry_has_propose_tool_but_no_mandate_writer(monkeypatch) -> None:
-    """The assembled registry exposes propose_mandate_profiles, no commit tool.
+def test_registry_exposes_no_mandate_or_commit_tools() -> None:
+    """This analysis-only fork removed the brokerage subsystem entirely.
 
-    propose_mandate_profiles is part of the live-trading consent flow, gated
-    behind the brokerage master switch (off by default). Enable it so this test
-    can assert the propose/commit split when trading is available.
+    Neither the mandate-proposal tool nor any mandate-writer/commit tool may be
+    registered, regardless of any stale ``VIBE_TRADING_ENABLE_BROKERAGE`` flag.
     """
-    from src.config.accessor import reset_env_config
     from src.tools import build_registry
 
-    monkeypatch.setenv("VIBE_TRADING_ENABLE_BROKERAGE", "1")
-    reset_env_config()
-    registry = build_registry()
-    names = set(registry.tool_names)
-    assert "propose_mandate_profiles" in names
-    for forbidden in ("commit_mandate", "set_mandate", "write_mandate", "authorize_live"):
+    names = set(build_registry().tool_names)
+    for forbidden in (
+        "propose_mandate_profiles",
+        "commit_mandate", "set_mandate", "write_mandate", "authorize_live",
+    ):
         assert forbidden not in names, f"{forbidden} must not be a registered tool"

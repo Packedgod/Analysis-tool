@@ -29,7 +29,7 @@ _BLOCKED_UPLOAD_EXT = {
     # executable-adjacent source, shell, config, and template files
     ".py", ".pyw", ".sh", ".bash", ".zsh", ".fish", ".ps1",
     ".yaml", ".yml", ".j2", ".jinja", ".jinja2", ".template",
-    # archives â€” don't auto-extract; user can unpack locally
+    # archives — don't auto-extract; user can unpack locally
     ".zip", ".rar", ".7z", ".tar", ".gz", ".tgz", ".bz2", ".xz",
 }
 

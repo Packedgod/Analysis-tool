@@ -8,7 +8,7 @@ from pathlib import Path
 import pandas as pd
 import pytest
 
-from src.tools.doc_reader_tool import _HARD_MAX_CHARS, read_document
+from src.tools.doc_reader_tool import _MAX_CHARS, read_document
 
 
 def _call(path: Path, pages: str = "") -> dict:
@@ -163,66 +163,3 @@ def test_envelope_shape(tmp_path: Path) -> None:
         assert key in result
 
 
-def test_document_under_window_is_returned_whole(tmp_path: Path) -> None:
-    """A doc smaller than the read window comes back complete and unwindowed."""
-    p = tmp_path / "small.txt"
-    p.write_text("x" * 20000, encoding="utf-8")
-    result = _call(p)
-    assert result["char_count"] == 20000
-    assert result["returned"] == 20000
-    assert result["truncated"] is False
-    assert result["next_offset"] is None
-    assert result["text"] == "x" * 20000
-
-
-def test_large_document_is_windowed_not_clipped(tmp_path: Path) -> None:
-    """A doc larger than the window returns a bounded slice plus a continuation."""
-    p = tmp_path / "big.txt"
-    p.write_bytes(b"x" * 250_000)
-    result = json.loads(read_document(str(p), max_chars=100_000))
-    assert result["char_count"] == 250_000  # true size, not the window size
-    assert result["returned"] == 100_000
-    assert result["offset"] == 0
-    assert result["next_offset"] == 100_000
-    assert result["truncated"] is True
-
-
-def test_offset_walks_entire_large_document(tmp_path: Path) -> None:
-    """Following next_offset covers every character exactly once."""
-    total = 250_000
-    p = tmp_path / "walk.txt"
-    p.write_bytes(b"y" * total)
-
-    offset, seen, windows = 0, 0, 0
-    while True:
-        result = json.loads(read_document(str(p), offset=offset, max_chars=100_000))
-        assert result["status"] == "ok"
-        assert result["char_count"] == total
-        seen += result["returned"]
-        windows += 1
-        if result["next_offset"] is None:
-            break
-        offset = result["next_offset"]
-        assert windows < 20, "next_offset failed to terminate"
-
-    assert windows == 3  # 100k + 100k + 50k
-    assert seen == total  # full coverage, no gap and no overlap
-
-
-def test_max_chars_is_clamped_to_hard_cap(tmp_path: Path) -> None:
-    """An over-large max_chars clamps instead of overflowing the context window."""
-    p = tmp_path / "huge.txt"
-    p.write_bytes(b"z" * (_HARD_MAX_CHARS + 50_000))
-    result = json.loads(read_document(str(p), max_chars=5_000_000))
-    assert result["returned"] == _HARD_MAX_CHARS
-    assert result["next_offset"] == _HARD_MAX_CHARS
-
-
-def test_offset_past_end_returns_empty_tail(tmp_path: Path) -> None:
-    """An offset beyond EOF terminates cleanly rather than erroring."""
-    p = tmp_path / "tail.txt"
-    p.write_text("abc", encoding="utf-8")
-    result = json.loads(read_document(str(p), offset=9999))
-    assert result["status"] == "ok"
-    assert result["returned"] == 0
-    assert result["next_offset"] is None

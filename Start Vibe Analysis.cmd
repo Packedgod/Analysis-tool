@@ -1,7 +1,10 @@
 @echo off
 setlocal
 
-set "PROJECT=C:\Users\Admin\Documents\Codex\2026-07-13\git\Vibe-Analysis"
+rem Derive the project root from this script's own location so the launcher is
+rem portable instead of hard-coded to one machine's path.
+set "PROJECT=%~dp0"
+if "%PROJECT:~-1%"=="\" set "PROJECT=%PROJECT:~0,-1%"
 set "WATCHDOG=%PROJECT%\scripts\analysis_watchdog.ps1"
 set "PID_FILE=%PROJECT%\.runtime\watchdog.pid"
 

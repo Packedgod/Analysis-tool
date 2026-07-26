@@ -29,7 +29,7 @@ for _s in ("stdout", "stderr"):
         _r(encoding="utf-8", errors="replace")
 
 # ---------------------------------------------------------------------------
-# Extracted infrastructure â€” re-exported for route-module and test access
+# Extracted infrastructure — re-exported for route-module and test access
 # ---------------------------------------------------------------------------
 
 from src.api.security import (  # noqa: F401, E402
@@ -116,12 +116,50 @@ logger = logging.getLogger(__name__)
 # FastAPI Application
 # ============================================================================
 
+from contextlib import asynccontextmanager  # noqa: E402
+
+
+@asynccontextmanager
+async def _lifespan(_app: "FastAPI"):
+    """Start background services on boot and stop them on shutdown.
+
+    Uses the lifespan protocol (the ``@app.on_event`` decorators it replaces are
+    deprecated). Dependencies are imported lazily so app construction stays cheap.
+    """
+    import threading
+
+    from src.preflight import run_preflight
+    from src.api.channels_routes import _start_channel_runtime, _stop_channel_runtime
+    from src.api.scheduled_routes import (
+        _start_scheduled_research_executor,
+        _stop_scheduled_research_executor,
+    )
+    from src.config.accessor import get_env_config
+
+    def _diagnose() -> None:
+        try:
+            run_preflight(console)
+        except Exception:  # noqa: BLE001 - diagnostics must never block startup
+            logger.exception("Background startup preflight failed")
+
+    threading.Thread(target=_diagnose, name="vibe-trading-preflight", daemon=True).start()
+    _start_scheduled_research_executor()
+    if get_env_config().agent_tuning.vibe_trading_channels_auto_start:
+        await _start_channel_runtime()
+    try:
+        yield
+    finally:
+        await _stop_channel_runtime()
+        await _stop_scheduled_research_executor()
+
+
 app = FastAPI(
     title="Vibe Analysis API",
     description="Evidence-first company research, financial analysis, simulations, and shadow-agent workflows",
     version=APP_VERSION,
     docs_url="/docs",
-    redoc_url="/redoc"
+    redoc_url="/redoc",
+    lifespan=_lifespan,
 )
 
 app.add_middleware(
@@ -133,57 +171,11 @@ app.add_middleware(
 )
 
 # Middleware functions are defined in src.api.security / src.api.helpers, so
-# the @app.middleware("http") decorator cannot be used here â€” register them
+# the @app.middleware("http") decorator cannot be used here — register them
 # programmatically instead.
 app.middleware("http")(_reject_untrusted_loopback_host)
 app.middleware("http")(_spa_html_deep_link_fallback)
 app.middleware("http")(_apply_security_headers)
-
-# ============================================================================
-# Lifecycle hooks
-# ============================================================================
-
-from src.api.channels_routes import (  # noqa: E402
-    _start_channel_runtime,
-    _stop_channel_runtime,
-)
-from src.api.scheduled_routes import (  # noqa: E402
-    _start_scheduled_research_executor,
-    _stop_scheduled_research_executor,
-)
-
-
-@app.on_event("startup")
-async def _run_startup_preflight() -> None:
-    """Start optional diagnostics without delaying the local web server."""
-    import threading
-
-    from src.preflight import run_preflight
-
-    def _diagnose() -> None:
-        try:
-            run_preflight(console)
-        except Exception:  # noqa: BLE001 - diagnostics must never block startup
-            logger.exception("Background startup preflight failed")
-
-    threading.Thread(
-        target=_diagnose,
-        name="vibe-trading-preflight",
-        daemon=True,
-    ).start()
-    _start_scheduled_research_executor()
-    from src.config.accessor import get_env_config
-
-    if get_env_config().agent_tuning.vibe_trading_channels_auto_start:
-        await _start_channel_runtime()
-
-
-@app.on_event("shutdown")
-async def _stop_scheduled_research_on_shutdown() -> None:
-    """Stop the scheduled research executor on server shutdown."""
-    await _stop_channel_runtime()
-    await _stop_scheduled_research_executor()
-
 
 # ============================================================================
 # Route registration + re-exports

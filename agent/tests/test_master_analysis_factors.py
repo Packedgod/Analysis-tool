@@ -10,10 +10,15 @@ def test_registry_preserves_all_common_parameters_and_user_authority():
     registry = load_master_factor_registry()
 
     assert registry["source"]["verification_status"] == "user_verified_authoritative"
-    assert registry["source"]["sha256"] == "f25f4c5b1a48fa973aa806069aed3f19c526217854975c0157d5e543bf508406"
+    assert {source["sha256"] for source in registry["sources"]} == {
+        "2dd2c03652645dbf453737593c3e58ded0fc65d86430479007723f5f98568db9",
+        "f00fd78e1e4ab9ae1d29a4c2dfb03b11889e7b16ef517da73435594645af337d",
+    }
+    assert registry["governance"]["applies_to_every_prompt"] is True
     assert len(registry["common_parameters"]) == 70
     assert len(registry["sector_map"]) == 23
     assert len(registry["sector_factors"]) == 23
+    assert len(registry["macro_market_briefing"]) == 7
 
 
 def test_sector_pack_returns_financial_services_factors_and_benchmark():
@@ -35,4 +40,43 @@ def test_backend_tool_returns_filtered_authoritative_pack():
     assert result["matched_sector"] == "Information Technology"
     assert len(result["common_parameters"]) == 70
     assert result["sector_factors"]
+
+
+def test_analysis_backbone_end_to_end():
+    """One path: generated registry -> runtime tool -> private prompt contract."""
+    from src.api.analysis_routes import AnalysisBriefRequest, build_analysis_prompt
+
+    registry = load_master_factor_registry()
+    pack = json.loads(MasterAnalysisFactorsTool().execute(sector="Information Technology"))
+    prompt = build_analysis_prompt(
+        AnalysisBriefRequest(
+            company="Infosys Limited",
+            ticker="INFY.NS",
+            factors="quality, valuation, and macro sensitivity",
+            history_years=3,
+        )
+    )
+
+    assert [source["filename"] for source in registry["sources"]] == [
+        "Stocks_Sector.xlsx",
+        "India_Macro_Market_Briefing.xlsx",
+    ]
+    assert pack["matched_sector"] == "Information Technology"
+    assert len(pack["common_parameters"]) == 70
+    assert pack["sector_factors"]
+    assert {
+        "Indicator Dashboard",
+        "Cycle Placement",
+        "Linkage Map",
+        "Positioning",
+        "Triggers & Caveats",
+    }.issubset(pack["macro_market_briefing"])
+    assert any(
+        row.get("calculated_cells")
+        for row in pack["macro_market_briefing"]["Cycle Placement"]
+    )
+    assert "two user-verified sources" in prompt
+    assert "Use the macro workbook alone" in prompt
+    assert "workbook filename, sheet, and row provenance" in prompt
+    assert "not a recommendation on any security" in prompt
 
