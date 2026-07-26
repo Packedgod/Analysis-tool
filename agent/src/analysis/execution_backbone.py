@@ -173,24 +173,36 @@ def _ingest_document(
     }, None)
 
 
+# Financial-report signals across corporate AND banking/NBFC statement styles
+# (banks say "profit and loss account" / "net interest income", not "revenue
+# from operations"). Kept broad so a genuine issuer annual report is recognised
+# whichever section falls inside the extracted window.
 _FINANCIAL_MARKERS = (
     "balance sheet", "cash flow", "profit and loss", "statement of profit",
     "statement of financial position", "revenue from operations", "total equity",
-    "total assets", "earnings per share", "independent auditor", "notes to",
-    "financial statements",
+    "total assets", "earnings per share", "independent auditor", "auditor's report",
+    "notes to", "financial statements", "profit before tax", "profit after tax",
+    "net interest income", "shareholders", "schedules", "deposits and other",
+    "consolidated financial", "standalone financial", "audited",
 )
+
+_MIN_REPORT_CHARS = 40_000
 
 
 def _looks_like_financial_report(content: str) -> bool:
-    """Require a real annual report: substantial text with financial statements.
+    """Distinguish a genuine annual report from an ancillary issuer filing.
 
-    Guards against accepting an issuer's ancillary filings (secretarial
-    compliance reports, BRSR, notices) that mention the company but contain no
-    income statement, balance sheet, or cash-flow data to analyse.
+    Substantial length is the primary filter: it rejects secretarial-compliance
+    certificates, notices, and single-annexure PDFs (a few KB) while admitting a
+    full report (100k+ chars). A couple of financial-statement signals then
+    confirm it is a report rather than, say, a large policy document — using a
+    broad marker set so bank/NBFC statement terminology is not misjudged.
     """
+    if len(content) < _MIN_REPORT_CHARS:
+        return False
     low = content.casefold()
     hits = sum(1 for marker in _FINANCIAL_MARKERS if marker in low)
-    return len(content) >= 40_000 and hits >= 3
+    return hits >= 2
 
 
 def _report_content_matches(content: str, company: str, code: str) -> bool:
