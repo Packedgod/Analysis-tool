@@ -380,11 +380,62 @@ def _fetch_sec_statement(code: str, *, statement: str, period: str) -> dict[str,
     return {"periods": _cap_periods(periods)}
 
 
+_YF_STATEMENT_ATTR = {
+    ("balance", False): "balance_sheet",
+    ("balance", True): "quarterly_balance_sheet",
+    ("income", False): "income_stmt",
+    ("income", True): "quarterly_income_stmt",
+    # "indicators" reuses the income statement — its rows (revenue, operating
+    # income, net income, EPS, EBITDA) are the per-period indicators.
+    ("indicators", False): "income_stmt",
+    ("indicators", True): "quarterly_income_stmt",
+    ("cashflow", False): "cashflow",
+    ("cashflow", True): "quarterly_cashflow",
+}
+
+
+def _fetch_yfinance_statement(code: str, *, statement: str, period: str) -> dict[str, Any]:
+    """Fetch an India (.NS/.BO) statement from yfinance, shaped as flat periods.
+
+    yfinance returns a DataFrame with line items as the index and reporting
+    period-ends as columns (newest first). It is reshaped to the same
+    ``{"periods": [...]}`` envelope the SEC/Eastmoney fetchers use.
+    """
+    try:
+        import yfinance as yf  # noqa: PLC0415
+    except Exception as exc:  # noqa: BLE001
+        return {"error": f"yfinance unavailable: {exc}"}
+
+    attr = _YF_STATEMENT_ATTR[(statement, period == "quarter")]
+    try:
+        frame = getattr(yf.Ticker(code), attr)
+    except Exception as exc:  # noqa: BLE001
+        return {"error": f"yfinance fetch failed for {code}: {exc}"}
+    if frame is None or getattr(frame, "empty", True):
+        return {"periods": []}
+
+    periods: list[dict[str, Any]] = []
+    for column in frame.columns:
+        row: dict[str, Any] = {
+            "period_end": str(column)[:10],
+            "report_type": statement,
+            "period": period,
+        }
+        for label, value in frame[column].items():
+            number = _to_number(value)
+            if number is not None and number == number:  # drop NaN (NaN != NaN)
+                row[str(label)] = number
+        periods.append(row)
+    periods.sort(key=lambda item: item.get("period_end", ""), reverse=True)
+    return {"periods": _cap_periods(periods)}
+
+
 def _classify_market(code: str) -> str | None:
-    """Classify a symbol's suffix into ``a_share``, ``us``, ``hk``, or ``None``.
+    """Classify a symbol's suffix into ``a_share``, ``us``, ``hk``, ``india``, or ``None``.
 
     Args:
-        code: Symbol with a market suffix (e.g. ``"600519.SH"``, ``"AAPL.US"``).
+        code: Symbol with a market suffix (e.g. ``"600519.SH"``, ``"AAPL.US"``,
+            ``"RELIANCE.NS"``).
 
     Returns:
         The market label, or ``None`` when the suffix is unrecognized.
@@ -396,6 +447,8 @@ def _classify_market(code: str) -> str | None:
         return "us"
     if suffix == "HK":
         return "hk"
+    if suffix in ("NS", "BO"):
+        return "india"
     return None
 
 
@@ -406,11 +459,12 @@ class FinancialStatementsTool(BaseTool):
     description = (
         "Fetch a single stock's financial statements: balance sheet, income "
         "statement, cash-flow statement, or key per-period indicators (margins, "
-        "ROE, EPS, etc.). Markets: A-share (.SH/.SZ/.BJ), US (.US) and "
-        "Hong Kong (.HK). US uses SEC EDGAR companyfacts; A-share and HK use "
-        "Eastmoney. Reports come back newest-first as flat per-period rows. Use "
-        'this to read fundamentals before building a valuation or screen. Example: '
-        '{"code": "600519.SH", "statement": "income", "period": "annual"}.'
+        "ROE, EPS, etc.). Markets: India (.NS/.BO), A-share (.SH/.SZ/.BJ), US "
+        "(.US) and Hong Kong (.HK). India uses yfinance; US uses SEC EDGAR "
+        "companyfacts; A-share and HK use Eastmoney. Reports come back "
+        "newest-first as flat per-period rows. Use this to read fundamentals "
+        'before building a valuation or screen. Example: '
+        '{"code": "RELIANCE.NS", "statement": "income", "period": "annual"}.'
     )
     parameters = {
         "type": "object",
@@ -418,8 +472,8 @@ class FinancialStatementsTool(BaseTool):
             "code": {
                 "type": "string",
                 "description": (
-                    "Single symbol with a market suffix, e.g. '600519.SH', "
-                    "'000001.SZ', 'AAPL.US', or '00700.HK'."
+                    "Single symbol with a market suffix, e.g. 'RELIANCE.NS', "
+                    "'600519.SH', '000001.SZ', 'AAPL.US', or '00700.HK'."
                 ),
             },
             "statement": {
@@ -477,12 +531,15 @@ class FinancialStatementsTool(BaseTool):
         market = _classify_market(code)
         if market is None:
             return _error(
-                "code must carry a supported suffix: .SH/.SZ/.BJ, .US, or .HK"
+                "code must carry a supported suffix: .NS/.BO, .SH/.SZ/.BJ, .US, or .HK"
             )
 
         if market == "us":
             result = _fetch_sec_statement(code, statement=statement, period=period)
             source = "sec_edgar"
+        elif market == "india":
+            result = _fetch_yfinance_statement(code, statement=statement, period=period)
+            source = "yfinance"
         else:
             result = _fetch_eastmoney_statement(
                 code, statement=statement, period=period

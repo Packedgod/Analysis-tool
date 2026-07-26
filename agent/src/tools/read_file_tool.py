@@ -71,23 +71,45 @@ class ReadFileTool(BaseTool):
             paths_to_try.append(file_path[len("skills/") :])
 
         resolved = None
+        escaped = False
         for root in allowed_roots:
             for p in paths_to_try:
                 try:
                     candidate = _safe_path(p, root)
-                    if candidate.exists():
-                        resolved = candidate
-                        break
                 except ValueError:
+                    escaped = True
                     continue
+                if candidate.exists():
+                    resolved = candidate
+                    break
             if resolved:
                 break
 
+        # Fallback: a valid file named like the request but at the run-dir root
+        # (agents often prefix a stray subdir, e.g. "artifacts/analysis_backbone.json"
+        # when the manifest lives at the run-dir root). Resolve by basename.
         if resolved is None:
+            basename = Path(file_path).name
+            if basename and basename not in paths_to_try:
+                for root in allowed_roots:
+                    try:
+                        candidate = _safe_path(basename, root)
+                    except ValueError:
+                        continue
+                    if candidate.exists():
+                        resolved = candidate
+                        break
+
+        if resolved is None:
+            hint = (
+                "path escapes the allowed roots (run_dir/skills)"
+                if escaped
+                else "file not found under run_dir/skills"
+            )
             return json.dumps(
                 {
                     "status": "error",
-                    "error": f"File not found or path escapes workspace: {file_path}",
+                    "error": f"Cannot read {file_path!r}: {hint}.",
                 },
                 ensure_ascii=False,
             )
