@@ -20,6 +20,7 @@ from typing import Any
 from src.agent.tools import BaseTool
 from src.config.accessor import _parse_bool, get_env_config
 from src.security.scanner import with_security_warnings
+from src.tools._pit import filter_to_window, parse_window, unavailable
 
 logger = logging.getLogger(__name__)
 
@@ -165,10 +166,66 @@ class WebSearchTool(BaseTool):
                 "description": "Maximum number of results to return (default 5, max 10)",
                 "default": 5,
             },
+            "year": {
+                "type": "integer",
+                "description": "Point-in-time filter: keep only results published in this calendar year.",
+            },
+            "start_date": {
+                "type": "string",
+                "description": "Point-in-time filter: inclusive window start (YYYY-MM-DD); pair with end_date.",
+            },
+            "end_date": {
+                "type": "string",
+                "description": "Point-in-time filter: inclusive window end (YYYY-MM-DD); pair with start_date.",
+            },
         },
         "required": ["query"],
     }
     repeatable = True
+
+    def _windowed_search(self, query: str, max_results: int, kwargs: dict[str, Any]) -> str:
+        """Point-in-time search: dated news only, filtered fail-closed to window.
+
+        Only ``news()`` results carry a publication date, so ``text()`` is never
+        used here. An invalid window is an error; a window that admits nothing is
+        reported ``unavailable`` rather than degraded to out-of-window material.
+        """
+        try:
+            window = parse_window(
+                year=kwargs.get("year"),
+                start_date=kwargs.get("start_date"),
+                end_date=kwargs.get("end_date"),
+            )
+        except ValueError as exc:
+            return json.dumps(
+                {"status": "error", "query": query, "error": f"invalid evidence window: {exc}"},
+                ensure_ascii=False,
+            )
+
+        try:
+            from ddgs import DDGS
+        except ImportError:  # pragma: no cover - legacy fallback
+            from duckduckgo_search import DDGS
+
+        try:
+            with DDGS() as client:
+                rows = list(client.news(query, max_results=max_results) or [])
+        except Exception as exc:  # noqa: BLE001
+            return json.dumps(
+                {"status": "error", "query": query, "error": f"news search failed: {exc}"},
+                ensure_ascii=False,
+            )
+
+        kept, audit = filter_to_window(rows, window)
+        if not kept:
+            span = window.label if window is not None else "the requested window"
+            return json.dumps(
+                unavailable(f"No verified evidence in {span} for this query", query=query, evidence_window=audit),
+                ensure_ascii=False,
+            )
+        payload = {"status": "ok", "query": query, "results": kept, "evidence_window": audit}
+        payload = with_security_warnings(payload, fields=("results.*.title", "results.*.body"))
+        return json.dumps(payload, ensure_ascii=False)
 
     def execute(self, **kwargs: Any) -> str:
         """Run a web search across free engines with retry and backend fallback.
@@ -183,6 +240,12 @@ class WebSearchTool(BaseTool):
         query = kwargs["query"]
         max_results = min(int(kwargs.get("max_results", 5)), 10)
         backends = (get_env_config().agent_tuning.vibe_trading_search_backends or _DEFAULT_BACKENDS).strip() or "auto"
+
+        # Point-in-time branch: when a window is requested, only dated news
+        # results are admissible and each is filtered fail-closed to the window.
+        # An invalid window is an error (never a silent unconstrained search).
+        if kwargs.get("year") is not None or kwargs.get("start_date") or kwargs.get("end_date"):
+            return self._windowed_search(query, max_results, kwargs)
 
         # Fast path: Alibaba Cloud IQS if configured (official API, CN-direct,
         # ~1s, structured + snippet, best quality). Skip ddgs entirely when IQS

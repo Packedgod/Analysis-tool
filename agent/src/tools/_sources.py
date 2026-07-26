@@ -14,7 +14,7 @@ from typing import Any
 from urllib.parse import parse_qs, quote, unquote, urljoin, urlsplit
 
 from backtest.loaders._http import throttled_get
-from src.tools._pit import EvidenceWindow
+from src.tools._pit import EvidenceWindow, parse_published
 
 
 @dataclass(frozen=True)
@@ -513,18 +513,24 @@ def _normalize_result(row: dict[str, Any], domain: str) -> dict[str, Any] | None
     }
 
 
-def _in_window(item: dict[str, Any], window: EvidenceWindow) -> bool:
-    value = item.get("date")
-    if not value:
+def _in_window(item: dict[str, Any], window: EvidenceWindow | None) -> bool:
+    """Fail-closed window membership using multi-format publication parsing.
+
+    A ``None`` window imposes no constraint. Otherwise the record is kept only
+    when its date parses (epoch/ISO/textual) and verifiably falls in-window;
+    undated or unparseable records are dropped, never assumed in-window.
+    """
+    if window is None:
+        return True
+    found = parse_published(item.get("date"))
+    if found is None:
         return False
-    try:
-        found = datetime.fromisoformat(str(value)[:10]).date()
-    except ValueError:
-        return False
-    return window.start <= found <= window.end
+    return window.contains(found)
 
 
-def search_ladder(query: str, window: EvidenceWindow, *, sweep: bool = False) -> dict[str, Any]:
+def search_ladder(
+    query: str, window: EvidenceWindow | None, *, sweep: bool = False
+) -> dict[str, Any]:
     attempts: list[dict[str, Any]] = []
     collected: list[dict[str, Any]] = []
     for source in SOURCE_LADDER:
@@ -545,7 +551,8 @@ def search_ladder(query: str, window: EvidenceWindow, *, sweep: bool = False) ->
                 return {"status": "ok", "source": source.name, "results": rung, "ladder": attempts}
     if collected:
         return {"status": "ok", "source": "sweep", "results": collected, "ladder": attempts}
-    return {"status": "unavailable", "reason": f"No verified evidence in {window.start}..{window.end}", "ladder": attempts}
+    span = f" in {window.start}..{window.end}" if window is not None else ""
+    return {"status": "unavailable", "reason": f"No verified evidence{span}", "ladder": attempts}
 
 
 def resolve_official_domain(company: str, code: str = "") -> dict[str, Any]:

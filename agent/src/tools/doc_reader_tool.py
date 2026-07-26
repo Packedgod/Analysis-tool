@@ -15,6 +15,7 @@ truncated, text. PDF/Excel add format-specific metadata (pages, sheets, ...).
 
 from __future__ import annotations
 
+import contextvars
 import json
 from pathlib import Path
 from typing import Any, Callable
@@ -24,8 +25,19 @@ from src.agent.tools import BaseTool
 from src.security.scanner import with_security_warnings
 from src.tools.path_utils import safe_document_path
 
-_MAX_CHARS = 15000
+# Default read window, and the hard ceiling a single call may ever return so an
+# oversized ``max_chars`` cannot overflow the model context. Larger documents are
+# paged: each response carries ``next_offset`` to fetch the following window,
+# giving full-document access instead of a silent one-shot truncation.
+_DEFAULT_MAX_CHARS = 50_000
+_HARD_MAX_CHARS = 200_000
 _MIN_TEXT_PER_PAGE = 50
+
+# Per-call read window (offset, max_chars), set by read_document and read by the
+# shared envelope. A ContextVar keeps it correct under concurrent tool calls.
+_window_params: contextvars.ContextVar[tuple[int, int]] = contextvars.ContextVar(
+    "doc_reader_window", default=(0, _DEFAULT_MAX_CHARS)
+)
 _ENCODING_FALLBACK = ("utf-8", "utf-8-sig", "gbk", "gb2312", "big5", "latin-1")
 
 _IMAGE_EXTS = {".png", ".jpg", ".jpeg", ".gif", ".bmp", ".webp", ".tiff", ".tif"}
@@ -77,21 +89,35 @@ def _err(msg: str) -> str:
     return json.dumps({"status": "error", "error": msg}, ensure_ascii=False)
 
 
-def _truncate(text: str) -> tuple[str, bool]:
-    """Clip to _MAX_CHARS, return (text, was_truncated)."""
-    if len(text) <= _MAX_CHARS:
-        return text, False
-    return text[:_MAX_CHARS] + f"\n\n... (truncated, total {len(text)} chars)", True
+def _window(text: str) -> tuple[str, int, int, int | None, bool]:
+    """Slice ``text`` to the active read window.
+
+    Returns (slice, offset, returned, next_offset, truncated). ``max_chars`` is
+    clamped to ``_HARD_MAX_CHARS``; ``next_offset`` is the offset to request next
+    (or None when the window reaches the end).
+    """
+    offset, max_chars = _window_params.get()
+    offset = max(0, int(offset))
+    max_chars = min(max(1, int(max_chars)), _HARD_MAX_CHARS)
+    total = len(text)
+    body = text[offset : offset + max_chars]
+    returned = len(body)
+    next_offset = offset + returned if offset + returned < total else None
+    truncated = next_offset is not None or offset > 0
+    return body, offset, returned, next_offset, truncated
 
 
 def _envelope(path: Path, fmt: str, text: str, **extra: Any) -> str:
-    """Build the standard JSON response."""
-    body, truncated = _truncate(text)
+    """Build the standard JSON response for the active read window."""
+    body, offset, returned, next_offset, truncated = _window(text)
     payload: dict[str, Any] = {
         "status": "ok",
         "file": path.name,
         "format": fmt,
         "char_count": len(text),
+        "offset": offset,
+        "returned": returned,
+        "next_offset": next_offset,
         "truncated": truncated,
         "text": body,
     }
@@ -308,16 +334,22 @@ _HANDLERS: dict[str, Callable[[Path], str]] = {
 }
 
 
-def read_document(file_path: str, pages: str = "") -> str:
+def read_document(
+    file_path: str, pages: str = "", *, offset: int = 0, max_chars: int | None = None
+) -> str:
     """Read any supported document; dispatch by extension.
 
     Args:
         file_path: Absolute path to the file.
         pages: Only used for PDF — e.g. "1-10", "5", "1,3,5-8"; empty = all.
+        offset: Character offset to start the read window at (for paging).
+        max_chars: Read-window size; defaults to ``_DEFAULT_MAX_CHARS`` and is
+            clamped to ``_HARD_MAX_CHARS``.
 
     Returns:
-        JSON envelope: status, file, format, char_count, truncated, text,
-        plus format-specific metadata (total_pages, sheets, etc.).
+        JSON envelope: status, file, format, char_count, offset, returned,
+        next_offset, truncated, text, plus format-specific metadata. When the
+        document exceeds the window, follow ``next_offset`` to read the rest.
     """
     try:
         path = safe_document_path(file_path)
@@ -328,6 +360,8 @@ def read_document(file_path: str, pages: str = "") -> str:
     if not path.is_file():
         return _err(f"Not a file: {file_path}")
 
+    window = (int(offset), _DEFAULT_MAX_CHARS if max_chars is None else int(max_chars))
+    token = _window_params.set(window)
     ext = path.suffix.lower()
     try:
         if ext == ".pdf":
@@ -342,6 +376,8 @@ def read_document(file_path: str, pages: str = "") -> str:
         return _read_text(path)
     except Exception as exc:
         return _err(f"{type(exc).__name__}: {exc}")
+    finally:
+        _window_params.reset(token)
 
 
 class DocReaderTool(BaseTool):
@@ -352,7 +388,8 @@ class DocReaderTool(BaseTool):
         "Read a document of any common format: PDF, Word (.docx), Excel "
         "(.xlsx/.xls), PowerPoint (.pptx), images (OCR), or plain text "
         "(txt/md/json/yaml/csv/html/code files). Returns extracted text in "
-        "a unified JSON envelope. For PDFs, accepts an optional `pages` range."
+        "a unified JSON envelope. For PDFs, accepts an optional `pages` range. "
+        "Large documents are paged: follow `next_offset` to read the remainder."
     )
     parameters = {
         "type": "object",
@@ -363,10 +400,25 @@ class DocReaderTool(BaseTool):
                 "description": "PDF only: page range (e.g. '1-10', '5', '1,3,5-8'). Ignored for other formats.",
                 "default": "",
             },
+            "offset": {
+                "type": "integer",
+                "description": "Character offset to start reading from; pass the previous response's `next_offset` to continue.",
+                "default": 0,
+            },
+            "max_chars": {
+                "type": "integer",
+                "description": f"Read-window size in characters (default {_DEFAULT_MAX_CHARS}, clamped to {_HARD_MAX_CHARS}).",
+            },
         },
         "required": ["file_path"],
     }
     repeatable = True
 
     def execute(self, **kwargs: Any) -> str:
-        return read_document(kwargs["file_path"], kwargs.get("pages", ""))
+        raw_max = kwargs.get("max_chars")
+        return read_document(
+            kwargs["file_path"],
+            kwargs.get("pages", ""),
+            offset=int(kwargs.get("offset", 0) or 0),
+            max_chars=int(raw_max) if raw_max not in (None, "") else None,
+        )
