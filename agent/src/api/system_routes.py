@@ -170,6 +170,10 @@ _MARKET_SYMBOLS = (
 _market_overview_cache: Dict[str, object] = {"expires_at": 0.0, "payload": None}
 _market_overview_lock = threading.Lock()
 
+# Market Pulse refresh cadence (seconds). Single source of truth: it is both the
+# server-side snapshot cache TTL and the ``refresh_seconds`` the client polls on.
+_MARKET_OVERVIEW_REFRESH_SECONDS = 5
+
 
 def _load_market_overview() -> Dict[str, object]:
     """Return a short-lived, source-labelled snapshot for the landing ticker."""
@@ -219,12 +223,12 @@ def _load_market_overview() -> Dict[str, object]:
                 "status": "live" if items else "unavailable",
                 "source": "Yahoo Finance",
                 "observed_at": datetime.now(timezone.utc).isoformat(),
-                "refresh_seconds": 60,
+                "refresh_seconds": _MARKET_OVERVIEW_REFRESH_SECONDS,
                 "items": items,
             }
             if items:
                 _market_overview_cache["payload"] = payload
-                _market_overview_cache["expires_at"] = now + 60.0
+                _market_overview_cache["expires_at"] = now + float(_MARKET_OVERVIEW_REFRESH_SECONDS)
             return payload
         except Exception as exc:  # noqa: BLE001 - landing ticker degrades independently
             logger.info("Market overview refresh unavailable: %s", exc)
@@ -236,7 +240,7 @@ def _load_market_overview() -> Dict[str, object]:
                 "status": "unavailable",
                 "source": "Yahoo Finance",
                 "observed_at": None,
-                "refresh_seconds": 60,
+                "refresh_seconds": _MARKET_OVERVIEW_REFRESH_SECONDS,
                 "items": [],
             }
 

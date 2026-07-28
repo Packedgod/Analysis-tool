@@ -33,7 +33,7 @@ const EMPTY_MARKET: MarketOverview = {
   status: "unavailable",
   source: "Yahoo Finance",
   observed_at: null,
-  refresh_seconds: 60,
+  refresh_seconds: 5,
   items: [],
 };
 
@@ -113,20 +113,29 @@ export function Home() {
   useEffect(() => {
     let active = true;
     const controller = new AbortController();
+    let timer: number | undefined;
+    // Poll cadence is driven by the server's refresh_seconds (floored at 5s), so
+    // the interval has a single source of truth. Self-rescheduling avoids
+    // overlapping requests when a fetch runs longer than the interval.
+    const schedule = (seconds: number) => {
+      timer = window.setTimeout(load, Math.max(5, seconds) * 1000);
+    };
     const load = async () => {
       try {
         const next = await api.getMarketOverview(controller.signal);
-        if (active) setMarket(next);
+        if (!active) return;
+        setMarket(next);
+        schedule(next.refresh_seconds || 5);
       } catch {
         // Market data is deliberately non-blocking: retain the last verified snapshot.
+        if (active) schedule(5);
       }
     };
     void load();
-    const timer = window.setInterval(load, 60_000);
     return () => {
       active = false;
       controller.abort();
-      window.clearInterval(timer);
+      if (timer) window.clearTimeout(timer);
     };
   }, []);
 
