@@ -11,34 +11,125 @@ from typing import Any
 
 REGISTRY_PATH = Path(__file__).resolve().parents[2] / "data" / "master_analysis_factors.json"
 
+# Map common GICS / global / provider sector names (normalized via _key) to the
+# workbook's NSE-style canonical taxonomy, so an analyst naming a sector the
+# ordinary way ("Banking", "Telecommunications", "Materials") is not rejected.
 _SECTOR_ALIASES = {
+    # Financial Services
     "financials": "Financial Services",
+    "financialservices": "Financial Services",
     "banks": "Financial Services",
+    "banking": "Financial Services",
+    "bank": "Financial Services",
+    "nbfc": "Financial Services",
+    "insurance": "Financial Services",
+    "diversifiedfinancials": "Financial Services",
+    # FMCG
     "consumerstaples": "Fast Moving Consumer Goods (FMC",
     "fmcg": "Fast Moving Consumer Goods (FMC",
+    "fastmovingconsumergoods": "Fast Moving Consumer Goods (FMC",
+    "consumergoods": "Fast Moving Consumer Goods (FMC",
+    # Healthcare / Pharma
     "healthcare": "Healthcare",
     "healthcareequipmentservices": "Healthcare",
+    "pharmaceuticals": "Healthcare",
+    "pharma": "Healthcare",
+    "pharmaceuticalsbiotechnology": "Healthcare",
+    # Capital Goods / Industrials
     "industrials": "Capital Goods",
     "capitalgoods": "Capital Goods",
+    "engineering": "Capital Goods",
+    "machinery": "Capital Goods",
+    # Consumer
     "consumerdiscretionary": "Consumer Durables",
+    "consumerdurables": "Consumer Durables",
+    "consumerservices": "Consumer Services",
+    "retailing": "Consumer Services",
+    # Energy
     "energy": "Oil, Gas & Consumable Fuels",
     "oilgas": "Oil, Gas & Consumable Fuels",
+    "oilgasconsumablefuels": "Oil, Gas & Consumable Fuels",
+    # Information Technology
     "technology": "Information Technology",
+    "informationtechnology": "Information Technology",
+    "it": "Information Technology",
+    "itservices": "Information Technology",
+    "software": "Information Technology",
+    # Telecommunication
     "communicationservices": "Telecommunication",
+    "telecommunication": "Telecommunication",
+    "telecommunications": "Telecommunication",
+    "telecom": "Telecommunication",
+    "telecomservices": "Telecommunication",
+    # Materials / Metals / Cement / Chemicals
+    "basicmaterials": "Metals & Mining",
+    "materials": "Metals & Mining",
+    "metals": "Metals & Mining",
+    "metalsmining": "Metals & Mining",
+    "mining": "Metals & Mining",
+    "steel": "Metals & Mining",
+    "cement": "Construction Materials",
+    "constructionmaterials": "Construction Materials",
+    "chemicals": "Chemicals",
+    # Utilities / Power
+    "utilities": "Utilities",
+    "power": "Power",
+    "electricutilities": "Power",
+    # Automobile
+    "automobiles": "Automobile & Auto Components",
+    "automobile": "Automobile & Auto Components",
+    "auto": "Automobile & Auto Components",
+    "autocomponents": "Automobile & Auto Components",
+    # Real estate / Media / Diversified
+    "realestate": "Realty",
+    "realty": "Realty",
+    "media": "Media, Entertainment & Publication",
+    "mediaentertainment": "Media, Entertainment & Publication",
+    "diversified": "Diversified",
+    "conglomerate": "Diversified",
+    "conglomerates": "Diversified",
 }
 
 _COMPANY_SECTOR_OVERRIDES = {
     "LT.NS": "Capital Goods",
     "HDFCBANK.NS": "Financial Services",
+    "ICICIBANK.NS": "Financial Services",
+    "SBIN.NS": "Financial Services",
+    "KOTAKBANK.NS": "Financial Services",
+    "AXISBANK.NS": "Financial Services",
+    "BAJFINANCE.NS": "Financial Services",
+    "BAJAJFINSV.NS": "Financial Services",
+    "IRFC.NS": "Financial Services",
     "ITC.NS": "Fast Moving Consumer Goods (FMC",
+    "HINDUNILVR.NS": "Fast Moving Consumer Goods (FMC",
+    "NESTLEIND.NS": "Fast Moving Consumer Goods (FMC",
     "DIVISLAB.NS": "Healthcare",
+    "SUNPHARMA.NS": "Healthcare",
+    "CIPLA.NS": "Healthcare",
+    "DRREDDY.NS": "Healthcare",
     "JSWSTEEL.NS": "Metals & Mining",
+    "TATASTEEL.NS": "Metals & Mining",
+    "HINDALCO.NS": "Metals & Mining",
     "TATAPOWER.NS": "Power",
+    "NTPC.NS": "Power",
+    "POWERGRID.NS": "Power",
     "ASIANPAINT.NS": "Chemicals",
     "MARUTI.NS": "Automobile & Auto Components",
+    "M&M.NS": "Automobile & Auto Components",
+    "TATAMOTORS.NS": "Automobile & Auto Components",
     "HINDPETRO.NS": "Oil, Gas & Consumable Fuels",
-    "IRFC.NS": "Financial Services",
+    "RELIANCE.NS": "Oil, Gas & Consumable Fuels",
+    "ONGC.NS": "Oil, Gas & Consumable Fuels",
+    "BPCL.NS": "Oil, Gas & Consumable Fuels",
     "INFY.NS": "Information Technology",
+    "TCS.NS": "Information Technology",
+    "WIPRO.NS": "Information Technology",
+    "HCLTECH.NS": "Information Technology",
+    "BHARTIARTL.NS": "Telecommunication",
+    "ULTRACEMCO.NS": "Construction Materials",
+    "SHREECEM.NS": "Construction Materials",
+    "GRASIM.NS": "Construction Materials",
+    "TITAN.NS": "Consumer Durables",
 }
 
 

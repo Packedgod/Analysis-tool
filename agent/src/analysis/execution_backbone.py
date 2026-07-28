@@ -360,7 +360,12 @@ def prepare_company_backbone(
             continue
         pack = factor_pack(sector, code=code)
         if pack.get("status") != "ok":
-            blockers.append(f"{code}: sector '{sector}' did not match the two-workbook backbone")
+            valid = pack.get("available_sectors") or []
+            blockers.append(
+                f"{code}: sector '{sector}' did not match the two-workbook backbone. "
+                f"Re-run prepare_analysis_backbone with one of the exact workbook sectors: "
+                f"{', '.join(valid)}"
+            )
             continue
         records.append({
             "company": name, "code": code, "sector": sector,
