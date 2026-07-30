@@ -48,3 +48,20 @@ def test_unmatched_sector_exposes_valid_names() -> None:
     pack = factor_pack("Totally Made Up Sector", code="NOSUCH.NS")
     assert pack["status"] == "sector_not_matched"
     assert "Financial Services" in pack["available_sectors"]
+
+
+def _all_sector_names():
+    from src.analysis.master_factors import load_master_factor_registry
+    return [item.get("Sector Name") for item in load_master_factor_registry()["sector_map"]]
+
+
+@pytest.mark.parametrize("sector_name", _all_sector_names())
+def test_every_workbook_sector_yields_a_non_empty_pack(sector_name) -> None:
+    """Every one of the 23 canonical sectors must resolve to real factor rows.
+
+    Guards against sector_map<->sheet name drift (e.g. "Entertainment" vs
+    "Entertain.") silently returning an empty pack and blocking analysis.
+    """
+    pack = factor_pack(sector_name)
+    assert pack["status"] == "ok", sector_name
+    assert pack["sector_factors"], f"empty factor sheet for {sector_name!r}"

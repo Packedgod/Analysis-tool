@@ -168,20 +168,45 @@ def load_master_factor_registry() -> dict[str, Any]:
     return payload
 
 
+def _first_word(value: str) -> str:
+    match = re.match(r"[A-Za-z]+", value.strip())
+    return match.group(0).lower() if match else ""
+
+
 def _sector_sheet(registry: dict[str, Any], sector: str) -> str | None:
     wanted = _key(sector)
     sheets = registry["sector_factors"]
     exact = next((name for name in sheets if _key(name) == wanted), None)
     if exact:
         return exact
+
+    def _prefix_or_leading_word(target_name: str) -> str | None:
+        target = _key(target_name)
+        # Long shared prefix (original heuristic).
+        hit = next(
+            (name for name in sheets if _key(name).startswith(target[:24]) or target.startswith(_key(name)[:24])),
+            None,
+        )
+        if hit:
+            return hit
+        # Fallback: unique sheet sharing the leading word. This tolerates the two
+        # workbooks abbreviating a name differently ("Entertainment" vs
+        # "Entertain.", "(FMCG)" vs "(FMC"), which the prefix compare misses.
+        fw = _first_word(target_name)
+        if fw:
+            candidates = [name for name in sheets if _first_word(name) == fw]
+            if len(candidates) == 1:
+                return candidates[0]
+        return None
+
+    direct = _prefix_or_leading_word(sector)
+    if direct:
+        return direct
     for item in registry["sector_map"]:
         mapped = str(item.get("Sector Name") or "")
         if _key(mapped) != wanted:
             continue
-        return next(
-            (name for name in sheets if _key(name).startswith(wanted[:24]) or wanted.startswith(_key(name)[:24])),
-            None,
-        )
+        return _prefix_or_leading_word(mapped)
     return None
 
 

@@ -75,11 +75,84 @@ def _detect_market_for_align(code: str) -> str:
 # ─── Signal alignment (reused from daily_portfolio logic) ───
 
 
+def _minimal_metrics(equity_series: pd.Series, initial_capital: float) -> Dict[str, Any]:
+    """A safe, complete-enough metrics dict so artifacts are always written.
+
+    Used only when full metric computation degrades; preserves the essential
+    numbers (final value, total return) rather than failing the whole run.
+    """
+    try:
+        final_value = float(equity_series.iloc[-1]) if len(equity_series) else float(initial_capital)
+    except Exception:  # noqa: BLE001
+        final_value = float(initial_capital)
+    total_return = (final_value / initial_capital) - 1.0 if initial_capital else 0.0
+    return {
+        "final_value": final_value,
+        "total_return": total_return,
+        "annual_return": None,
+        "max_drawdown": None,
+        "sharpe": None,
+        "sortino": None,
+        "calmar": None,
+        "win_rate": None,
+        "profit_factor": None,
+        "trade_count": None,
+        "benchmark_return": None,
+        "excess_return": None,
+        "degraded": True,
+    }
+
+
+def _resolve_sizing(config: Dict[str, Any]) -> Dict[str, Any]:
+    """Extract portfolio-construction constraints from config, if any.
+
+    Returns ``max_positions`` (breadth cap) and ``max_weight`` (per-name cap).
+    Empty when the config specifies neither, so behaviour is unchanged then.
+    """
+    sizing: Dict[str, Any] = {}
+    ps = config.get("position_sizing") or {}
+    risk = config.get("risk") or {}
+    max_positions = ps.get("max_positions")
+    if isinstance(max_positions, (int, float)) and max_positions > 0:
+        sizing["max_positions"] = int(max_positions)
+    max_weight = risk.get("max_single_name_weight") or ps.get("max_weight")
+    if isinstance(max_weight, (int, float)) and 0 < max_weight <= 1:
+        sizing["max_weight"] = float(max_weight)
+    return sizing
+
+
+def _apply_sizing_constraints(pos: pd.DataFrame, sizing: Optional[Dict[str, Any]]) -> pd.DataFrame:
+    """Enforce breadth (max_positions) and per-name weight caps, then re-normalise.
+
+    Previously these config keys were silently ignored, letting a signal
+    concentrate 100% in one name in violation of the stated risk limits.
+    """
+    if not sizing or pos.empty:
+        return pos
+    result = pos
+    max_positions = sizing.get("max_positions")
+    if max_positions and result.shape[1] > max_positions:
+        def _cap_row(row: pd.Series) -> pd.Series:
+            if int((row != 0).sum()) <= max_positions:
+                return row
+            keep = row.abs().nlargest(max_positions).index
+            capped = row.copy()
+            capped[~capped.index.isin(keep)] = 0.0
+            return capped
+        result = result.apply(_cap_row, axis=1)
+    max_weight = sizing.get("max_weight")
+    if max_weight:
+        result = result.clip(lower=-max_weight, upper=max_weight)
+    scale = result.abs().sum(axis=1).clip(lower=1.0)
+    return result.div(scale, axis=0)
+
+
 def _align(
     data_map: Dict[str, pd.DataFrame],
     signal_map: Dict[str, pd.Series],
     codes: List[str],
     optimizer: Optional[Callable] = None,
+    sizing: Optional[Dict[str, Any]] = None,
 ) -> tuple:
     """Build aligned date index, close matrix, target-position matrix, return matrix.
 
@@ -133,6 +206,9 @@ def _align(
 
     scale = pos.abs().sum(axis=1).clip(lower=1.0)
     pos = pos.div(scale, axis=0)
+
+    # Enforce configured breadth / per-name weight caps (no-op if unset).
+    pos = _apply_sizing_constraints(pos, sizing)
 
     return dates, close, pos, ret
 
@@ -419,10 +495,11 @@ class BaseEngine(ABC):
             print(json.dumps({"error": "No valid signals generated"}))
             sys.exit(1)
 
-        # 3. Pre-compute target weights (with optimizer)
+        # 3. Pre-compute target weights (with optimizer + configured risk caps)
         opt_fn = _load_optimizer(config)
         dates, close_df, target_pos, ret_df = _align(
             data_map, signal_map, valid_codes, optimizer=opt_fn,
+            sizing=_resolve_sizing(config),
         )
 
         # Sync codes after _align may have dropped all-NaN symbols
@@ -439,49 +516,68 @@ class BaseEngine(ABC):
         bench_ret = ret_df.mean(axis=1) if ret_df.shape[1] > 0 else pd.Series(0.0, index=dates)
         benchmark_metadata = {}
 
-        # ── External benchmark fetch ──────────────────────────────────────────
+        # ── External benchmark fetch (never fatal) ────────────────────────────
+        # A slow/failed benchmark request must not cost the run its metrics, so
+        # this degrades to the equal-weight internal benchmark on any error.
         bench_ticker = config.get("benchmark")
         if bench_ticker and bench_ticker != "auto":
-            from backtest.benchmark import resolve_benchmark
-            bench_result = resolve_benchmark(
-                strategy_codes=codes,
-                source=config.get("source", "yfinance"),
-                start_date=config.get("start_date", ""),
-                end_date=config.get("end_date", ""),
-                interval=interval,
-                explicit=bench_ticker,
-            )
-            if bench_result is not None:
-                bench_ret = bench_result.ret_series.reindex(dates).fillna(0.0)
-                benchmark_metadata = {
-                    "benchmark_ticker": bench_result.ticker,
-                    "benchmark_return": bench_result.total_ret,
-                }
+            try:
+                from backtest.benchmark import resolve_benchmark
+                bench_result = resolve_benchmark(
+                    strategy_codes=codes,
+                    source=config.get("source", "yfinance"),
+                    start_date=config.get("start_date", ""),
+                    end_date=config.get("end_date", ""),
+                    interval=interval,
+                    explicit=bench_ticker,
+                )
+                if bench_result is not None:
+                    bench_ret = bench_result.ret_series.reindex(dates).fillna(0.0)
+                    benchmark_metadata = {
+                        "benchmark_ticker": bench_result.ticker,
+                        "benchmark_return": bench_result.total_ret,
+                    }
+            except Exception as exc:  # noqa: BLE001 - benchmark is best-effort
+                print(json.dumps({"warning": f"benchmark unavailable, using internal: {exc}"}))
         # ── External benchmark fetch ──────────────────────────────────────────
 
         bench_equity = self.initial_capital * (1 + bench_ret).cumprod()
 
-        # 6. Metrics
-        m = calc_metrics(equity_series, self.trades, self.initial_capital, bars_per_year, bench_ret, target_pos)
+        # 6. Metrics — degrade to a minimal set rather than lose all artifacts.
+        try:
+            m = calc_metrics(equity_series, self.trades, self.initial_capital, bars_per_year, bench_ret, target_pos)
+        except Exception as exc:  # noqa: BLE001
+            print(json.dumps({"warning": f"metrics computation degraded: {exc}"}))
+            m = _minimal_metrics(equity_series, self.initial_capital)
         m.update(benchmark_metadata)
-        m["by_symbol"] = by_symbol_stats(self.trades)
-        m["by_exit_reason"] = by_exit_reason_stats(self.trades)
+        # Keep the reported excess_return consistent with the reported
+        # benchmark_return after any override from an external benchmark.
+        if "benchmark_return" in m and m.get("total_return") is not None:
+            try:
+                m["excess_return"] = float(m["total_return"]) - float(m["benchmark_return"])
+            except (TypeError, ValueError):
+                pass
+        try:
+            m["by_symbol"] = by_symbol_stats(self.trades)
+            m["by_exit_reason"] = by_exit_reason_stats(self.trades)
+        except Exception:  # noqa: BLE001
+            pass
 
-        # 7. Validation (optional — triggered by config["validation"])
+        # 7. Validation (optional) — never let a Monte-Carlo failure block artifacts.
         if config.get("validation"):
-            from backtest.validation import run_validation
-            v_results = run_validation(
-                config, equity_series, self.trades, self.initial_capital, bars_per_year,
-            )
-            m["validation"] = v_results
-            # Write validation.json artifact. The artifacts dir is normally
-            # created by _write_artifacts() below (step 8), so ensure it exists
-            # here to avoid a FileNotFoundError when run_dir/artifacts is absent.
-            v_path = run_dir / "artifacts" / "validation.json"
-            v_path.parent.mkdir(parents=True, exist_ok=True)
-            v_path.write_text(json.dumps(v_results, indent=2, ensure_ascii=False), encoding="utf-8")
+            try:
+                from backtest.validation import run_validation
+                v_results = run_validation(
+                    config, equity_series, self.trades, self.initial_capital, bars_per_year,
+                )
+                m["validation"] = v_results
+                v_path = run_dir / "artifacts" / "validation.json"
+                v_path.parent.mkdir(parents=True, exist_ok=True)
+                v_path.write_text(json.dumps(v_results, indent=2, ensure_ascii=False), encoding="utf-8")
+            except Exception as exc:  # noqa: BLE001
+                print(json.dumps({"warning": f"validation skipped: {exc}"}))
 
-        # 8. Artifacts
+        # 8. Artifacts — always attempt so metrics.csv is produced.
         self._write_artifacts(
             run_dir, data_map, dates, equity_series, bench_equity, bench_ret,
             target_pos, m, valid_codes, config,

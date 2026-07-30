@@ -210,12 +210,25 @@ def calc_metrics(
     else:
         bpy = bars_per_year
 
-    port_ret = equity_curve.pct_change().fillna(0.0)
+    # Drop the leading NaN row rather than filling a spurious 0.0, so the fake
+    # first-bar return does not bias mean/std (total_return is still the equity
+    # ratio below, so it is unaffected).
+    port_ret = equity_curve.pct_change().dropna()
 
     total_ret = float(equity_curve.iloc[-1] / initial_cash - 1)
-    ann_ret = float((1 + total_ret) ** (bpy / max(n, 1)) - 1)
-    vol = float(port_ret.std())
-    sharpe = float(port_ret.mean() / (vol + 1e-10) * np.sqrt(bpy))
+    # Annualisation base can be negative on a wipeout (total_ret <= -1); a
+    # fractional power of a negative base yields a complex number and float()
+    # would raise. Clamp so this never crashes the run.
+    if total_ret <= -1.0:
+        ann_ret = -1.0
+    else:
+        base = max(1.0 + total_ret, 0.0)
+        ann_ret = float(base ** (bpy / max(n, 1)) - 1)
+    # pandas .std() uses ddof=1 (sample); keep this convention everywhere
+    # (see validation._sharpe) so headline and validation Sharpe agree.
+    vol = float(port_ret.std()) if len(port_ret) > 1 else 0.0
+    ret_mean = float(port_ret.mean()) if len(port_ret) > 0 else 0.0
+    sharpe = float(ret_mean / (vol + 1e-10) * np.sqrt(bpy))
 
     # Drawdown
     peak = equity_curve.cummax()
@@ -224,10 +237,16 @@ def calc_metrics(
 
     calmar = ann_ret / abs(max_dd) if abs(max_dd) > 1e-10 else 0.0
 
-    # Sortino
-    downside = port_ret[port_ret < 0]
-    downside_std = float(downside.std()) if len(downside) > 1 else 1e-10
-    sortino = float(port_ret.mean() / (downside_std + 1e-10) * np.sqrt(bpy))
+    # Sortino: downside deviation vs a target of 0 measured over ALL periods
+    # (not just the negative subset), i.e. sqrt(mean(min(r,0)^2)).
+    if len(port_ret) > 0:
+        downside_dev = float(np.sqrt((port_ret.clip(upper=0.0) ** 2).mean()))
+    else:
+        downside_dev = 0.0
+    if downside_dev > 0 and np.isfinite(downside_dev):
+        sortino = float(ret_mean / downside_dev * np.sqrt(bpy))
+    else:
+        sortino = 0.0
 
     trade_stats = win_rate_and_stats(trades)
 
@@ -242,6 +261,10 @@ def calc_metrics(
     ir = 0.0
     if bench_ret is not None and len(bench_ret) > 0:
         bench_return = float((1 + bench_ret).prod() - 1)
+        # Derive excess from the SAME benchmark_return value that is reported,
+        # so the invariant excess_return == total_return - benchmark_return
+        # holds for the reported (rounded) numbers.
+        bench_return = round(bench_return, 6)
         excess = total_ret - bench_return
         active_ret = port_ret - bench_ret.reindex(port_ret.index).fillna(0.0)
         active_std = float(active_ret.std())

@@ -892,35 +892,21 @@ def main(run_dir: Path) -> None:
             fields=config.get("extra_fields") or None,
             interval=interval,
         )
-        if data_map and len(data_map) < len(codes):
-            missing = set(codes) - set(data_map.keys())
-            logger.warning(
-                "source=%s returned data for %d/%d symbols; missing: %s",
-                source, len(data_map), len(codes), missing,
+        # Per-symbol runtime fallback: recover any symbols the primary source
+        # missed (partial 5xx) as well as the all-empty case, from the chain.
+        if codes:
+            before = len(data_map or {})
+            data_map = _recover_missing_symbols(
+                data_map or {}, codes, source, _detect_market(codes[0]),
+                config.get("start_date", ""), config.get("end_date", ""), interval,
             )
-        # Runtime fallback: try next sources in chain when primary returns empty
-        if not data_map and codes:
-            market = _detect_market(codes[0])
-            for fb_name in FALLBACK_CHAINS.get(market, []):
-                if fb_name == source or fb_name not in LOADER_REGISTRY:
-                    continue
-                try:
-                    fb_loader = LOADER_REGISTRY[fb_name]()
-                    if not fb_loader.is_available():
-                        continue
-                except Exception as exc:  # missing token / optional dependency
-                    logger.debug("runtime fallback %s unavailable: %s", fb_name, exc)
-                    continue
-                fb_codes = _normalize_codes(codes, fb_name)
-                data_map = fb_loader.fetch(
-                    fb_codes, config.get("start_date", ""),
-                    config.get("end_date", ""), interval=interval,
+            if len(data_map) < len(codes):
+                logger.warning(
+                    "source=%s returned %d/%d symbols after fallback; missing: %s",
+                    source, len(data_map), len(codes), set(codes) - set(data_map.keys()),
                 )
-                if data_map:
-                    logger.info("Runtime fallback: %s -> %s", source, fb_name)
-                    source = fb_name
-                    loader = fb_loader
-                    break
+            elif len(data_map) > before:
+                logger.info("Per-symbol fallback filled %d symbol(s)", len(data_map) - before)
 
     # Loader-boundary OHLC sanity for every source, centralized at the one
     # point all fetch paths converge (auto / single / runtime fallback).
@@ -1044,6 +1030,69 @@ def _detect_primary_source(codes: List[str], source: str) -> str:
     return max(groups, key=lambda s: len(groups[s]))
 
 
+def _recover_missing_symbols(
+    result: dict,
+    original_codes: List[str],
+    primary_source: str,
+    market: str,
+    start_date: str,
+    end_date: str,
+    interval: str,
+) -> dict:
+    """Per-symbol fallback: recover symbols the primary source did not return.
+
+    A transient upstream 5xx (e.g. Yahoo 500 on a couple of names) previously
+    dropped those symbols silently because fallback only fired when the WHOLE
+    group came back empty. This walks the market's fallback chain for just the
+    missing symbols and re-keys recovered frames into the primary key space, so
+    the backtest runs on the full universe. Data quality over convenience.
+    """
+    result = dict(result or {})
+    primary_norm = _normalize_codes(original_codes, primary_source)
+    norm_to_orig = dict(zip(primary_norm, original_codes))
+    missing = [c for c in primary_norm if c not in result]
+    if not missing:
+        return result
+    for fb_name in FALLBACK_CHAINS.get(market, []):
+        if not missing:
+            break
+        if fb_name == primary_source or fb_name not in LOADER_REGISTRY:
+            continue
+        try:
+            fb_loader = LOADER_REGISTRY[fb_name]()
+            if not fb_loader.is_available():
+                continue
+        except Exception as exc:  # missing token / optional dependency
+            logger.debug("per-symbol fallback %s unavailable: %s", fb_name, exc)
+            continue
+        missing_orig = [norm_to_orig[c] for c in missing]
+        fb_codes = _normalize_codes(missing_orig, fb_name)
+        fb_to_norm = dict(zip(fb_codes, missing))
+        try:
+            recovered = fb_loader.fetch(fb_codes, start_date, end_date, interval=interval) or {}
+        except Exception as exc:  # noqa: BLE001 - a dry fallback source is not fatal
+            logger.debug("per-symbol fallback %s fetch failed: %s", fb_name, exc)
+            continue
+        got = 0
+        for fbc, df in recovered.items():
+            nc = fb_to_norm.get(fbc)
+            if nc and nc not in result and df is not None and len(df) > 0:
+                result[nc] = df
+                got += 1
+        if got:
+            logger.info(
+                "Per-symbol fallback: recovered %d/%d missing symbol(s) via %s",
+                got, len(missing), fb_name,
+            )
+        missing = [c for c in primary_norm if c not in result]
+    if missing:
+        logger.warning(
+            "Symbols unrecoverable after full fallback chain: %s",
+            [norm_to_orig[c] for c in missing],
+        )
+    return result
+
+
 def _fetch_auto(codes: List[str], config: dict, interval: str = "1D") -> dict:
     """Auto mode: route each market group through fallback chain.
 
@@ -1073,25 +1122,13 @@ def _fetch_auto(codes: List[str], config: dict, interval: str = "1D") -> dict:
         src_name = getattr(loader, "name", "unknown")
         normalized_codes = _normalize_codes(market_codes, src_name)
         fields = config.get("extra_fields") if src_name == "tushare" else None
-        result = loader.fetch(normalized_codes, start_date, end_date, fields=fields, interval=interval)
+        result = loader.fetch(normalized_codes, start_date, end_date, fields=fields, interval=interval) or {}
 
-        # Runtime fallback: try remaining sources when primary returns empty
-        if not result:
-            for fb_name in FALLBACK_CHAINS.get(market, []):
-                if fb_name == src_name or fb_name not in LOADER_REGISTRY:
-                    continue
-                try:
-                    fb_loader = LOADER_REGISTRY[fb_name]()
-                    if not fb_loader.is_available():
-                        continue
-                except Exception as exc:  # missing token / optional dependency
-                    logger.debug("runtime fallback %s unavailable: %s", fb_name, exc)
-                    continue
-                fb_codes = _normalize_codes(market_codes, fb_name)
-                result = fb_loader.fetch(fb_codes, start_date, end_date, interval=interval)
-                if result:
-                    logger.info("Runtime fallback: %s -> %s for %s", src_name, fb_name, market)
-                    break
+        # Per-symbol runtime fallback: recover any symbols the primary source
+        # missed (not just when the whole group is empty).
+        result = _recover_missing_symbols(
+            result, market_codes, src_name, market, start_date, end_date, interval,
+        )
 
         merged.update(result)
 

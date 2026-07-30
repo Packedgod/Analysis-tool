@@ -30,6 +30,7 @@ def monte_carlo_test(
     initial_capital: float,
     n_simulations: int = 1000,
     seed: int = 42,
+    bars_per_year: int = 252,
 ) -> Dict[str, Any]:
     """Shuffle trade PnL order to test path significance.
 
@@ -50,7 +51,7 @@ def monte_carlo_test(
         return {"error": "need at least 3 trades", "p_value_sharpe": 1.0}
 
     pnls = np.array([t.pnl for t in trades])
-    actual = _path_metrics(pnls, initial_capital)
+    actual = _path_metrics(pnls, initial_capital, bars_per_year)
 
     rng = np.random.default_rng(seed)
     sharpe_count = 0
@@ -59,7 +60,7 @@ def monte_carlo_test(
 
     for _ in range(n_simulations):
         shuffled = rng.permutation(pnls)
-        sim = _path_metrics(shuffled, initial_capital)
+        sim = _path_metrics(shuffled, initial_capital, bars_per_year)
         sim_sharpes.append(sim["sharpe"])
         if sim["sharpe"] >= actual["sharpe"]:
             sharpe_count += 1
@@ -81,12 +82,12 @@ def monte_carlo_test(
     }
 
 
-def _path_metrics(pnls: np.ndarray, initial_capital: float) -> Dict[str, float]:
+def _path_metrics(pnls: np.ndarray, initial_capital: float, bars_per_year: int = 252) -> Dict[str, float]:
     """Compute Sharpe and max drawdown from a PnL sequence."""
     equity = initial_capital + np.cumsum(pnls)
     returns = np.diff(equity) / equity[:-1] if len(equity) > 1 else np.array([0.0])
-    std = returns.std()
-    sharpe = float(returns.mean() / (std + 1e-10) * np.sqrt(252))
+    std = returns.std(ddof=1) if len(returns) > 1 else 0.0
+    sharpe = float(returns.mean() / (std + 1e-10) * np.sqrt(bars_per_year))
     peak = np.maximum.accumulate(equity)
     dd = (equity - peak) / np.where(peak > 0, peak, 1.0)
     max_dd = float(dd.min())
@@ -146,7 +147,10 @@ def bootstrap_sharpe_ci(
 
 
 def _sharpe(returns: np.ndarray, bars_per_year: int = 252) -> float:
-    std = returns.std()
+    # Use ddof=1 (sample std) to match metrics.calc_metrics, which relies on
+    # pandas .std() (ddof=1); this keeps the headline and validation Sharpe
+    # consistent on identical data.
+    std = returns.std(ddof=1) if len(returns) > 1 else 0.0
     return float(returns.mean() / (std + 1e-10) * np.sqrt(bars_per_year))
 
 
@@ -268,6 +272,7 @@ def run_validation(
             initial_capital,
             n_simulations=mc_cfg.get("n_simulations", 1000),
             seed=mc_cfg.get("seed", 42),
+            bars_per_year=bars_per_year,
         )
 
     if "bootstrap" in v_cfg:
@@ -391,13 +396,28 @@ def main(run_dir: Path) -> Dict[str, Any]:
         config = {}
     initial_capital = config.get("initial_cash", 1_000_000)
 
+    # Derive the annualisation factor from config so intraday/crypto runs
+    # annualise correctly; fall back to 252 when not resolvable.
+    bars_per_year = config.get("bars_per_year")
+    if not bars_per_year:
+        interval = config.get("interval")
+        source = config.get("source") or config.get("data_source")
+        if interval and source:
+            try:
+                from backtest.metrics import calc_bars_per_year
+
+                bars_per_year = calc_bars_per_year(interval, source)
+            except Exception:
+                bars_per_year = 252
+    bars_per_year = int(bars_per_year) if bars_per_year else 252
+
     equity = _load_equity(run_dir)
     trades = _load_trades(run_dir)
 
     results = {
-        "monte_carlo": monte_carlo_test(trades, initial_capital),
-        "bootstrap": bootstrap_sharpe_ci(equity),
-        "walk_forward": walk_forward_analysis(equity, trades),
+        "monte_carlo": monte_carlo_test(trades, initial_capital, bars_per_year=bars_per_year),
+        "bootstrap": bootstrap_sharpe_ci(equity, bars_per_year=bars_per_year),
+        "walk_forward": walk_forward_analysis(equity, trades, bars_per_year=bars_per_year),
     }
     safe_results = _json_safe(results)
 

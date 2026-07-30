@@ -39,6 +39,9 @@ class MarketDataTool(BaseTool):
                     "auto",
                     "yfinance",
                     "yahoo",
+                    "nse",
+                    "moneycontrol",
+                    "groww",
                     "okx",
                     "ccxt",
                     "tushare",
@@ -53,13 +56,17 @@ class MarketDataTool(BaseTool):
                     "alphavantage",
                     "tiingo",
                     "fmp",
+                    "local",
                 ],
                 "description": (
-                    "Data source. 'auto' detects from symbol format with fallback. "
-                    "Free, no key: yfinance/yahoo (US/HK equities), okx/ccxt "
-                    "(crypto), baostock/tencent/eastmoney/sina/akshare/mootdx "
+                    "Data source. 'auto' detects from symbol format with per-symbol "
+                    "fallback. Free, no key: yfinance/yahoo (US/HK/India .NS/.BO "
+                    "equities + indices), nse/moneycontrol/groww (India .NS), "
+                    "okx/ccxt (crypto), baostock/tencent/eastmoney/sina/akshare/mootdx "
                     "(China A-shares), stooq (global EOD). Key-gated REST: tushare "
-                    "(China A-shares), finnhub/alphavantage/tiingo/fmp (US/global)."
+                    "(China A-shares), finnhub/alphavantage/tiingo/fmp (US/global). "
+                    "For India (.NS/.BO) prefer 'auto' so a transient outage on one "
+                    "source falls through to the next per symbol."
                 ),
                 "default": "auto",
             },

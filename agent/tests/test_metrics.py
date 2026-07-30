@@ -273,7 +273,22 @@ class TestCalcMetrics:
     def test_sortino_positive_for_growth(self) -> None:
         eq = self._growing_equity()
         m = calc_metrics(eq, [], 1_000_000, 252)
-        assert m["sortino"] > 0
+        # _growing_equity is strictly monotonic, so downside deviation is 0 and
+        # Sortino is undefined; the guarded implementation returns 0.0. (The old
+        # code returned a large positive value only via the empty-downside
+        # 1e-10 denominator bug being fixed here.) A series with genuine
+        # downside is exercised below.
+        assert m["sortino"] == 0.0
+
+        # Growth with real down bars -> positive, finite Sortino.
+        dates = pd.bdate_range("2025-01-01", periods=100)
+        values = np.concatenate([
+            np.linspace(1_000_000, 950_000, 40),   # drawdown (downside bars)
+            np.linspace(950_000, 1_200_000, 60),    # recovery
+        ])
+        eq2 = pd.Series(values, index=dates)
+        m2 = calc_metrics(eq2, [], 1_000_000, 252)
+        assert m2["sortino"] > 0
 
     def test_calmar_positive_for_drawdown(self) -> None:
         """Growing equity with a dip should have positive Calmar."""

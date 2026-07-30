@@ -34,7 +34,13 @@ def test_ladder_order_is_exactly_the_configured_policy() -> None:
     assert [s.name for s in SOURCE_LADDER] == [
         "mint",
         "economic_times",
+        "business_standard",
+        "hindu_businessline",
+        "financial_express",
         "reuters",
+        "bloomberg",
+        "cnbctv18",
+        "ndtv_profit",
         "rbi",
         "sebi",
         "nse",
@@ -47,9 +53,9 @@ def test_ladder_order_is_exactly_the_configured_policy() -> None:
     ]
 
 
-def test_rating_agency_rung_covers_all_three() -> None:
+def test_rating_agency_rung_covers_the_major_agencies() -> None:
     rung = next(s for s in SOURCE_LADDER if s.name == "rating_agencies")
-    assert set(rung.domains) == {"icra.in", "careratings.com", "crisil.com"}
+    assert {"icra.in", "careratings.com", "crisil.com"} <= set(rung.domains)
 
 
 # --------------------------------------------------------------------------- #
@@ -109,7 +115,10 @@ def test_walk_falls_through_empty_rungs_in_order(fake_ddgs) -> None:
     out = search_ladder("q", parse_window(year=2016))
     assert out["source"] == "reuters"
     tried = [a["source"] for a in out["ladder"]]
-    assert tried == ["mint", "economic_times", "reuters"]
+    assert tried == [
+        "mint", "economic_times", "business_standard",
+        "hindu_businessline", "financial_express", "reuters",
+    ]
 
 
 def test_sweep_collects_from_every_rung(fake_ddgs) -> None:

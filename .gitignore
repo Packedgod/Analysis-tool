@@ -112,3 +112,9 @@ scripts/vibe_watchdog.ps1
 wiki/alpha-library/manifest.json
 wiki/alpha-library/content/
 
+
+# Runtime report/data caches (regenerated on demand)
+agent/data/report_pdf_store/
+agent/data/report_text_cache/
+agent/data/report_discovery_cache/
+agent/data/bse_scrip_master.json

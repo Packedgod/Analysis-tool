@@ -30,15 +30,30 @@ class IssuerArchive:
     asset_domains: tuple[str, ...] = ()
 
 
+# Ordered quality-first: primary regulators/exchanges and established financial
+# mastheads outrank aggregators. Only reputable outlets are added — the goal is
+# reliable inflow, not raw quantity (a low-signal aggregator is worse than none).
 SOURCE_LADDER = (
+    # Top-tier Indian business mastheads
     Source("mint", ("livemint.com",)),
     Source("economic_times", ("economictimes.indiatimes.com",)),
+    Source("business_standard", ("business-standard.com",)),
+    Source("hindu_businessline", ("thehindubusinessline.com",)),
+    Source("financial_express", ("financialexpress.com",)),
+    # Global wires
     Source("reuters", ("reuters.com",)),
+    Source("bloomberg", ("bloomberg.com",)),
+    # Broadcast / real-time desks
+    Source("cnbctv18", ("cnbctv18.com",)),
+    Source("ndtv_profit", ("ndtvprofit.com",)),
+    # Primary: regulators & exchanges (highest authority for facts/filings)
     Source("rbi", ("rbi.org.in",)),
     Source("sebi", ("sebi.gov.in",)),
     Source("nse", ("nseindia.com",)),
     Source("bse", ("bseindia.com",)),
-    Source("rating_agencies", ("icra.in", "careratings.com", "crisil.com")),
+    # Credit rating agencies
+    Source("rating_agencies", ("icra.in", "careratings.com", "crisil.com", "indiaratings.co.in")),
+    # Aggregators / general dailies (lower priority)
     Source("moneycontrol", ("moneycontrol.com",)),
     Source("times_of_india", ("timesofindia.indiatimes.com",)),
     Source("yahoo_finance", ("finance.yahoo.com",)),
