@@ -76,7 +76,7 @@ class TestEnvConfigDefaults:
         assert c.llm.timeout_seconds == 120
         assert c.llm.max_retries == 2
         assert c.llm.langchain_reasoning_effort == ""
-        assert c.llm.vibe_trading_deepseek_adapter == "auto"
+        assert c.llm.vantage_deepseek_adapter == "auto"
         assert c.llm.moonshot_user_agent == ""
         assert c.llm.openai_codex_base_url == "https://chatgpt.com/backend-api/codex/responses"
 
@@ -93,24 +93,24 @@ class TestEnvConfigDefaults:
         assert c.data.tiingo_api_key == ""
         assert c.data.fmp_api_key == ""
         assert c.data.fred_api_key == ""
-        assert c.data.vibe_trading_iwencai_key == ""
-        assert c.data.vibe_trading_sec_ua == ""
-        assert c.data.vibe_trading_data_cache is False
-        assert c.data.vibe_trading_data_cache_root == ""
+        assert c.data.vantage_iwencai_key == ""
+        assert c.data.vantage_sec_ua == ""
+        assert c.data.vantage_data_cache is False
+        assert c.data.vantage_data_cache_root == ""
         assert c.data.aliyun_iqs_api_key == ""
 
     def test_api_defaults(self) -> None:
         c = EnvConfig()
         assert c.api.api_auth_key == ""
-        assert c.api.vibe_trading_api_key == ""
+        assert c.api.vantage_api_key == ""
         assert c.api.cors_origins == ""
         assert c.api.api_allowed_hosts == ""
         assert c.api.enable_session_runtime is True
-        assert c.api.vibe_trading_trust_docker_loopback is False
-        assert c.api.vibe_trading_enable_shell_tools is False
-        assert c.api.vibe_trading_allowed_file_roots == ""
-        assert c.api.vibe_trading_allowed_write_roots == ""
-        assert c.api.vibe_trading_allowed_run_roots == ""
+        assert c.api.vantage_trust_docker_loopback is False
+        assert c.api.vantage_enable_shell_tools is False
+        assert c.api.vantage_allowed_file_roots == ""
+        assert c.api.vantage_allowed_write_roots == ""
+        assert c.api.vantage_allowed_run_roots == ""
 
     def test_swarm_defaults(self) -> None:
         c = EnvConfig()
@@ -128,23 +128,23 @@ class TestEnvConfigDefaults:
         assert c.agent_tuning.vt_heartbeat_interval_s == 3.0
         assert c.agent_tuning.vt_reasoning_delta_min_interval_s == 1.0
         assert c.agent_tuning.vt_stream_retry_delay_s == 1.0
-        assert c.agent_tuning.vibe_trading_tool_timeout_seconds == 1800.0
-        assert c.agent_tuning.vibe_trading_goal_max_continuations == 3
-        assert c.agent_tuning.vibe_trading_sse_timeout == 90
+        assert c.agent_tuning.vantage_tool_timeout_seconds == 1800.0
+        assert c.agent_tuning.vantage_goal_max_continuations == 3
+        assert c.agent_tuning.vantage_sse_timeout == 90
         assert c.agent_tuning.content_filter_warning_threshold == 0.05
-        assert c.agent_tuning.vibe_trading_enable_advisory is False
-        assert c.agent_tuning.vibe_trading_enable_scheduler is False
-        assert c.agent_tuning.vibe_trading_channels_auto_start is False
-        assert c.agent_tuning.vibe_trading_disable_bottleneck is False
-        assert c.agent_tuning.vibe_trading_bench_workers == 0
-        assert c.agent_tuning.vibe_trading_search_backends == ""
-        assert c.agent_tuning.vibe_trading_search_bing_fallback is True
+        assert c.agent_tuning.vantage_enable_advisory is False
+        assert c.agent_tuning.vantage_enable_scheduler is False
+        assert c.agent_tuning.vantage_channels_auto_start is False
+        assert c.agent_tuning.vantage_disable_bottleneck is False
+        assert c.agent_tuning.vantage_bench_workers == 0
+        assert c.agent_tuning.vantage_search_backends == ""
+        assert c.agent_tuning.vantage_search_bing_fallback is True
 
     def test_path_defaults(self) -> None:
         c = EnvConfig()
-        assert c.paths.vibe_trading_hypotheses_path == ""
-        assert c.paths.vibe_trading_goal_db_path == ""
-        assert c.paths.vibe_trading_swarm_agent_config == ""
+        assert c.paths.vantage_hypotheses_path == ""
+        assert c.paths.vantage_goal_db_path == ""
+        assert c.paths.vantage_swarm_agent_config == ""
         assert c.paths.allow_session_mcp_servers is False
 
 
@@ -179,9 +179,9 @@ class TestEnvConfigTypeCoercion:
         assert c.agent_tuning.token_threshold == 40000
 
     def test_bool_coercion_from_env(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        monkeypatch.setenv("VIBE_TRADING_DATA_CACHE", "true")
+        monkeypatch.setenv("VANTAGE_DATA_CACHE", "true")
         c = EnvConfig()
-        assert c.data.vibe_trading_data_cache is True
+        assert c.data.vantage_data_cache is True
 
     def test_bool_false_from_env(self, monkeypatch: pytest.MonkeyPatch) -> None:
         monkeypatch.setenv("ENABLE_SESSION_RUNTIME", "false")
@@ -243,16 +243,16 @@ class TestEnvConfigOverride:
 
 
 class TestAPIKeyAlias:
-    """Verify VIBE_TRADING_API_KEY → api_auth_key alias resolution."""
+    """Verify VANTAGE_API_KEY → api_auth_key alias resolution."""
 
-    def test_vibe_trading_api_key_only(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        monkeypatch.setenv("VIBE_TRADING_API_KEY", "secret")
+    def test_vantage_api_key_only(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        monkeypatch.setenv("VANTAGE_API_KEY", "secret")
         c = EnvConfig()
         assert c.api.api_auth_key == "secret"
-        assert c.api.vibe_trading_api_key == "secret"
+        assert c.api.vantage_api_key == "secret"
 
     def test_both_keys_explicit_wins(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        monkeypatch.setenv("VIBE_TRADING_API_KEY", "secret")
+        monkeypatch.setenv("VANTAGE_API_KEY", "secret")
         monkeypatch.setenv("API_AUTH_KEY", "other")
         c = EnvConfig()
         assert c.api.api_auth_key == "other"
@@ -265,7 +265,7 @@ class TestAPIKeyAlias:
     def test_neither_key_set(self) -> None:
         c = EnvConfig()
         assert c.api.api_auth_key == ""
-        assert c.api.vibe_trading_api_key == ""
+        assert c.api.vantage_api_key == ""
 
 
 # ===================================================================

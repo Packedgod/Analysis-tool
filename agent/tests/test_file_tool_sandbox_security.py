@@ -19,7 +19,7 @@ def _body(raw: str) -> dict:
 
 
 def test_write_file_rejects_unconfigured_absolute_run_dir(tmp_path: Path, monkeypatch) -> None:
-    monkeypatch.delenv("VIBE_TRADING_ALLOWED_RUN_ROOTS", raising=False)
+    monkeypatch.delenv("VANTAGE_ALLOWED_RUN_ROOTS", raising=False)
 
     body = _body(WriteFileTool().execute(
         path="code/signal_engine.py",
@@ -33,7 +33,7 @@ def test_write_file_rejects_unconfigured_absolute_run_dir(tmp_path: Path, monkey
 
 
 def test_read_and_edit_file_accept_configured_run_root(tmp_path: Path, monkeypatch) -> None:
-    monkeypatch.setenv("VIBE_TRADING_ALLOWED_RUN_ROOTS", str(tmp_path))
+    monkeypatch.setenv("VANTAGE_ALLOWED_RUN_ROOTS", str(tmp_path))
     target = tmp_path / "run" / "notes.md"
     target.parent.mkdir(parents=True)
     target.write_text("alpha beta", encoding="utf-8")
@@ -53,7 +53,7 @@ def test_read_and_edit_file_accept_configured_run_root(tmp_path: Path, monkeypat
 
 
 def test_backtest_rejects_unconfigured_absolute_run_dir(tmp_path: Path, monkeypatch) -> None:
-    monkeypatch.delenv("VIBE_TRADING_ALLOWED_RUN_ROOTS", raising=False)
+    monkeypatch.delenv("VANTAGE_ALLOWED_RUN_ROOTS", raising=False)
     (tmp_path / "code").mkdir()
     (tmp_path / "config.json").write_text('{"source":"auto","codes":["AAPL"]}', encoding="utf-8")
     (tmp_path / "code" / "signal_engine.py").write_text(
@@ -75,13 +75,13 @@ def test_tilde_expansion_resolves_to_mock_home(tmp_path: Path, monkeypatch) -> N
     monkeypatch.setenv("USERPROFILE", str(mock_home))
 
     # Configure mock home as allowed write root
-    monkeypatch.setenv("VIBE_TRADING_ALLOWED_WRITE_ROOTS", str(mock_home / ".vibe-trading"))
+    monkeypatch.setenv("VANTAGE_ALLOWED_WRITE_ROOTS", str(mock_home / ".vantage"))
     allowed_write = allowed_write_roots()
     assert any(p.is_relative_to(mock_home) for p in allowed_write)
 
     # Resolve safe path using tilde
-    resolved = resolve_safe_path("~/.vibe-trading/scripts/strat.py", None, allowed_write, purpose="write")
-    assert resolved == mock_home / ".vibe-trading" / "scripts" / "strat.py"
+    resolved = resolve_safe_path("~/.vantage/scripts/strat.py", None, allowed_write, purpose="write")
+    assert resolved == mock_home / ".vantage" / "scripts" / "strat.py"
 
 
 def test_read_write_separation_prevent_cross_escalation(tmp_path: Path, monkeypatch) -> None:
@@ -91,8 +91,8 @@ def test_read_write_separation_prevent_cross_escalation(tmp_path: Path, monkeypa
     write_only_dir.mkdir()
 
     # Configure separate environment variables
-    monkeypatch.setenv("VIBE_TRADING_ALLOWED_FILE_ROOTS", str(read_only_dir))
-    monkeypatch.setenv("VIBE_TRADING_ALLOWED_WRITE_ROOTS", str(write_only_dir))
+    monkeypatch.setenv("VANTAGE_ALLOWED_FILE_ROOTS", str(read_only_dir))
+    monkeypatch.setenv("VANTAGE_ALLOWED_WRITE_ROOTS", str(write_only_dir))
 
     # Setup read-only file
     ro_file = read_only_dir / "conf.json"
@@ -122,8 +122,8 @@ def test_resolve_safe_path_run_dir_escapes_fallback(tmp_path: Path, monkeypatch)
     extra_write_dir = tmp_path / "extra_write"
     extra_write_dir.mkdir()
 
-    monkeypatch.setenv("VIBE_TRADING_ALLOWED_RUN_ROOTS", str(tmp_path / "runs"))
-    monkeypatch.setenv("VIBE_TRADING_ALLOWED_WRITE_ROOTS", str(extra_write_dir))
+    monkeypatch.setenv("VANTAGE_ALLOWED_RUN_ROOTS", str(tmp_path / "runs"))
+    monkeypatch.setenv("VANTAGE_ALLOWED_WRITE_ROOTS", str(extra_write_dir))
 
     # 1. Inside run_dir -> resolves to run_dir
     resolved_1 = resolve_safe_path("script.py", str(run_dir), allowed_write_roots(), purpose="write")

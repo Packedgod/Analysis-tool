@@ -90,7 +90,7 @@ def test_parse_dsml_tool_call_content_as_structured_tool_call() -> None:
         '<｜｜DSML｜｜tool_calls> '
         '<｜｜DSML｜｜invoke name="bash"> '
         '<｜｜DSML｜｜parameter name="command" string="true">'
-        "python -c \"print('vibe-dsml-ok')\""
+        "python -c \"print('vantage-dsml-ok')\""
         "</｜｜DSML｜｜parameter> "
         "</｜｜DSML｜｜invoke> "
         "</｜｜DSML｜｜tool_calls>/"
@@ -103,7 +103,7 @@ def test_parse_dsml_tool_call_content_as_structured_tool_call() -> None:
     assert response.tool_calls[0].id == "dsml_call_1"
     assert response.tool_calls[0].name == "bash"
     assert response.tool_calls[0].arguments == {
-        "command": "python -c \"print('vibe-dsml-ok')\""
+        "command": "python -c \"print('vantage-dsml-ok')\""
     }
     assert response.finish_reason == "tool_calls"
 

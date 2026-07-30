@@ -78,7 +78,7 @@ def _strip_surrogates(text: str) -> str:
 # ---------------------------------------------------------------- session ----
 
 
-class _VibePromptSession(PromptSession):
+class _VantagePromptSession(PromptSession):
     """PromptSession with a prompt-height that hugs the edited text."""
 
     def _create_layout(self):  # type: ignore[no-untyped-def]
@@ -250,8 +250,8 @@ def _build_keybindings(state: _CtrlCState) -> KeyBindings:
 
 
 def _default_history_path() -> Path:
-    """Where ``~/.vibe-trading/history`` lives by default."""
-    home = Path.home() / ".vibe-trading"
+    """Where ``~/.vantage/history`` lives by default."""
+    home = Path.home() / ".vantage"
     return home / "history"
 
 
@@ -260,12 +260,12 @@ def make_session(history_path: Optional[Path] = None) -> PromptSession:
 
     Args:
         history_path: Override for the persistent history file. ``None``
-            uses ``~/.vibe-trading/history``.
+            uses ``~/.vantage/history``.
 
     Returns:
         A ready-to-use ``PromptSession`` wired to the slash completer,
         Ctrl+C bindings, multi-line editing, and a surrogate-safe
-        history file. The session exposes ``vibe_ctrl_c_state`` on the
+        history file. The session exposes ``vantage_ctrl_c_state`` on the
         returned object so callers can implement the two-press exit
         confirmation.
     """
@@ -283,7 +283,7 @@ def make_session(history_path: Optional[Path] = None) -> PromptSession:
     from cli.completer import SlashCompleter
 
     ctrl_c_state = _CtrlCState()
-    session = _VibePromptSession(
+    session = _VantagePromptSession(
         history=SafeFileHistory(str(path)),
         completer=SlashCompleter(),
         complete_while_typing=True,
@@ -300,7 +300,7 @@ def make_session(history_path: Optional[Path] = None) -> PromptSession:
         ),
     )
     # Expose the state so the outer loop can implement two-press exit.
-    setattr(session, "vibe_ctrl_c_state", ctrl_c_state)
+    setattr(session, "vantage_ctrl_c_state", ctrl_c_state)
     return session
 
 
@@ -350,12 +350,12 @@ def ctrl_c_within_window(session: PromptSession, window_sec: float = _EXIT_HINT_
 
     * ``SimpleNamespace`` test doubles that set ``last_press_ts`` directly
       (legacy test fixtures predate the two-timestamp design).
-    * ``vibe_ctrl_c_state`` being absent entirely (defensive — returns
+    * ``vantage_ctrl_c_state`` being absent entirely (defensive — returns
       ``False`` so the caller treats it as "no exit").
 
     Args:
         session: The active prompt_toolkit session (or a duck-typed
-            stand-in exposing ``vibe_ctrl_c_state``).
+            stand-in exposing ``vantage_ctrl_c_state``).
         window_sec: Window length in seconds. Only used by the fallback
             paths described above; the primary path trusts the cached
             ``last_window_hit`` already computed against the configured
@@ -364,7 +364,7 @@ def ctrl_c_within_window(session: PromptSession, window_sec: float = _EXIT_HINT_
     Returns:
         ``True`` iff the loop should now exit.
     """
-    state = getattr(session, "vibe_ctrl_c_state", None)
+    state = getattr(session, "vantage_ctrl_c_state", None)
     if state is None:
         return False
     # Primary path — the keybinding cached the press-time decision.

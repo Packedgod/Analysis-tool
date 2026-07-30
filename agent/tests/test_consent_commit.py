@@ -498,7 +498,7 @@ def test_registry_exposes_no_mandate_or_commit_tools() -> None:
     """This analysis-only fork removed the brokerage subsystem entirely.
 
     Neither the mandate-proposal tool nor any mandate-writer/commit tool may be
-    registered, regardless of any stale ``VIBE_TRADING_ENABLE_BROKERAGE`` flag.
+    registered, regardless of any stale ``VANTAGE_ENABLE_BROKERAGE`` flag.
     """
     from src.tools import build_registry
 

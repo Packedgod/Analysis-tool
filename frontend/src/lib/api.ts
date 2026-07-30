@@ -134,7 +134,7 @@ export const api = {
     networkRetries: 5,
   }),
   // Runtime capability flags. `capabilities.brokerage` mirrors the backend
-  // VIBE_TRADING_ENABLE_BROKERAGE switch so the UI can hide every live-trading
+  // VANTAGE_ENABLE_BROKERAGE switch so the UI can hide every live-trading
   // surface in the research-only build without probing the gated /live routes.
   getApiInfo: (signal?: AbortSignal) => request<ApiInfo>("/api", { signal }),
   getMarketOverview: (signal?: AbortSignal) => request<MarketOverview>("/market/overview", { signal }),

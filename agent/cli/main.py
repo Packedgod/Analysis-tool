@@ -1,4 +1,4 @@
-"""Interactive CLI front door for Vibe-Trading.
+"""Interactive CLI front door for Vantage.
 
 Responsibilities:
 
@@ -13,7 +13,7 @@ Responsibilities:
    long tail of ``serve``, ``run``, ``mcp``, ``sessions``, ``swarm`` etc.
    keeps working without regression.
 
-The console script entry in ``pyproject.toml`` (``vibe-trading = "cli:main"``)
+The console script entry in ``pyproject.toml`` (``vantage = "cli:main"``)
 hits :func:`main`.
 """
 
@@ -97,7 +97,7 @@ def _register_data_slash_commands() -> None:  # QVERIS-INTEGRATION
 _register_data_slash_commands()  # QVERIS-INTEGRATION
 # QVERIS-INTEGRATION
 _AGENT_DIR = Path(__file__).resolve().parents[1]
-_ENV_PATH = Path.home() / ".vibe-trading" / ".env"
+_ENV_PATH = Path.home() / ".vantage" / ".env"
 _PROJECT_ENV_PATH = _AGENT_DIR / ".env"
 _CWD_ENV_PATH = Path.cwd() / ".env"
 # Best-effort fallbacks used only when the probe genuinely fails (missing
@@ -155,7 +155,7 @@ def _probe_skill_count() -> int:
 
     Reads ``SkillsLoader.skills`` directly — that is the authoritative list
     populated by :meth:`SkillsLoader._load` from bundled ``agent/skills/``
-    plus ``~/.vibe-trading/skills/user/``.
+    plus ``~/.vantage/skills/user/``.
     """
     try:
         from src.agent.skills import SkillsLoader
@@ -168,7 +168,7 @@ def _probe_skill_count() -> int:
 
 def _probe_session_count() -> int:
     """Count recorded sessions from the SQLite store."""
-    db_path = Path.home() / ".vibe-trading" / "sessions.db"
+    db_path = Path.home() / ".vantage" / "sessions.db"
     if not db_path.exists():
         return 0
     try:
@@ -312,7 +312,7 @@ def _show_banner() -> None:
     console.print(
         "  [dim]Live trading (opt-in, read-only by default): "
         "[/dim][bold]/connector[/bold][dim] in chat · "
-        "[/dim][bold]vibe-trading connector --help[/bold][dim] · "
+        "[/dim][bold]vantage connector --help[/bold][dim] · "
         "[/dim][bold]/halt[/bold][dim] = kill switch.[/dim]"
     )
     console.print()
@@ -399,7 +399,7 @@ def _new_session(prompt_preview: str) -> Optional[str]:
 
     Dual-writes to the filesystem :class:`SessionStore` (canonical JSONL
     log under ``agent/sessions/``) *and* to the SQLite FTS5 search index
-    (``~/.vibe-trading/sessions.db``) so cross-session search via
+    (``~/.vantage/sessions.db``) so cross-session search via
     :class:`SessionSearchIndex` finds turns recorded from the interactive
     loop. Matches the pattern in :class:`SessionService`.
     """
@@ -528,7 +528,7 @@ def _start_preflight_async() -> threading.Thread:
         except Exception:  # noqa: BLE001
             pass
 
-    thread = threading.Thread(target=_worker, daemon=True, name="vibe-preflight")
+    thread = threading.Thread(target=_worker, daemon=True, name="vantage-preflight")
     thread.start()
     return thread
 
@@ -737,7 +737,7 @@ def _run_one_turn(user_input: str, ctx: InteractiveContext) -> None:
             dashboard.finish(result, time.perf_counter() - start)
     except (KeyboardInterrupt, BrokenPipeError):
         dashboard.close()
-        # BrokenPipe: caller did ``vibe-trading chat | head`` and the
+        # BrokenPipe: caller did ``vantage chat | head`` and the
         # downstream pipe closed mid-render. Print may itself fail on
         # the closed fd, so swallow that defensively too.
         try:
@@ -860,7 +860,7 @@ def _trip_halt_from_repl(console: Any, *, reason: str) -> None:
         return
     console.print(
         "[bold red]Live trading halted[/bold red] — all live order tools are now "
-        "disabled until you run [bold]/resume[/bold] or [bold]vibe-trading connector resume[/bold]."
+        "disabled until you run [bold]/resume[/bold] or [bold]vantage connector resume[/bold]."
     )
     console.print(f"[dim]HALT sentinel: {path}[/dim]")
 
@@ -870,7 +870,7 @@ def _clear_halt_from_repl(console: Any) -> None:
 
     Clearing the halt is a privileged surface action — an explicit re-enable,
     never an agent tool (SPEC.md Consent §4). It is intercepted in the input
-    path so the model never performs it. Mirrors ``vibe-trading connector resume``
+    path so the model never performs it. Mirrors ``vantage connector resume``
     with no broker (the global scope).
 
     Args:
@@ -894,7 +894,7 @@ def _clear_halt_from_repl(console: Any) -> None:
 def _run_connector_command_from_repl(console: Any, args: list[str]) -> None:
     """Run a ``/connector ...`` subcommand from the REPL via the dispatcher.
 
-    ``/connector`` is a thin in-REPL bridge to the ``vibe-trading connector``
+    ``/connector`` is a thin in-REPL bridge to the ``vantage connector``
     subcommand group (SPEC.md §9 Decision 1): ``/connector status``,
     ``/connector start``, ``/connector stop``, ``/connector halt``, etc. It parses the
     arguments through the same argparse surface as the non-interactive CLI and
@@ -1028,7 +1028,7 @@ def _commit_mandate(proposal: Dict[str, Any], selected_ordinal: int) -> Dict[str
     commit-endpoint parcel) and is NEVER fed to the model. ``consent_ack`` is set
     here because the user's keypress *is* the affirmative consent.
 
-    The endpoint base URL is read from ``VIBE_TRADING_API_URL`` (falling back to
+    The endpoint base URL is read from ``VANTAGE_API_URL`` (falling back to
     ``http://127.0.0.1:8000``); a per-request override is not accepted from the
     proposal payload so the model cannot redirect the commit.
 
@@ -1045,7 +1045,7 @@ def _commit_mandate(proposal: Dict[str, Any], selected_ordinal: int) -> Dict[str
 
     from src.config.accessor import get_env_config
 
-    base = get_env_config().api.vibe_trading_api_url.rstrip("/")
+    base = get_env_config().api.vantage_api_url.rstrip("/")
     body = {
         "proposal_id": proposal.get("proposal_id"),
         "selected_ordinal": selected_ordinal,
@@ -1131,7 +1131,7 @@ def _interactive_loop(max_iter: int, resume_session_id: Optional[str] = None) ->
     pending_input: Optional[str] = None
 
     if resume_session_id:
-        # Resume a specific session by ID (``vibe-trading resume <session-id>``).
+        # Resume a specific session by ID (``vantage resume <session-id>``).
         try:
             store = _session_store()
             session = store.get_session(resume_session_id)
@@ -1259,7 +1259,7 @@ def _interactive_loop(max_iter: int, resume_session_id: Optional[str] = None) ->
     console.print("[dim]Goodbye[/dim]")
     if ctx.session_id:
         console.print(
-            f"[dim]To resume this session:[/dim] [bold]vibe-trading resume {ctx.session_id}[/bold]"
+            f"[dim]To resume this session:[/dim] [bold]vantage resume {ctx.session_id}[/bold]"
         )
     return 0
 
@@ -1300,7 +1300,7 @@ def main(argv: Optional[list[str]] = None) -> int:
         max_iter = _extract_max_iter(raw_argv, default=50)
         return _interactive_loop(max_iter)
 
-    # Handle ``vibe-trading resume <session-id>`` — enter the interactive
+    # Handle ``vantage resume <session-id>`` — enter the interactive
     # loop with a specific session loaded, bypassing the legacy dispatcher.
     if len(raw_argv) == 2 and raw_argv[0] == "resume":
         max_iter = _extract_max_iter(raw_argv, default=50)
@@ -1362,7 +1362,7 @@ def _build_typer_app():  # type: ignore[no-untyped-def]
     app = typer.Typer(
         add_completion=False,
         no_args_is_help=False,
-        help="Vibe-Trading — natural-language finance research agent.",
+        help="Vantage — natural-language finance research agent.",
         rich_markup_mode=None,
     )
 

@@ -113,8 +113,8 @@
     "disconnected": "连接已断开"
   },
   "welcome": {
-    "title": "Vibe-Trading",
-    "subtitle": "与你的专业金融智能体团队一起进行 vibe trading",
+    "title": "Vantage",
+    "subtitle": "与你的专业金融智能体团队一起进行 vantage trading",
     "describePrompt": "描述一个交易策略即可开始。",
     "tryExample": "试试示例：",
     "categories": {
@@ -268,7 +268,7 @@
     "clearApiKey": "清除已保存的 API 密钥",
     "channels": {
       "title": "IM 通道",
-      "description": "将聊天适配器接入 Web UI 和 CLI 使用的同一套 Vibe-Trading 会话运行时。",
+      "description": "将聊天适配器接入 Web UI 和 CLI 使用的同一套 Vantage 会话运行时。",
       "runtime": "运行时",
       "running": "运行中",
       "stopped": "已停止",

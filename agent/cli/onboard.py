@@ -1,10 +1,10 @@
 """First-launch onboarding wizard.
 
-Triggered automatically when ``~/.vibe-trading/.env`` does not exist. Five
+Triggered automatically when ``~/.vantage/.env`` does not exist. Five
 back-steppable steps (provider → model → key → timeout → optional Tushare),
 matching §3.2 of the 2026-05-19 UI/UX design proposal.
 
-Each step persists immediately to ``~/.vibe-trading/.env.partial`` and the
+Each step persists immediately to ``~/.vantage/.env.partial`` and the
 file is atomically renamed to ``.env`` only on completion, so a crash mid-
 wizard never leaves a corrupt ``.env`` behind. API key entry is masked.
 
@@ -94,7 +94,7 @@ TIMEOUT_CHOICES: Final[tuple[tuple[str, str], ...]] = (
 # ---------------------------------------------------------------------------
 
 
-def _env_dir() -> Path: return Path.home() / ".vibe-trading"
+def _env_dir() -> Path: return Path.home() / ".vantage"
 def _env_path() -> Path: return _env_dir() / ".env"
 def _partial_path() -> Path: return _env_dir() / ".env.partial"
 
@@ -356,9 +356,9 @@ def _validate_key(provider: Provider, key: str) -> str | None:
 
 def _intro_header(console: Console) -> None:
     console.print()
-    console.print(Text("  Vibe-Trading setup", style=Theme.primary))
+    console.print(Text("  Vantage setup", style=Theme.primary))
     console.print(Text(
-        "  We didn't find a config at ~/.vibe-trading/.env.\n"
+        "  We didn't find a config at ~/.vantage/.env.\n"
         "  Let's set up in under a minute.",
         style=Theme.muted,
     ))
@@ -427,7 +427,7 @@ def run_onboarding(*, console: Console | None = None) -> Path | None:
                     style=Theme.success,
                 ))
                 cons.print(Text(
-                    "  After setup, run: vibe-trading provider login openai-codex",
+                    "  After setup, run: vantage provider login openai-codex",
                     style=Theme.muted,
                 ))
             else:
@@ -437,7 +437,7 @@ def run_onboarding(*, console: Console | None = None) -> Path | None:
         while True:
             key = _prompt_secret(
                 f"Paste your {provider.label} API key "
-                "(saved to ~/.vibe-trading/.env, never logged)",
+                "(saved to ~/.vantage/.env, never logged)",
                 console=cons,
             )
             if key is BACK or key is CANCEL:

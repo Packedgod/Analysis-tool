@@ -38,7 +38,7 @@ def _ok_payload() -> Dict[str, Any]:
 
 
 class TestToFinnhubSymbol:
-    """Vibe-Trading -> Finnhub ticker translation."""
+    """Vantage -> Finnhub ticker translation."""
 
     def test_us_suffix_stripped(self):
         assert _to_finnhub_symbol("AAPL.US") == "AAPL"
@@ -98,7 +98,7 @@ class TestFetch:
 
     def test_returns_empty_without_key(self, monkeypatch):
         monkeypatch.delenv("FINNHUB_API_KEY", raising=False)
-        monkeypatch.setenv("VIBE_TRADING_DATA_CACHE", "0")
+        monkeypatch.setenv("VANTAGE_DATA_CACHE", "0")
 
         def boom(*args, **kwargs):  # pragma: no cover - must never be called
             raise AssertionError("no network call without a key")
@@ -108,7 +108,7 @@ class TestFetch:
 
     def test_parses_candles_into_ohlcv_frame(self, monkeypatch):
         monkeypatch.setenv("FINNHUB_API_KEY", "tok_123")
-        monkeypatch.setenv("VIBE_TRADING_DATA_CACHE", "0")
+        monkeypatch.setenv("VANTAGE_DATA_CACHE", "0")
 
         captured: Dict[str, Any] = {}
 
@@ -144,7 +144,7 @@ class TestFetch:
         loaders' nanosecond index and from a plain ``datetime64[ns]`` literal.
         """
         monkeypatch.setenv("FINNHUB_API_KEY", "tok_123")
-        monkeypatch.setenv("VIBE_TRADING_DATA_CACHE", "0")
+        monkeypatch.setenv("VANTAGE_DATA_CACHE", "0")
         monkeypatch.setattr(
             finnhub_loader, "throttled_get_json", lambda url, **kwargs: _ok_payload()
         )
@@ -159,7 +159,7 @@ class TestFetch:
 
     def test_no_data_status_yields_no_entry(self, monkeypatch):
         monkeypatch.setenv("FINNHUB_API_KEY", "tok_123")
-        monkeypatch.setenv("VIBE_TRADING_DATA_CACHE", "0")
+        monkeypatch.setenv("VANTAGE_DATA_CACHE", "0")
         monkeypatch.setattr(
             finnhub_loader,
             "throttled_get_json",
@@ -169,7 +169,7 @@ class TestFetch:
 
     def test_one_failing_symbol_does_not_abort_batch(self, monkeypatch):
         monkeypatch.setenv("FINNHUB_API_KEY", "tok_123")
-        monkeypatch.setenv("VIBE_TRADING_DATA_CACHE", "0")
+        monkeypatch.setenv("VANTAGE_DATA_CACHE", "0")
 
         def selective(url, **kwargs):
             if kwargs["params"]["symbol"] == "BAD":
@@ -183,7 +183,7 @@ class TestFetch:
 
     def test_skips_bars_with_missing_ohlc(self, monkeypatch):
         monkeypatch.setenv("FINNHUB_API_KEY", "tok_123")
-        monkeypatch.setenv("VIBE_TRADING_DATA_CACHE", "0")
+        monkeypatch.setenv("VANTAGE_DATA_CACHE", "0")
         payload = _ok_payload()
         payload["c"] = [None, 12.5]  # first bar's close is a gap
 

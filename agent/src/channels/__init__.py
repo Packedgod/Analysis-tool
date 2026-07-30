@@ -1,6 +1,6 @@
 """Chat channels module — multi-IM adapter layer.
 
-Provides a plugin-based channel architecture for connecting Vibe-Trading
+Provides a plugin-based channel architecture for connecting Vantage
 to chat platforms (Telegram, Discord, Slack, Feishu, WhatsApp, etc.).
 
 Architecture::
@@ -22,7 +22,7 @@ Core components:
     - :mod:`src.channels.utils` — shared helpers (split_message, safe_filename, etc.)
 
 Built-in channels are discovered via ``pkgutil.iter_modules`` on this package.
-External plugins can register via the ``vibe_trading.channels`` entry_point group.
+External plugins can register via the ``vantage.channels`` entry_point group.
 
 Usage::
 

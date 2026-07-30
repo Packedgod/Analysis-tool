@@ -60,7 +60,7 @@ def _agent(llm: _CapturingLLM, run_dir: Path) -> AgentLoop:
 
 def test_agent_loop_injects_active_goal_context(tmp_path: Path, monkeypatch) -> None:
     monkeypatch.setattr("src.agent.loop.GOAL_MAX_CONTINUATIONS", 0)
-    monkeypatch.setenv("VIBE_TRADING_GOAL_DB_PATH", str(tmp_path / "goals.db"))
+    monkeypatch.setenv("VANTAGE_GOAL_DB_PATH", str(tmp_path / "goals.db"))
     store = GoalStore()
     goal = store.replace_goal(
         session_id="session-1",
@@ -85,7 +85,7 @@ def test_agent_loop_injects_active_goal_context(tmp_path: Path, monkeypatch) -> 
 
 def test_agent_loop_accounts_goal_token_and_turn_usage(tmp_path: Path, monkeypatch) -> None:
     monkeypatch.setattr("src.agent.loop.GOAL_MAX_CONTINUATIONS", 0)
-    monkeypatch.setenv("VIBE_TRADING_GOAL_DB_PATH", str(tmp_path / "goals.db"))
+    monkeypatch.setenv("VANTAGE_GOAL_DB_PATH", str(tmp_path / "goals.db"))
     store = GoalStore()
     goal = store.replace_goal(
         session_id="session-1",
@@ -109,7 +109,7 @@ def test_agent_loop_accounts_goal_token_and_turn_usage(tmp_path: Path, monkeypat
 
 def test_agent_loop_continues_active_incomplete_goal(tmp_path: Path, monkeypatch) -> None:
     monkeypatch.setattr("src.agent.loop.GOAL_MAX_CONTINUATIONS", 1)
-    monkeypatch.setenv("VIBE_TRADING_GOAL_DB_PATH", str(tmp_path / "goals.db"))
+    monkeypatch.setenv("VANTAGE_GOAL_DB_PATH", str(tmp_path / "goals.db"))
     store = GoalStore()
     store.replace_goal(
         session_id="session-1",
@@ -136,7 +136,7 @@ def test_agent_loop_continues_active_covered_goal_to_force_audit(tmp_path: Path,
     from src.goal import EvidenceInput
 
     monkeypatch.setattr("src.agent.loop.GOAL_MAX_CONTINUATIONS", 1)
-    monkeypatch.setenv("VIBE_TRADING_GOAL_DB_PATH", str(tmp_path / "goals.db"))
+    monkeypatch.setenv("VANTAGE_GOAL_DB_PATH", str(tmp_path / "goals.db"))
     store = GoalStore()
     goal = store.replace_goal(
         session_id="session-1",

@@ -18,7 +18,7 @@ from src.api._compat import host_attr as _host_attr
 # Path constants
 # ============================================================================
 
-# helpers.py lives at agent/src/api/helpers.py — 4 levels up to Vibe-Trading/.
+# helpers.py lives at agent/src/api/helpers.py — 4 levels up to Vantage/.
 _AGENT_DIR = Path(__file__).resolve().parent.parent.parent  # agent/
 
 RUNS_DIR = _AGENT_DIR / "runs"
@@ -73,7 +73,7 @@ def _set_owner_only_secret_permissions(path: Path, *, fd: int | None = None) -> 
     Codex sandbox token and the interactive desktop account are distinct local
     users even though both expose the same ``USERNAME`` environment value.
     Granting only the process-token SID makes ``agent/.env`` unreadable when
-    the user later starts Vibe-Trading normally. The protected DACL therefore
+    the user later starts Vantage normally. The protected DACL therefore
     includes the current token plus the single ``USERDOMAIN\\USERNAME`` account
     when it resolves to a different SID; it never grants a group or Everyone.
     """
@@ -180,7 +180,7 @@ def _ensure_agent_env_file() -> Path:
     """Ensure the project-local agent/.env exists."""
     env_path = _host_attr("ENV_PATH", ENV_PATH)
     if not env_path.exists():
-        _atomic_write_secret(env_path, "# Created by Vibe-Trading Web UI settings.\n")
+        _atomic_write_secret(env_path, "# Created by Vantage Web UI settings.\n")
     return env_path
 
 

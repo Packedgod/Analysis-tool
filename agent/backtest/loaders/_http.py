@@ -108,7 +108,7 @@ def resolve_min_interval(env_name: str, default: float) -> float:
 
     Args:
         env_name: Env var carrying an override in seconds (e.g.
-            ``VIBE_TRADING_EASTMONEY_MIN_INTERVAL``).
+            ``VANTAGE_EASTMONEY_MIN_INTERVAL``).
         default: Fallback interval when the env var is absent or invalid.
 
     Returns:

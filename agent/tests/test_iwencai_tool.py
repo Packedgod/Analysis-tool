@@ -16,7 +16,7 @@ import pytest
 from src.tools import iwencai_tool
 from src.tools.iwencai_tool import IWenCaiSearchTool, _coerce_limit, _extract_rows
 
-_KEY_ENV = "VIBE_TRADING_IWENCAI_KEY"
+_KEY_ENV = "VANTAGE_IWENCAI_KEY"
 
 
 def _robot_payload() -> dict[str, Any]:

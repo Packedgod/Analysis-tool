@@ -20,7 +20,7 @@ import pytest
 
 def _reload_base_with_bottleneck(enabled: bool):
     """Reload base.py with bottleneck enabled or disabled."""
-    os.environ["VIBE_TRADING_DISABLE_BOTTLENECK"] = "0" if enabled else "1"
+    os.environ["VANTAGE_DISABLE_BOTTLENECK"] = "0" if enabled else "1"
     # Force reimport of _backend and base
     if "src.factors._backend" in sys.modules:
         del sys.modules["src.factors._backend"]
@@ -289,7 +289,7 @@ class TestBackend:
         assert HAS_BOTTLENECK is True
 
     def test_disable_env_var(self):
-        """VIBE_TRADING_DISABLE_BOTTLENECK=1 should disable bottleneck."""
+        """VANTAGE_DISABLE_BOTTLENECK=1 should disable bottleneck."""
         _reload_base_with_bottleneck(False)
         from src.factors._backend import HAS_BOTTLENECK
 

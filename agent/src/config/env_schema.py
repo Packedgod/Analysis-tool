@@ -1,7 +1,7 @@
-"""Single source of truth for all Vibe-Trading environment variable defaults.
+"""Single source of truth for all Vantage environment variable defaults.
 
 This module defines Pydantic models for every environment variable consumed by
-the Vibe-Trading agent, grouped by functional category.  Each field carries the
+the Vantage agent, grouped by functional category.  Each field carries the
 correct type, default value, and env-var alias so that ``EnvConfig()`` with no
 arguments reads from ``os.environ`` and applies the documented defaults.
 
@@ -129,7 +129,7 @@ class LLMConfig(_EnvBase):
     timeout_seconds: int = Field(alias="TIMEOUT_SECONDS", default=120)
     max_retries: int = Field(alias="MAX_RETRIES", default=2)
     langchain_reasoning_effort: str = Field(alias="LANGCHAIN_REASONING_EFFORT", default="")
-    vibe_trading_deepseek_adapter: str = Field(alias="VIBE_TRADING_DEEPSEEK_ADAPTER", default="auto")
+    vantage_deepseek_adapter: str = Field(alias="VANTAGE_DEEPSEEK_ADAPTER", default="auto")
     moonshot_user_agent: str = Field(alias="MOONSHOT_USER_AGENT", default="")
     openai_codex_base_url: str = Field(
         alias="OPENAI_CODEX_BASE_URL",
@@ -161,10 +161,10 @@ class DataConfig(_EnvBase):
     tiingo_api_key: str = Field(alias="TIINGO_API_KEY", default="")
     fmp_api_key: str = Field(alias="FMP_API_KEY", default="")
     fred_api_key: str = Field(alias="FRED_API_KEY", default="")
-    vibe_trading_iwencai_key: str = Field(alias="VIBE_TRADING_IWENCAI_KEY", default="")
-    vibe_trading_sec_ua: str = Field(alias="VIBE_TRADING_SEC_UA", default="")
-    vibe_trading_data_cache: EnvBool = Field(alias="VIBE_TRADING_DATA_CACHE", default=False)
-    vibe_trading_data_cache_root: str = Field(alias="VIBE_TRADING_DATA_CACHE_ROOT", default="")
+    vantage_iwencai_key: str = Field(alias="VANTAGE_IWENCAI_KEY", default="")
+    vantage_sec_ua: str = Field(alias="VANTAGE_SEC_UA", default="")
+    vantage_data_cache: EnvBool = Field(alias="VANTAGE_DATA_CACHE", default=False)
+    vantage_data_cache_root: str = Field(alias="VANTAGE_DATA_CACHE_ROOT", default="")
     aliyun_iqs_api_key: str = Field(alias="ALIYUN_IQS_API_KEY", default="")
     qveris_api_key: str = Field(alias="QVERIS_API_KEY", default="")
     qveris_base_url: str = Field(alias="QVERIS_BASE_URL", default="")
@@ -183,8 +183,8 @@ class OcrConfig(_EnvBase):
     Sources: ``src/tools/ocr/engine.py``, ``src/tools/ocr/qwen_vision_ocr.py``.
     """
 
-    vibe_trading_ocr_engine: str = Field(alias="VIBE_TRADING_OCR_ENGINE", default="auto")
-    vibe_trading_ocr_qwen_model: str = Field(alias="VIBE_TRADING_OCR_QWEN_MODEL", default="")
+    vantage_ocr_engine: str = Field(alias="VANTAGE_OCR_ENGINE", default="auto")
+    vantage_ocr_qwen_model: str = Field(alias="VANTAGE_OCR_QWEN_MODEL", default="")
 
 
 # ---------------------------------------------------------------------------
@@ -200,27 +200,27 @@ class APIConfig(_EnvBase):
     """
 
     api_auth_key: str = Field(alias="API_AUTH_KEY", default="")
-    vibe_trading_api_key: str = Field(alias="VIBE_TRADING_API_KEY", default="")
+    vantage_api_key: str = Field(alias="VANTAGE_API_KEY", default="")
     cors_origins: str = Field(alias="CORS_ORIGINS", default="")
     api_allowed_hosts: str = Field(alias="API_ALLOWED_HOSTS", default="")
     enable_session_runtime: EnvBool = Field(alias="ENABLE_SESSION_RUNTIME", default=True)
-    vibe_trading_trust_docker_loopback: EnvBool = Field(
-        alias="VIBE_TRADING_TRUST_DOCKER_LOOPBACK", default=False,
+    vantage_trust_docker_loopback: EnvBool = Field(
+        alias="VANTAGE_TRUST_DOCKER_LOOPBACK", default=False,
     )
-    vibe_trading_enable_shell_tools: EnvBool = Field(
-        alias="VIBE_TRADING_ENABLE_SHELL_TOOLS", default=False,
+    vantage_enable_shell_tools: EnvBool = Field(
+        alias="VANTAGE_ENABLE_SHELL_TOOLS", default=False,
     )
-    vibe_trading_allowed_file_roots: str = Field(
-        alias="VIBE_TRADING_ALLOWED_FILE_ROOTS", default="",
+    vantage_allowed_file_roots: str = Field(
+        alias="VANTAGE_ALLOWED_FILE_ROOTS", default="",
     )
-    vibe_trading_allowed_write_roots: str = Field(
-        alias="VIBE_TRADING_ALLOWED_WRITE_ROOTS", default="",
+    vantage_allowed_write_roots: str = Field(
+        alias="VANTAGE_ALLOWED_WRITE_ROOTS", default="",
     )
-    vibe_trading_allowed_run_roots: str = Field(
-        alias="VIBE_TRADING_ALLOWED_RUN_ROOTS", default="",
+    vantage_allowed_run_roots: str = Field(
+        alias="VANTAGE_ALLOWED_RUN_ROOTS", default="",
     )
-    vibe_trading_api_url: str = Field(
-        alias="VIBE_TRADING_API_URL", default="http://127.0.0.1:8000",
+    vantage_api_url: str = Field(
+        alias="VANTAGE_API_URL", default="http://127.0.0.1:8000",
     )
     futu_trade_pwd_md5: str = Field(alias="FUTU_TRADE_PWD_MD5", default="")
 
@@ -266,43 +266,43 @@ class AgentTuningConfig(_EnvBase):
         alias="VT_REASONING_DELTA_MIN_INTERVAL_S", default=1.0,
     )
     vt_stream_retry_delay_s: float = Field(alias="VT_STREAM_RETRY_DELAY_S", default=1.0)
-    vibe_trading_tool_timeout_seconds: float = Field(
-        alias="VIBE_TRADING_TOOL_TIMEOUT_SECONDS", default=1800.0,
+    vantage_tool_timeout_seconds: float = Field(
+        alias="VANTAGE_TOOL_TIMEOUT_SECONDS", default=1800.0,
     )
-    vibe_trading_goal_max_continuations: int = Field(
-        alias="VIBE_TRADING_GOAL_MAX_CONTINUATIONS", default=3,
+    vantage_goal_max_continuations: int = Field(
+        alias="VANTAGE_GOAL_MAX_CONTINUATIONS", default=3,
     )
-    vibe_trading_sse_timeout: int = Field(alias="VIBE_TRADING_SSE_TIMEOUT", default=90)
+    vantage_sse_timeout: int = Field(alias="VANTAGE_SSE_TIMEOUT", default=90)
     content_filter_warning_threshold: float = Field(
         alias="CONTENT_FILTER_WARNING_THRESHOLD", default=0.05,
     )
-    vibe_trading_enable_advisory: EnvBool = Field(
-        alias="VIBE_TRADING_ENABLE_ADVISORY", default=False,
+    vantage_enable_advisory: EnvBool = Field(
+        alias="VANTAGE_ENABLE_ADVISORY", default=False,
     )
-    vibe_trading_enable_scheduler: EnvBool = Field(
-        alias="VIBE_TRADING_ENABLE_SCHEDULER", default=False,
+    vantage_enable_scheduler: EnvBool = Field(
+        alias="VANTAGE_ENABLE_SCHEDULER", default=False,
     )
-    vibe_trading_channels_auto_start: EnvBool = Field(
-        alias="VIBE_TRADING_CHANNELS_AUTO_START", default=False,
+    vantage_channels_auto_start: EnvBool = Field(
+        alias="VANTAGE_CHANNELS_AUTO_START", default=False,
     )
     # Master switch for the live-brokerage subsystem (broker connectors,
     # mandates, order-submitting runners, the /live + /mandate HTTP surface,
     # the trading_* / propose_mandate_profiles agent tools, and the frontend
     # connector panels). Default OFF: this build is a research-only toolkit —
     # market data comes from verified public sources, never a broker login.
-    vibe_trading_enable_brokerage: EnvBool = Field(
-        alias="VIBE_TRADING_ENABLE_BROKERAGE", default=False,
+    vantage_enable_brokerage: EnvBool = Field(
+        alias="VANTAGE_ENABLE_BROKERAGE", default=False,
     )
-    vibe_trading_disable_bottleneck: EnvBool = Field(
-        alias="VIBE_TRADING_DISABLE_BOTTLENECK", default=False,
+    vantage_disable_bottleneck: EnvBool = Field(
+        alias="VANTAGE_DISABLE_BOTTLENECK", default=False,
     )
-    vibe_trading_bench_workers: int = Field(alias="VIBE_TRADING_BENCH_WORKERS", default=0)
-    vibe_trading_search_backends: str = Field(alias="VIBE_TRADING_SEARCH_BACKENDS", default="")
-    vibe_trading_search_bing_fallback: EnvBool = Field(
-        alias="VIBE_TRADING_SEARCH_BING_FALLBACK", default=True,
+    vantage_bench_workers: int = Field(alias="VANTAGE_BENCH_WORKERS", default=0)
+    vantage_search_backends: str = Field(alias="VANTAGE_SEARCH_BACKENDS", default="")
+    vantage_search_bing_fallback: EnvBool = Field(
+        alias="VANTAGE_SEARCH_BING_FALLBACK", default=True,
     )
-    vibe_live_authorize_timeout_s: int = Field(
-        alias="VIBE_LIVE_AUTHORIZE_TIMEOUT_SECONDS", default=300,
+    vantage_live_authorize_timeout_s: int = Field(
+        alias="VANTAGE_LIVE_AUTHORIZE_TIMEOUT_SECONDS", default=300,
     )
 
 
@@ -318,16 +318,16 @@ class PathConfig(_EnvBase):
     ``src/config/loader.py``.
     """
 
-    vibe_trading_hypotheses_path: str = Field(alias="VIBE_TRADING_HYPOTHESES_PATH", default="")
-    vibe_trading_goal_db_path: str = Field(alias="VIBE_TRADING_GOAL_DB_PATH", default="")
-    vibe_trading_swarm_agent_config: str = Field(
-        alias="VIBE_TRADING_SWARM_AGENT_CONFIG", default="",
+    vantage_hypotheses_path: str = Field(alias="VANTAGE_HYPOTHESES_PATH", default="")
+    vantage_goal_db_path: str = Field(alias="VANTAGE_GOAL_DB_PATH", default="")
+    vantage_swarm_agent_config: str = Field(
+        alias="VANTAGE_SWARM_AGENT_CONFIG", default="",
     )
     allow_session_mcp_servers: EnvBool = Field(alias="ALLOW_SESSION_MCP_SERVERS", default=False)
-    vibe_trading_theme: str = Field(alias="VIBE_TRADING_THEME", default="")
-    vibe_goal_session_id: str = Field(alias="VIBE_GOAL_SESSION_ID", default="")
-    vibe_trading_strategy_store_db_path: str = Field(
-        alias="VIBE_TRADING_STRATEGY_STORE_DB_PATH", default="",
+    vantage_theme: str = Field(alias="VANTAGE_THEME", default="")
+    vantage_goal_session_id: str = Field(alias="VANTAGE_GOAL_SESSION_ID", default="")
+    vantage_strategy_store_db_path: str = Field(
+        alias="VANTAGE_STRATEGY_STORE_DB_PATH", default="",
     )
 
 
@@ -357,13 +357,13 @@ class EnvConfig(_EnvBase):
 
     @model_validator(mode="after")
     def _resolve_api_key_alias(self) -> "EnvConfig":
-        """Copy ``VIBE_TRADING_API_KEY`` to ``api_auth_key`` when only the alias is set.
+        """Copy ``VANTAGE_API_KEY`` to ``api_auth_key`` when only the alias is set.
 
-        The CLI historically reads ``VIBE_TRADING_API_KEY`` first and falls back to
+        The CLI historically reads ``VANTAGE_API_KEY`` first and falls back to
         ``API_AUTH_KEY`` (``cli/_legacy.py:2834``).  The API server only reads
         ``API_AUTH_KEY`` (``src/api/security.py:126``).  This validator closes
         the semantic gap so both surfaces agree.
         """
-        if self.api.vibe_trading_api_key and not self.api.api_auth_key:
-            self.api.api_auth_key = self.api.vibe_trading_api_key
+        if self.api.vantage_api_key and not self.api.api_auth_key:
+            self.api.api_auth_key = self.api.vantage_api_key
         return self

@@ -36,7 +36,7 @@ _SEARCH_URL = "https://searchapi.eastmoney.com/api/suggest/get"
 
 # Throttle/session bucket shared by all Eastmoney calls.
 _HOST_KEY = "eastmoney"
-_MIN_INTERVAL_ENV = "VIBE_TRADING_EASTMONEY_MIN_INTERVAL"
+_MIN_INTERVAL_ENV = "VANTAGE_EASTMONEY_MIN_INTERVAL"
 _DEFAULT_MIN_INTERVAL = 1.0
 
 # Eastmoney kline period codes (``klt``) keyed by our interval labels.
@@ -204,7 +204,7 @@ def _resolve_us_secid(code: str) -> str | None:
 
 
 def resolve_secid(symbol: str) -> str | None:
-    """Map a Vibe-Trading symbol to its Eastmoney secid.
+    """Map a Vantage symbol to its Eastmoney secid.
 
     Supported suffixes: ``.SH`` / ``.SZ`` / ``.BJ`` (A-share), ``.HK`` (Hong
     Kong, code zero-padded to five digits), ``.US`` (resolved via search and

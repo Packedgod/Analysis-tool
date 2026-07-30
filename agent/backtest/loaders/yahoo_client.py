@@ -11,7 +11,7 @@ cookie plus a matching ``crumb`` token. This client fetches both lazily on the
 first call that needs them and refreshes them once on a 401 (the documented
 "crumb expired / unauthorized" signal), so callers never manage that handshake.
 
-Symbol convention (Vibe-Trading -> Yahoo):
+Symbol convention (Vantage -> Yahoo):
   * US ``AAPL.US`` -> ``AAPL`` (Yahoo carries US tickers bare)
   * HK ``00700.HK`` -> ``0700.HK`` (Yahoo drops the leading zero to 4 digits)
   * India ``RELIANCE.NS`` / ``500325.BO`` -> unchanged (Yahoo carries the
@@ -54,7 +54,7 @@ _CRUMB_URL = "https://query2.finance.yahoo.com/v1/test/getcrumb"
 # endpoint then validates.
 _COOKIE_URL = "https://fc.yahoo.com"
 
-_MIN_INTERVAL_ENV = "VIBE_TRADING_YAHOO_MIN_INTERVAL"
+_MIN_INTERVAL_ENV = "VANTAGE_YAHOO_MIN_INTERVAL"
 _DEFAULT_MIN_INTERVAL_S = 0.6
 
 # The columns Yahoo packs into indicators.quote[0], in our output field order.
@@ -67,7 +67,7 @@ def _min_interval() -> float:
 
 
 def map_symbol(symbol: str) -> str:
-    """Translate a Vibe-Trading symbol into Yahoo's ticker convention.
+    """Translate a Vantage symbol into Yahoo's ticker convention.
 
     Args:
         symbol: Project-side symbol, e.g. ``AAPL.US``, ``00700.HK``, ``BTC-USD``.

@@ -248,7 +248,7 @@ def test_loader_cache_disabled_by_default_bypasses_home(tmp_path, monkeypatch):
 
     assert calls["count"] == 1
     pd.testing.assert_frame_equal(out, frame)
-    assert not (home / ".vibe-trading").exists()
+    assert not (home / ".vantage").exists()
 
 
 def test_loader_cache_key_partitions_source_symbol_timeframe_date_and_fields():

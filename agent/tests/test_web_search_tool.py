@@ -40,8 +40,8 @@ def _patch_ddgs(monkeypatch, text_impl):
 
 @pytest.fixture(autouse=True)
 def _clear_backend_env(monkeypatch):
-    monkeypatch.delenv("VIBE_TRADING_SEARCH_BACKENDS", raising=False)
-    monkeypatch.delenv("VIBE_TRADING_SEARCH_BING_FALLBACK", raising=False)
+    monkeypatch.delenv("VANTAGE_SEARCH_BACKENDS", raising=False)
+    monkeypatch.delenv("VANTAGE_SEARCH_BING_FALLBACK", raising=False)
     monkeypatch.delenv("ALIYUN_IQS_API_KEY", raising=False)
 
 
@@ -63,8 +63,8 @@ def test_returns_results_and_passes_backend_list(monkeypatch):
 
 
 def test_env_overrides_backends(monkeypatch):
-    """VIBE_TRADING_SEARCH_BACKENDS overrides the default engine list."""
-    monkeypatch.setenv("VIBE_TRADING_SEARCH_BACKENDS", "google, bing")
+    """VANTAGE_SEARCH_BACKENDS overrides the default engine list."""
+    monkeypatch.setenv("VANTAGE_SEARCH_BACKENDS", "google, bing")
     seen = {}
 
     def text_impl(query, max_results, **kwargs):
@@ -113,7 +113,7 @@ def test_no_results_is_ok_empty_not_error(monkeypatch):
 
 def test_persistent_failure_returns_actionable_error(monkeypatch):
     """When every attempt fails, the error names the retry/env/read_url remedies."""
-    monkeypatch.setenv("VIBE_TRADING_SEARCH_BING_FALLBACK", "0")
+    monkeypatch.setenv("VANTAGE_SEARCH_BING_FALLBACK", "0")
     monkeypatch.setattr("src.tools.web_search_tool.time.sleep", lambda *_: None)
     calls = {"n": 0}
 
@@ -126,7 +126,7 @@ def test_persistent_failure_returns_actionable_error(monkeypatch):
 
     assert out["status"] == "error"
     assert calls["n"] == 3  # exhausted all attempts
-    assert "VIBE_TRADING_SEARCH_BACKENDS" in out["error"]
+    assert "VANTAGE_SEARCH_BACKENDS" in out["error"]
     assert "read_url" in out["error"]
 
 

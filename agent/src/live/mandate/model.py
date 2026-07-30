@@ -41,18 +41,18 @@ class HardCaps:
     Funding is enforced BROKER-SIDE (Robinhood dedicated agentic account
     balance) and is the absolute ceiling the agent physically cannot exceed;
     it is mirrored here only for defense-in-depth pre-trade math, never as the
-    primary guarantee. Every other field is enforced VIBE-SIDE in the gate.
+    primary guarantee. Every other field is enforced VANTAGE-SIDE in the gate.
 
     Attributes:
         account_funding_usd: Ring-fenced balance in the dedicated agentic
             account, USD. BROKER-ENFORCED ceiling; mirrored for local math.
-        max_order_notional_usd: Vibe-enforced max single-order notional, USD.
-        max_total_exposure_usd: Vibe-enforced cap on aggregate post-trade
+        max_order_notional_usd: Vantage-enforced max single-order notional, USD.
+        max_total_exposure_usd: Vantage-enforced cap on aggregate post-trade
             market value of all open positions, USD.
-        max_leverage: Vibe-enforced gross leverage multiple. 1.0 == cash-only.
-        allowed_instruments: Vibe-enforced whitelist of tradable instrument
+        max_leverage: Vantage-enforced gross leverage multiple. 1.0 == cash-only.
+        allowed_instruments: Vantage-enforced whitelist of tradable instrument
             types. Empty == deny all (fail-closed).
-        max_trades_per_day: Vibe-enforced count of order placements allowed
+        max_trades_per_day: Vantage-enforced count of order placements allowed
             per UTC calendar day. Counter persisted alongside the mandate.
     """
 

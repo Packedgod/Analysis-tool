@@ -329,7 +329,7 @@ describe("useSSE — SSE ticket auth (VT-003)", () => {
   });
 
   it("mints a single-use ticket and opens the stream with ?ticket= when a key is stored", async () => {
-    localStorage.setItem("vibe_trading_api_auth_key", "remote-key");
+    localStorage.setItem("vantage_api_auth_key", "remote-key");
     const fetchSpy = vi.fn().mockResolvedValue(
       new Response(JSON.stringify({ ticket: "SSE-TICKET" }), {
         status: 200,

@@ -1,7 +1,7 @@
 """Pluggable OCR engine interface and factory.
 
 Allows users to swap between local OCR (RapidOCR) and cloud vision models
-(Qwen-VL, etc.) via environment variable VIBE_TRADING_OCR_ENGINE.
+(Qwen-VL, etc.) via environment variable VANTAGE_OCR_ENGINE.
 """
 
 from __future__ import annotations
@@ -39,13 +39,13 @@ def _get_ocr_choice() -> str:
     """Return the configured OCR engine choice (cached per process)."""
     from src.config.accessor import get_env_config
 
-    return get_env_config().ocr.vibe_trading_ocr_engine.strip().lower()
+    return get_env_config().ocr.vantage_ocr_engine.strip().lower()
 
 
 def get_ocr_engine() -> OcrEngine | None:
     """Return the configured OCR engine, or None if unavailable.
 
-    Engine selection via VIBE_TRADING_OCR_ENGINE:
+    Engine selection via VANTAGE_OCR_ENGINE:
       - "auto" (default): local RapidOCR if installed, else no OCR
       - "rapid": RapidOCR only (local, ONNX)
       - "qwen-vl": Qwen-VL vision model (cloud, DashScope API)
@@ -114,6 +114,6 @@ def get_ocr_install_hint(engine: OcrEngine | None) -> str:
         "No OCR engine available. Install one of:\n"
         "  1. Local OCR: pip install rapidocr_onnxruntime\n"
         "  2. Cloud vision (pages are sent to DashScope): set "
-        "VIBE_TRADING_OCR_ENGINE=qwen-vl and DASHSCOPE_API_KEY=your_key\n"
-        "Or set VIBE_TRADING_OCR_ENGINE=none to disable OCR."
+        "VANTAGE_OCR_ENGINE=qwen-vl and DASHSCOPE_API_KEY=your_key\n"
+        "Or set VANTAGE_OCR_ENGINE=none to disable OCR."
     )

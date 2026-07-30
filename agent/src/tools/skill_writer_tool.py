@@ -1,7 +1,7 @@
 """Skill management tools: full CRUD + auxiliary file support.
 
 User-created skills are stored separately from bundled skills:
-    ~/.vibe-trading/skills/user/<skill-name>/
+    ~/.vantage/skills/user/<skill-name>/
         SKILL.md            # Main skill document
         references/         # Reference materials
         templates/          # Code/config templates
@@ -175,7 +175,7 @@ class DeleteSkillTool(BaseTool):
     name = "delete_skill"
     description = (
         "Delete a user-created skill and all its files. "
-        "Only works on skills in ~/.vibe-trading/skills/user/. "
+        "Only works on skills in ~/.vantage/skills/user/. "
         "Cannot delete bundled skills."
     )
     is_readonly = False

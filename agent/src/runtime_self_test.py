@@ -3,7 +3,7 @@
 The normal test suite verifies behavior with deterministic provider doubles.
 This module is intentionally different: the Windows launcher runs it before
 opening the browser to prove that the configured hosted search and the NIFTY
-market-data route work from the process context that will run Vibe-Trading.
+market-data route work from the process context that will run Vantage.
 """
 
 from __future__ import annotations

@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)
 # Constants
 # ---------------------------------------------------------------------------
 
-_SCHEDULED_RESEARCH_SCHEDULER_ENV = "VIBE_TRADING_ENABLE_SCHEDULER"
+_SCHEDULED_RESEARCH_SCHEDULER_ENV = "VANTAGE_ENABLE_SCHEDULER"
 _SCHEDULED_RESEARCH_TRUE_VALUES = {"1", "true", "yes", "on"}
 
 
@@ -38,7 +38,7 @@ _scheduled_research_executor: Any = None
 
 def _scheduled_research_scheduler_enabled() -> bool:
     """Return whether scheduled research execution is enabled."""
-    return get_env_config().agent_tuning.vibe_trading_enable_scheduler
+    return get_env_config().agent_tuning.vantage_enable_scheduler
 
 
 def _get_scheduled_research_store():

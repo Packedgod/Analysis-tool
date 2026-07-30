@@ -22,8 +22,8 @@ from pathlib import Path
 
 from src.config.accessor import get_env_config
 
-_ALLOWED_FILE_ROOTS_ENV = "VIBE_TRADING_ALLOWED_FILE_ROOTS"
-_ALLOWED_RUN_ROOTS_ENV = "VIBE_TRADING_ALLOWED_RUN_ROOTS"
+_ALLOWED_FILE_ROOTS_ENV = "VANTAGE_ALLOWED_FILE_ROOTS"
+_ALLOWED_RUN_ROOTS_ENV = "VANTAGE_ALLOWED_RUN_ROOTS"
 
 
 def _rejects_unc(p: str) -> None:
@@ -49,7 +49,7 @@ def safe_path(p: str, workdir: Path) -> Path:
     """
     _rejects_unc(p)
     base = Path(workdir).resolve()
-    # Expand ~ so home-relative paths (e.g. ~/.vibe-trading/scripts/foo.py)
+    # Expand ~ so home-relative paths (e.g. ~/.vantage/scripts/foo.py)
     # resolve correctly instead of being treated as literal directory names.
     expanded = Path(p).expanduser()
     if expanded.is_absolute():
@@ -70,7 +70,7 @@ def _agent_root() -> Path:
 
 def _configured_file_roots() -> list[Path]:
     """Return file roots configured through the environment."""
-    raw = get_env_config().api.vibe_trading_allowed_file_roots
+    raw = get_env_config().api.vantage_allowed_file_roots
     roots: list[Path] = []
     for item in raw.split(","):
         item = item.strip()
@@ -91,8 +91,8 @@ def _default_file_roots() -> list[Path]:
         agent_root / "runs",
         cwd / "uploads",
         cwd / "data",
-        home / ".vibe-trading" / "uploads",
-        home / ".vibe-trading" / "imports",
+        home / ".vantage" / "uploads",
+        home / ".vantage" / "imports",
     ]
 
 
@@ -107,8 +107,8 @@ def _default_run_roots() -> list[Path]:
         agent_root / "runs",
         swarm_runs_root(),
         cwd / "runs",
-        home / ".vibe-trading" / "shadow_runs",
-        home / ".vibe-trading" / "runs",
+        home / ".vantage" / "shadow_runs",
+        home / ".vantage" / "runs",
     ]
 
 
@@ -122,12 +122,12 @@ def allowed_file_roots() -> list[Path]:
     return roots
 
 
-_ALLOWED_WRITE_ROOTS_ENV = "VIBE_TRADING_ALLOWED_WRITE_ROOTS"
+_ALLOWED_WRITE_ROOTS_ENV = "VANTAGE_ALLOWED_WRITE_ROOTS"
 
 
 def allowed_write_roots() -> list[Path]:
     """Return all roots allowed for file writes and edits."""
-    raw = get_env_config().api.vibe_trading_allowed_write_roots
+    raw = get_env_config().api.vantage_allowed_write_roots
     configured: list[Path] = []
     for item in raw.split(","):
         item = item.strip()
@@ -143,8 +143,8 @@ def allowed_write_roots() -> list[Path]:
         agent_root / "uploads",
         agent_root / "runs",
         cwd / "uploads",
-        home / ".vibe-trading" / "uploads",
-        home / ".vibe-trading" / "runs",
+        home / ".vantage" / "uploads",
+        home / ".vantage" / "runs",
     ]
 
     roots: list[Path] = []
@@ -215,7 +215,7 @@ def resolve_safe_path(
 
 def _allowed_run_roots() -> list[Path]:
     """Return all roots allowed for run_dir-based tools."""
-    raw = get_env_config().api.vibe_trading_allowed_run_roots
+    raw = get_env_config().api.vantage_allowed_run_roots
     configured: list[Path] = []
     for item in raw.split(","):
         item = item.strip()

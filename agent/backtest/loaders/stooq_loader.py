@@ -9,7 +9,7 @@ reuse) under the ``"stooq"`` host bucket.
 API format:
   https://stooq.com/q/d/l/?s=aapl.us&d1=20240101&d2=20240131&i=d
 
-Symbol convention (Vibe-Trading -> Stooq):
+Symbol convention (Vantage -> Stooq):
   * ``AAPL.US`` -> ``aapl.us`` (Stooq tickers are lowercase; the ``.US`` market
     suffix is kept, just lower-cased).
 
@@ -35,7 +35,7 @@ logger = logging.getLogger(__name__)
 _BASE_URL = "https://stooq.com/q/d/l/"
 HOST_KEY = "stooq"
 
-_MIN_INTERVAL_ENV = "VIBE_TRADING_STOOQ_MIN_INTERVAL"
+_MIN_INTERVAL_ENV = "VANTAGE_STOOQ_MIN_INTERVAL"
 _DEFAULT_MIN_INTERVAL_S = 0.6
 
 # Stooq's CSV header columns mapped to our output field names.
@@ -55,7 +55,7 @@ def _min_interval() -> float:
 
 
 def map_symbol(symbol: str) -> str:
-    """Translate a Vibe-Trading symbol into Stooq's ticker convention.
+    """Translate a Vantage symbol into Stooq's ticker convention.
 
     Args:
         symbol: Project-side symbol, e.g. ``AAPL.US``.

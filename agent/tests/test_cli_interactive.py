@@ -184,7 +184,7 @@ class TestMainRouting:
         """Interactive startup must accept the provider loader's project-local `.env`."""
         cli_main = importlib.import_module("cli.main")
 
-        home_env = tmp_path / "home" / ".vibe-trading" / ".env"
+        home_env = tmp_path / "home" / ".vantage" / ".env"
         project_env = tmp_path / "agent" / ".env"
         cwd_env = tmp_path / "cwd" / ".env"
         project_env.parent.mkdir(parents=True)
@@ -207,7 +207,7 @@ class TestMainRouting:
         """The startup banner should show the same project-local model the loader uses."""
         cli_main = importlib.import_module("cli.main")
 
-        home_env = tmp_path / "home" / ".vibe-trading" / ".env"
+        home_env = tmp_path / "home" / ".vantage" / ".env"
         project_env = tmp_path / "agent" / ".env"
         cwd_env = tmp_path / "cwd" / ".env"
         project_env.parent.mkdir(parents=True)
@@ -387,14 +387,14 @@ class TestInputHelpers:
         from cli.input import ctrl_c_within_window
 
         state = SimpleNamespace(last_press_ts=time.monotonic())
-        session = SimpleNamespace(vibe_ctrl_c_state=state)
+        session = SimpleNamespace(vantage_ctrl_c_state=state)
         assert ctrl_c_within_window(session, window_sec=2.0) is True
 
     def test_ctrl_c_window_expires(self) -> None:
         from cli.input import ctrl_c_within_window
 
         state = SimpleNamespace(last_press_ts=time.monotonic() - 10.0)
-        session = SimpleNamespace(vibe_ctrl_c_state=state)
+        session = SimpleNamespace(vantage_ctrl_c_state=state)
         assert ctrl_c_within_window(session, window_sec=2.0) is False
 
 
@@ -444,7 +444,7 @@ class TestCtrlCTwoPress:
         state = _CtrlCState()
         # Simulate the keybinding's press-time decision.
         state.record_press_and_check_window(window_sec=2.0)  # first → False
-        session = SimpleNamespace(vibe_ctrl_c_state=state)
+        session = SimpleNamespace(vantage_ctrl_c_state=state)
         assert ctrl_c_within_window(session, window_sec=2.0) is False
 
         state.record_press_and_check_window(window_sec=2.0)  # second → True

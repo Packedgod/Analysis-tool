@@ -12,7 +12,7 @@ export const PANEL_COLUMNS = 12;
 export const MIN_SPAN = 3;
 export const MIN_HEIGHT = 140;
 
-const STORAGE_PREFIX = "vibe.panel-layout.";
+const STORAGE_PREFIX = "vantage.panel-layout.";
 
 function readStored(key: string): PanelLayoutState | null {
   try {

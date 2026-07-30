@@ -57,7 +57,7 @@ def test_provider_capabilities_are_provider_specific() -> None:
 
     assert kimi.capture_reasoning is True
     assert kimi.send_reasoning_content is True
-    assert kimi.default_headers["User-Agent"].startswith("Vibe-Trading/")
+    assert kimi.default_headers["User-Agent"].startswith("Vantage/")
 
     assert gemini.gemini_thought_signatures is True
     assert gemini.send_reasoning_content is False
@@ -95,7 +95,7 @@ def test_reasoning_effort_extra_body_is_openrouter_only() -> None:
         "DEEPSEEK_BASE_URL": "https://api.deepseek.com/v1",
         "LANGCHAIN_MODEL_NAME": "deepseek-v4-pro",
         "LANGCHAIN_REASONING_EFFORT": "high",
-        "VIBE_TRADING_DEEPSEEK_ADAPTER": "openai-compatible",
+        "VANTAGE_DEEPSEEK_ADAPTER": "openai-compatible",
     }
     with patch.dict(os.environ, env, clear=True):
         with patch.object(llm_mod, "ChatOpenAIWithReasoning", _FakeChatOpenAI):
@@ -125,7 +125,7 @@ def test_kimi_user_agent_header_is_moonshot_only() -> None:
         with patch.object(llm_mod, "ChatOpenAIWithReasoning", _FakeChatOpenAI):
             build_llm()
 
-    assert captured["default_headers"]["User-Agent"].startswith("Vibe-Trading/")
+    assert captured["default_headers"]["User-Agent"].startswith("Vantage/")
 
     captured.clear()
     env = {
@@ -172,7 +172,7 @@ def test_kimi_user_agent_respects_moonshot_user_agent_env_var() -> None:
         with patch.object(llm_mod, "ChatOpenAIWithReasoning", _FakeChatOpenAI):
             build_llm()
 
-    assert captured["default_headers"]["User-Agent"].startswith("Vibe-Trading/")
+    assert captured["default_headers"]["User-Agent"].startswith("Vantage/")
 
 
 def test_kimi_inference_respects_custom_user_agent() -> None:

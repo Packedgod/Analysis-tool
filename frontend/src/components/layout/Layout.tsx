@@ -10,7 +10,7 @@ import { ConnectionBanner } from "@/components/layout/ConnectionBanner";
 import { ResizeHandle } from "@/components/panels/ResizeHandle";
 import { SUPPORTED_LANGUAGES } from "@/i18n";
 
-const SIDEBAR_WIDTH_KEY = "vibe.sidebar-width";
+const SIDEBAR_WIDTH_KEY = "vantage.sidebar-width";
 const SIDEBAR_MIN_WIDTH = 180;
 const SIDEBAR_MAX_WIDTH = 480;
 const SIDEBAR_DEFAULT_WIDTH = 238;

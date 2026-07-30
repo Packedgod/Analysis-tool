@@ -115,7 +115,7 @@ class DataLoader:
         """Resolve one symbol and build its OHLCV frame, or ``None`` on a miss.
 
         Args:
-            code: A single Vibe-Trading symbol.
+            code: A single Vantage symbol.
             start_date: Inclusive start date (``YYYY-MM-DD``).
             end_date: Inclusive end date (``YYYY-MM-DD``).
             interval: Bar interval label.

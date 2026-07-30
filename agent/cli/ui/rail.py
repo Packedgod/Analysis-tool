@@ -300,7 +300,7 @@ class RailRunDashboard:
         self._ticker = threading.Thread(
             target=self._tick,
             daemon=True,
-            name="vibe-rail-ticker",
+            name="vantage-rail-ticker",
         )
         self._ticker.start()
 

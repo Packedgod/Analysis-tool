@@ -30,7 +30,7 @@ _BASE_URL = "https://api.tiingo.com/tiingo/daily"
 
 # Throttle/session bucket plus the per-provider minimum spacing override.
 _HOST_KEY = "tiingo"
-_MIN_INTERVAL_ENV = "VIBE_TRADING_TIINGO_MIN_INTERVAL"
+_MIN_INTERVAL_ENV = "VANTAGE_TIINGO_MIN_INTERVAL"
 _DEFAULT_MIN_INTERVAL = 0.5
 
 _AUTH_ENV = "TIINGO_API_KEY"

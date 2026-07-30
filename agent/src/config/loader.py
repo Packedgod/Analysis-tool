@@ -15,7 +15,7 @@ from src.config.schema import AgentConfig, AgentConfigOverride, MCPServerConfig
 
 logger = logging.getLogger(__name__)
 
-_SWARM_AGENT_CONFIG_ENV_VAR = "VIBE_TRADING_SWARM_AGENT_CONFIG"
+_SWARM_AGENT_CONFIG_ENV_VAR = "VANTAGE_SWARM_AGENT_CONFIG"
 _SWARM_AGENT_CONFIG_FILENAME = "swarm-agent.json"
 _MAIN_AGENT_FALLBACK_FILENAMES = ("agent.json", "agent.yaml", "agent.yml")
 
@@ -159,7 +159,7 @@ def _resolve_swarm_agent_config_path(
 
     Resolution order (first hit wins):
 
-    1. ``VIBE_TRADING_SWARM_AGENT_CONFIG`` env var — absolute override hatch
+    1. ``VANTAGE_SWARM_AGENT_CONFIG`` env var — absolute override hatch
        for CI / sandbox deployments where the runtime root is read-only.
        Returned even if the file does not yet exist; the caller logs &
        degrades gracefully so a misconfigured env var doesn't crash boot.
@@ -178,7 +178,7 @@ def _resolve_swarm_agent_config_path(
 
     Args:
         runtime_root: Override the directory the on-disk lookup uses. Defaults
-            to ``~/.vibe-trading``. Tests pass a ``tmp_path`` here to keep
+            to ``~/.vantage``. Tests pass a ``tmp_path`` here to keep
             assertions hermetic.
 
     Returns:
@@ -217,7 +217,7 @@ def load_swarm_agent_config(
 
     Args:
         runtime_root: Override the directory the on-disk lookup uses. Defaults
-            to ``~/.vibe-trading``.
+            to ``~/.vantage``.
 
     Returns:
         The validated swarm agent config, or an empty :class:`AgentConfig`

@@ -1,7 +1,7 @@
 """Connector-first trading tools.
 
 Tools take an optional ``connection`` profile id. If omitted, they use the
-selected profile from ``~/.vibe-trading/trading-connections.json``.
+selected profile from ``~/.vantage/trading-connections.json``.
 """
 
 from __future__ import annotations

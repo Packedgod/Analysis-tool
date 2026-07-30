@@ -9,7 +9,7 @@ endpoint read-only.
 The endpoint is rate-limited per source IP and requires a caller-supplied access
 key, so every request routes through :mod:`backtest.loaders._http` for per-host
 throttling and session reuse, and carries a ``Bearer`` authorization header built
-from ``VIBE_TRADING_IWENCAI_KEY``. The tool is silently excluded from the registry
+from ``VANTAGE_IWENCAI_KEY``. The tool is silently excluded from the registry
 when that key is absent, so a key-less install never advertises a search it cannot
 perform.
 """
@@ -31,11 +31,11 @@ logger = logging.getLogger(__name__)
 # HTTP layer spaces and pools them independently of other providers.
 _SEARCH_URL = "https://www.iwencai.com/customized/chart/get-robot-data"
 _HOST_KEY = "iwencai"
-_MIN_INTERVAL_ENV = "VIBE_TRADING_IWENCAI_MIN_INTERVAL"
+_MIN_INTERVAL_ENV = "VANTAGE_IWENCAI_MIN_INTERVAL"
 _DEFAULT_MIN_INTERVAL = 1.5
 
 # Access key env var. Absent -> tool excluded by check_available().
-_KEY_ENV = "VIBE_TRADING_IWENCAI_KEY"
+_KEY_ENV = "VANTAGE_IWENCAI_KEY"
 
 # Result caps so a broad query never returns an unbounded payload.
 _DEFAULT_LIMIT = 20
@@ -155,18 +155,18 @@ class IWenCaiSearchTool(BaseTool):
         """Available only when an iWenCai access key is configured.
 
         Returns:
-            ``True`` when ``VIBE_TRADING_IWENCAI_KEY`` is set to a non-empty
+            ``True`` when ``VANTAGE_IWENCAI_KEY`` is set to a non-empty
             value; ``False`` otherwise, which silently excludes the tool from
             the registry. Never raises.
         """
-        return bool(get_env_config().data.vibe_trading_iwencai_key)
+        return bool(get_env_config().data.vantage_iwencai_key)
 
     description = (
         "Run a natural-language A-share research query against iWenCai (问财), a "
         "Chinese-market semantic stock screener. Phrase the question in plain "
         "language (Chinese works best) and get back the matching China A-share "
         "(SH/SZ) securities with the metric columns iWenCai parsed from the "
-        "question. Read-only; requires the VIBE_TRADING_IWENCAI_KEY access key. "
+        "question. Read-only; requires the VANTAGE_IWENCAI_KEY access key. "
         'Example: {"query": "市盈率低于15的银行股", "limit": 10}.'
     )
     parameters = {
@@ -205,7 +205,7 @@ class IWenCaiSearchTool(BaseTool):
             "data": {"query": ..., "count": int, "results": [...]}}``. On
             failure: ``{"ok": false, "error": "..."}``.
         """
-        key = get_env_config().data.vibe_trading_iwencai_key or None
+        key = get_env_config().data.vantage_iwencai_key or None
         if not key:
             return self._error(
                 f"iWenCai access key not configured; set {_KEY_ENV} to enable this tool"

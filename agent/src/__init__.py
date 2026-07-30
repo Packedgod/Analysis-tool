@@ -1,1 +1,1 @@
-"""Vibe-Trading core package."""
+"""Vantage core package."""

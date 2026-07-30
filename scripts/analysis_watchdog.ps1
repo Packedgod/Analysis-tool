@@ -8,7 +8,7 @@ $RuntimeRoot = Join-Path $Project ".runtime"
 $LogRoot = Join-Path $Project "logs"
 $Python = Join-Path $Project ".venv\Scripts\python.exe"
 if (-not (Test-Path -LiteralPath $Python)) {
-    $Python = Join-Path (Split-Path -Parent $Project) "Vibe-Trading\.venv\Scripts\python.exe"
+    $Python = Join-Path (Split-Path -Parent $Project) "Vantage\.venv\Scripts\python.exe"
 }
 $GatewayRoot = "C:\Users\Admin\Documents\Codex\2026-07-13\git-2\CLIProxyAPI"
 $GatewayExe = Join-Path $GatewayRoot "bin\cli-proxy-api.exe"
@@ -91,10 +91,10 @@ $env:MPLCONFIGDIR = Join-Path $RuntimeRoot ".matplotlib"
 $env:NO_PROXY = "127.0.0.1,localhost"
 $env:no_proxy = "127.0.0.1,localhost"
 $env:PYTHONPATH = "$(Join-Path $Project 'agent');$($env:PYTHONPATH)"
-$env:VIBE_TRADING_ENABLE_BROKERAGE = "false"
+$env:VANTAGE_ENABLE_BROKERAGE = "false"
 
 $createdNew = $false
-$mutex = [Threading.Mutex]::new($true, "Local\VibeAnalysisWatchdog", [ref]$createdNew)
+$mutex = [Threading.Mutex]::new($true, "Local\VantageAnalysisWatchdog", [ref]$createdNew)
 if (-not $createdNew) { $mutex.Dispose(); exit 0 }
 
 Set-Content -LiteralPath $WatchdogPid -Value $PID -Encoding ASCII

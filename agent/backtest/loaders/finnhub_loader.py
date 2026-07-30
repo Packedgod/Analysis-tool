@@ -11,7 +11,7 @@ spacing plus session reuse. The endpoint answers with parallel arrays
 (``o``/``h``/``l``/``c``/``v`` plus epoch ``t``) and a status field ``s`` that
 reads ``"ok"`` on a hit or ``"no_data"`` for an empty window.
 
-Symbol convention (Vibe-Trading -> Finnhub):
+Symbol convention (Vantage -> Finnhub):
   * US ``AAPL.US`` -> ``AAPL`` (Finnhub carries US tickers bare)
   * Anything else is passed through uppercased (e.g. a bare ``MSFT``).
 
@@ -38,7 +38,7 @@ _CANDLE_URL = "https://finnhub.io/api/v1/stock/candle"
 # Throttle bucket + default minimum spacing (free tier is ~30 req/s but bursts
 # get a 429; one shared bucket keeps the whole process polite).
 _HOST_KEY = "finnhub"
-_MIN_INTERVAL_ENV = "VIBE_TRADING_FINNHUB_MIN_INTERVAL"
+_MIN_INTERVAL_ENV = "VANTAGE_FINNHUB_MIN_INTERVAL"
 _DEFAULT_MIN_INTERVAL_S = 0.4
 
 # Only daily candles are wired here; Finnhub also exposes intraday resolutions

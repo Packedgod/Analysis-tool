@@ -18,7 +18,7 @@ def _call(path: Path, pages: str = "") -> dict:
 @pytest.fixture(autouse=True)
 def allow_tmp_documents(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     """Allow each test's temporary directory as a document import root."""
-    monkeypatch.setenv("VIBE_TRADING_ALLOWED_FILE_ROOTS", str(tmp_path))
+    monkeypatch.setenv("VANTAGE_ALLOWED_FILE_ROOTS", str(tmp_path))
 
 
 # ---------------- Plain text variants ----------------

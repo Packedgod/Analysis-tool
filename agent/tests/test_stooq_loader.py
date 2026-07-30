@@ -56,7 +56,7 @@ class TestLoaderContract:
 
 
 class TestMapSymbol:
-    """Vibe-Trading -> Stooq ticker translation."""
+    """Vantage -> Stooq ticker translation."""
 
     def test_us_lowercased(self):
         assert stooq_loader.map_symbol("AAPL.US") == "aapl.us"

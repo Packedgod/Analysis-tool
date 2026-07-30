@@ -38,7 +38,7 @@ _HOST_KEY = "nse"
 _BASE = "https://www.nseindia.com"
 _HISTORY_URL = f"{_BASE}/api/historical/cm/equity"
 # NSE bans bursts hard; keep a polite floor between calls (override via env).
-_MIN_INTERVAL = resolve_min_interval("VIBE_TRADING_NSE_MIN_INTERVAL", 1.0)
+_MIN_INTERVAL = resolve_min_interval("VANTAGE_NSE_MIN_INTERVAL", 1.0)
 # NSE returns a bounded window per request; walk the range in ~150-day chunks.
 _CHUNK_DAYS = 150
 _MAX_CHUNKS = 12  # ~5y of daily history; a hard bound so one call can't spin.

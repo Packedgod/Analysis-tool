@@ -11,7 +11,7 @@ Note: ``bn.move_rank`` uses a fundamentally different normalization
 so ``ts_rank`` uses numpy ``sliding_window_view`` instead.
 
 ``HAS_BOTTLENECK`` and ``bn`` are resolved lazily on first access via
-:func:`__getattr__` so the ``VIBE_TRADING_DISABLE_BOTTLENECK`` env var
+:func:`__getattr__` so the ``VANTAGE_DISABLE_BOTTLENECK`` env var
 is read through :func:`get_env_config` instead of at import time.
 """
 
@@ -36,7 +36,7 @@ _bn_module: Any = None
 def _ensure_bottleneck() -> None:
     """Attempt to import bottleneck on first access.
 
-    Reads ``VIBE_TRADING_DISABLE_BOTTLENECK`` through the lazy
+    Reads ``VANTAGE_DISABLE_BOTTLENECK`` through the lazy
     :func:`get_env_config` accessor so runtime Settings API changes
     take effect before the first factor computation.
     """
@@ -46,7 +46,7 @@ def _ensure_bottleneck() -> None:
     _bn_initialised = True
     from src.config.accessor import get_env_config
 
-    if get_env_config().agent_tuning.vibe_trading_disable_bottleneck:
+    if get_env_config().agent_tuning.vantage_disable_bottleneck:
         return
     try:
         import bottleneck as _bn

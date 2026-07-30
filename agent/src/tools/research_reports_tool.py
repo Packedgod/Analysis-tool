@@ -42,7 +42,7 @@ _REPORT_LIST_URL = "https://reportapi.eastmoney.com/report/list"
 # THS consensus-forecast endpoint. Returns per-forward-year mean analyst EPS.
 _THS_CONSENSUS_URL = "https://basic.10jqka.com.cn/api/stock/profit_forecast/"
 _THS_HOST_KEY = "ths"
-_THS_MIN_INTERVAL_ENV = "VIBE_TRADING_THS_MIN_INTERVAL"
+_THS_MIN_INTERVAL_ENV = "VANTAGE_THS_MIN_INTERVAL"
 _THS_DEFAULT_MIN_INTERVAL = 1.0
 _THS_TIMEOUT_S = 15.0
 

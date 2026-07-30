@@ -64,7 +64,7 @@ is required only where listed (no key listed = free / no auth).
 | Market screen | `screen_market` | A-share | — |
 | Symbol search | `search_symbol` | A-share, US | — |
 | Macro / FRED series | `get_macro_series` | Macro (US/global) | `FRED_API_KEY` |
-| iWenCai NL search (问财) | `iwencai_search` | A-share | `VIBE_TRADING_IWENCAI_KEY` |
+| iWenCai NL search (问财) | `iwencai_search` | A-share | `VANTAGE_IWENCAI_KEY` |
 
 Notes:
 - `get_financial_statements` reads US statements from SEC EDGAR companyfacts
@@ -120,7 +120,7 @@ same-market sources automatically. Only set a concrete source when the user asks
 - **Sina / Yahoo also throttle by IP** — same per-host wrapper, same fallback rule.
 - **Key-gated sources need their env key** (`FINNHUB_API_KEY`,
   `ALPHAVANTAGE_API_KEY`, `TIINGO_API_KEY`, `FMP_API_KEY`, `FRED_API_KEY`,
-  `VIBE_TRADING_IWENCAI_KEY`, `TUSHARE_TOKEN`). If the key is absent the tool/loader
+  `VANTAGE_IWENCAI_KEY`, `TUSHARE_TOKEN`). If the key is absent the tool/loader
   is unavailable — route to a free same-market source instead of erroring out.
 - A single failing symbol or transient HTTP error is reported inside the envelope;
   it never aborts the surrounding batch.

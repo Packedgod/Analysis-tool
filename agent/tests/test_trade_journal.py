@@ -54,7 +54,7 @@ def _df(records: list[TradeRecord]) -> pd.DataFrame:
 @pytest.fixture()
 def allow_tmp(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     """Allow analyze_trade_journal to read files under tmp_path."""
-    monkeypatch.setenv("VIBE_TRADING_ALLOWED_FILE_ROOTS", str(tmp_path))
+    monkeypatch.setenv("VANTAGE_ALLOWED_FILE_ROOTS", str(tmp_path))
     return tmp_path
 
 

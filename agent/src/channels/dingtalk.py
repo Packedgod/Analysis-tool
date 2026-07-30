@@ -43,10 +43,10 @@ except ImportError:
     ChatbotMessage = None  # type: ignore[assignment,misc]
 
 
-class VibeTradingDingTalkHandler(CallbackHandler):
+class VantageDingTalkHandler(CallbackHandler):
     """
     Standard DingTalk Stream SDK Callback Handler.
-    Parses incoming messages and forwards them to the Vibe-Trading channel.
+    Parses incoming messages and forwards them to the Vantage channel.
     """
 
     def __init__(self, channel: "DingTalkChannel"):
@@ -141,7 +141,7 @@ class VibeTradingDingTalkHandler(CallbackHandler):
 
             self.channel.logger.info("Received message from {} ({}): {}", sender_name, sender_id, content)
 
-            # Forward to Vibe-Trading via _on_message (non-blocking).
+            # Forward to Vantage via _on_message (non-blocking).
             # Store reference to prevent GC before task completes.
             task = asyncio.create_task(
                 self.channel._on_message(
@@ -238,7 +238,7 @@ class DingTalkChannel(BaseChannel):
             self._client = DingTalkStreamClient(credential)
 
             # Register standard handler
-            handler = VibeTradingDingTalkHandler(self)
+            handler = VantageDingTalkHandler(self)
             self._client.register_callback_handler(ChatbotMessage.TOPIC, handler)
 
             self.logger.info("bot started with Stream Mode")
@@ -606,7 +606,7 @@ class DingTalkChannel(BaseChannel):
             token,
             chat_id,
             "sampleMarkdown",
-            {"text": content, "title": "Vibe-Trading Reply"},
+            {"text": content, "title": "Vantage Reply"},
         )
 
     async def _send_media_ref(self, token: str, chat_id: str, media_ref: str) -> bool:
@@ -699,7 +699,7 @@ class DingTalkChannel(BaseChannel):
         conversation_type: str | None = None,
         conversation_id: str | None = None,
     ) -> None:
-        """Handle incoming message (called by VibeTradingDingTalkHandler).
+        """Handle incoming message (called by VantageDingTalkHandler).
 
         Delegates to BaseChannel._handle_message() which enforces allow_from
         permission checks before publishing to the bus.

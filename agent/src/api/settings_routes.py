@@ -211,7 +211,7 @@ def _build_llm_settings_response(
         timeout_seconds=host._coerce_int(env_values.get("TIMEOUT_SECONDS", "120"), 120),
         max_retries=host._coerce_int(env_values.get("MAX_RETRIES", "2"), 2),
         reasoning_effort=env_values.get("LANGCHAIN_REASONING_EFFORT", "").strip().lower(),
-        sse_timeout_seconds=host._coerce_int(env_values.get("VIBE_TRADING_SSE_TIMEOUT", "90"), 90),
+        sse_timeout_seconds=host._coerce_int(env_values.get("VANTAGE_SSE_TIMEOUT", "90"), 90),
         env_path=host._project_relative_path(host.ENV_PATH),
         providers=LLM_PROVIDERS,
     )

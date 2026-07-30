@@ -92,7 +92,7 @@ def test_commit_mandate_rejects_proposal_id_traversal_to_external_json(live_runt
 
     external = live_runtime / "uploads" / "crafted_proposal.json"
     external.parent.mkdir(parents=True)
-    marker = "VIBE_TRAVERSAL_PROPOSAL_SHOULD_NOT_COMMIT"
+    marker = "VANTAGE_TRAVERSAL_PROPOSAL_SHOULD_NOT_COMMIT"
     payload = _proposal("mp_" + "b" * 32)
     payload["profiles"][0]["exclude_symbols"] = [marker]  # type: ignore[index]
     external.write_text(json.dumps(payload), encoding="utf-8")

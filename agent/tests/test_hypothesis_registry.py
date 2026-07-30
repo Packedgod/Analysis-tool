@@ -20,7 +20,7 @@ from src.tools.hypothesis_tool import (
 def storage_path(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     """Use env-isolated storage for each test."""
     path = tmp_path / "hypotheses.json"
-    monkeypatch.setenv("VIBE_TRADING_HYPOTHESES_PATH", str(path))
+    monkeypatch.setenv("VANTAGE_HYPOTHESES_PATH", str(path))
     return path
 
 

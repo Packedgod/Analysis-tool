@@ -116,7 +116,7 @@ def _parse_bool(value: str | None) -> bool:
 def brokerage_enabled() -> bool:
     """Return whether the live-brokerage subsystem is enabled.
 
-    Single source of truth for the ``VIBE_TRADING_ENABLE_BROKERAGE`` master
+    Single source of truth for the ``VANTAGE_ENABLE_BROKERAGE`` master
     switch (default OFF). Every live-trading surface — the ``/live`` + ``/mandate``
     HTTP routes, the ``trading_*`` / ``propose_mandate_profiles`` agent tools, and
     the frontend connector panels — consults this so the whole capability flips
@@ -133,7 +133,7 @@ def get_env_or(primary: str, fallback: str, default: str = "") -> str:
     """Read an env var with a backward-compatible alias fallback.
 
     Several env vars were renamed during the centralization effort (e.g.
-    ``VIBE_TRADING_API_KEY`` → ``API_AUTH_KEY``).  This helper reads the
+    ``VANTAGE_API_KEY`` → ``API_AUTH_KEY``).  This helper reads the
     *primary* (new) name first, falls back to the *fallback* (old) name,
     and finally returns *default* when neither is set.
 

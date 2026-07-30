@@ -19,8 +19,8 @@ logger = logging.getLogger(__name__)
 DEFAULT_MAX_ROWS = 250
 _CACHE_ROOT = Path(
     os.getenv(
-        "VIBE_ANALYSIS_MARKET_CACHE",
-        str(Path.home() / ".vibe-analysis" / "cache" / "market-data"),
+        "VANTAGE_ANALYSIS_MARKET_CACHE",
+        str(Path.home() / ".vantage" / "cache" / "market-data"),
     )
 )
 

@@ -25,7 +25,7 @@ def _local_client() -> TestClient:
 def _clean_state(monkeypatch: pytest.MonkeyPatch) -> None:
     """Start each test from dev-mode auth with an empty ticket store."""
     monkeypatch.delenv("API_AUTH_KEY", raising=False)
-    monkeypatch.delenv("VIBE_TRADING_TRUST_DOCKER_LOOPBACK", raising=False)
+    monkeypatch.delenv("VANTAGE_TRUST_DOCKER_LOOPBACK", raising=False)
     monkeypatch.setattr(api_server, "_API_KEY", "")
     with security._sse_tickets_lock:
         security._sse_tickets.clear()

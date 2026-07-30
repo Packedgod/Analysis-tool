@@ -13,7 +13,7 @@ Key design principles:
 * **Fail-open**: any provider exception is caught and converted to
   :attr:`Verdict.REVIEW_UNAVAILABLE` — the order proceeds unaffected.
 * **Default-off**: advisory review is activated only when the environment
-  variable ``VIBE_TRADING_ENABLE_ADVISORY`` is set to a truthy value.
+  variable ``VANTAGE_ENABLE_ADVISORY`` is set to a truthy value.
 * **Broker-agnostic**: :class:`AdvisoryContext` decouples providers from
   broker-specific payload shapes, carrying only the normalized fields a risk
   reviewer needs.

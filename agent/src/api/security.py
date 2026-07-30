@@ -272,7 +272,7 @@ def _get_api_key() -> str:
 def _configured_api_key() -> str:
     """Return the current API auth key, if configured.
 
-    Resolves the ``VIBE_TRADING_API_KEY`` alias server-side via
+    Resolves the ``VANTAGE_API_KEY`` alias server-side via
     :func:`get_env_config` so both ``API_AUTH_KEY`` and the legacy
     alias produce the same key.
     """
@@ -437,7 +437,7 @@ def _trusted_docker_loopback_ip(ip: ipaddress._BaseAddress) -> bool:
     """Return whether an IP is the trusted Docker host gateway."""
     if not isinstance(ip, ipaddress.IPv4Address):
         return False
-    if not get_env_config().api.vibe_trading_trust_docker_loopback:
+    if not get_env_config().api.vantage_trust_docker_loopback:
         return False
     gateway_fn = _host_attr("_default_gateway_ips", _default_gateway_ips)
     return ip in gateway_fn()
@@ -445,7 +445,7 @@ def _trusted_docker_loopback_ip(ip: ipaddress._BaseAddress) -> bool:
 
 def _env_shell_tools_enabled() -> bool:
     """Return whether server-side shell tools are explicitly enabled."""
-    return get_env_config().api.vibe_trading_enable_shell_tools
+    return get_env_config().api.vantage_enable_shell_tools
 
 
 def _shell_tools_enabled_for_request(request: Request) -> bool:

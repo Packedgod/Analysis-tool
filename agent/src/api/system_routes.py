@@ -297,7 +297,7 @@ def register_system_routes(
     def _health_payload() -> HealthResponse:
         return HealthResponse(
             status="healthy",
-            service="Vibe Analysis API",
+            service="Vantage API",
             timestamp=datetime.now(timezone.utc).isoformat(),
         )
 
@@ -338,7 +338,7 @@ def register_system_routes(
             raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=reason)
         return {
             "status": "ready",
-            "service": "Vibe Analysis API",
+            "service": "Vantage API",
             "timestamp": datetime.now(timezone.utc).isoformat(),
         }
 
@@ -394,7 +394,7 @@ def register_system_routes(
         background_tasks.add_task(_get_terminate_process())
         return {
             "status": "shutting-down",
-            "service": "Vibe Analysis API",
+            "service": "Vantage API",
             "timestamp": datetime.now(timezone.utc).isoformat(),
         }
 
@@ -416,7 +416,7 @@ def register_system_routes(
     async def api_info():
         """Service metadata plus runtime capability flags for the frontend.
 
-        ``capabilities.brokerage`` mirrors the ``VIBE_TRADING_ENABLE_BROKERAGE``
+        ``capabilities.brokerage`` mirrors the ``VANTAGE_ENABLE_BROKERAGE``
         master switch so the UI can hide every live-trading surface (connector
         panels, mandate cards, runner controls) when the research-only build is
         running, without probing the gated ``/live`` routes and getting 404s.
@@ -424,7 +424,7 @@ def register_system_routes(
         from src.config.accessor import brokerage_enabled
 
         return {
-            "service": "Vibe Analysis API",
+            "service": "Vantage API",
             "version": _app_version,
             "docs": "/docs",
             "health": "/health",

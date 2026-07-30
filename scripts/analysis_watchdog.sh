@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
-# macOS/Linux recovery service for Vibe Analysis.
+# macOS/Linux recovery service for Vantage.
 #
 # Keeps the local API+frontend server alive on port 8900, restarting it if it
 # exits. Mirrors scripts/analysis_watchdog.ps1 (the Windows equivalent) but uses
 # only POSIX shell + the project virtualenv, so it works from a double-clicked
-# "Start Vibe Analysis.command" on a Mac.
+# "Start Vantage.command" on a Mac.
 set -u
 
 PROJECT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -14,7 +14,7 @@ PID_FILE="$RUNTIME_DIR/watchdog.pid"
 WEB_STDOUT="$LOG_DIR/server.out.log"
 WEB_STDERR="$LOG_DIR/server.err.log"
 HOST="127.0.0.1"
-PORT="${VIBE_ANALYSIS_PORT:-8900}"
+PORT="${VANTAGE_ANALYSIS_PORT:-8900}"
 
 mkdir -p "$RUNTIME_DIR" "$LOG_DIR"
 echo $$ > "$PID_FILE"

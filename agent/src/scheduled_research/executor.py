@@ -22,7 +22,7 @@ from src.scheduled_research.store import ScheduledResearchJobStore
 logger = logging.getLogger(__name__)
 
 DEFAULT_TICK_INTERVAL_MS = 60 * 1000
-SCHEDULER_ENABLED_ENV = "VIBE_TRADING_ENABLE_SCHEDULER"
+SCHEDULER_ENABLED_ENV = "VANTAGE_ENABLE_SCHEDULER"
 
 NowFn = Callable[[], int]
 DispatchCallback = Callable[[ScheduledResearchJob], Awaitable[None]]
@@ -48,7 +48,7 @@ def scheduler_enabled_from_env(value: str | None = None) -> bool:
     """
     if value is not None:
         return value.strip().lower() in _TRUE_VALUES
-    return get_env_config().agent_tuning.vibe_trading_enable_scheduler
+    return get_env_config().agent_tuning.vantage_enable_scheduler
 
 
 def is_due(job: ScheduledResearchJob, now_ms: int) -> bool:

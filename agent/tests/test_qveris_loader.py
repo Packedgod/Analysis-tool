@@ -64,8 +64,8 @@ def _isolated_qveris_config(monkeypatch, tmp_path):
     monkeypatch.setattr(qv, "_CONFIG_PATH", tmp_path / "qveris.json")
     monkeypatch.delenv("QVERIS_API_KEY", raising=False)
     monkeypatch.delenv("QVERIS_BASE_URL", raising=False)
-    monkeypatch.setenv("VIBE_TRADING_DATA_CACHE", "0")
-    monkeypatch.setenv("VIBE_TRADING_QVERIS_MIN_INTERVAL", "0")
+    monkeypatch.setenv("VANTAGE_DATA_CACHE", "0")
+    monkeypatch.setenv("VANTAGE_QVERIS_MIN_INTERVAL", "0")
 
 
 def _write_config(

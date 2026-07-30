@@ -10,7 +10,7 @@ Turn shape:
         "role": "user" | "assistant",
         "content": str,
         "timestamp": str | None,   # ISO or formatted clock
-        "meta": str | None,        # "Vibe · 4.1s · 1.2k tokens · $0.003"
+        "meta": str | None,        # "Vantage · 4.1s · 1.2k tokens · $0.003"
     }
 """
 
@@ -38,8 +38,8 @@ def _render_turn(turn: Mapping[str, object]) -> Text:
     meta = turn.get("meta")
     header = Text()
     if role == "assistant":
-        # "Vibe" is the brand wordmark for assistant turns — primary color
-        header.append("Vibe", style="bold #d97706")
+        # "Vantage" is the brand wordmark for assistant turns — primary color
+        header.append("Vantage", style="bold #d97706")
     else:
         header.append("you", style="bold")
     if timestamp:

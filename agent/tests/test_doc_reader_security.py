@@ -13,7 +13,7 @@ from src.tools.path_utils import safe_document_path, safe_user_path
 @pytest.fixture(autouse=True)
 def clear_allowed_roots(monkeypatch: pytest.MonkeyPatch) -> None:
     """Start each test with only the built-in import roots."""
-    monkeypatch.delenv("VIBE_TRADING_ALLOWED_FILE_ROOTS", raising=False)
+    monkeypatch.delenv("VANTAGE_ALLOWED_FILE_ROOTS", raising=False)
 
 
 def _read_json(result: str) -> dict:
@@ -39,7 +39,7 @@ def test_read_document_allows_configured_import_root(
 ) -> None:
     doc = tmp_path / "note.txt"
     doc.write_text("VT_DOC_OK", encoding="utf-8")
-    monkeypatch.setenv("VIBE_TRADING_ALLOWED_FILE_ROOTS", str(tmp_path))
+    monkeypatch.setenv("VANTAGE_ALLOWED_FILE_ROOTS", str(tmp_path))
 
     result = _read_json(read_document(str(doc)))
 

@@ -206,9 +206,9 @@ def run_bench(
     n_total = len(alpha_ids)
 
     try:
-        n_workers = get_env_config().agent_tuning.vibe_trading_bench_workers or os.cpu_count() or 1
+        n_workers = get_env_config().agent_tuning.vantage_bench_workers or os.cpu_count() or 1
     except ValueError:
-        logger.warning("invalid VIBE_TRADING_BENCH_WORKERS; falling back to sequential")
+        logger.warning("invalid VANTAGE_BENCH_WORKERS; falling back to sequential")
         n_workers = 1
     n_workers = max(1, min(n_workers, n_total))
     use_parallel = registry is None and n_workers > 1 and n_total > 1

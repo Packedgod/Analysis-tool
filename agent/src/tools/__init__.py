@@ -30,7 +30,7 @@ _SUBCLASSES_CACHE: list[type[BaseTool]] | None = None
 _SHELL_TOOL_NAMES = {"bash", "background_run"}
 
 # Live-brokerage tools. The research-only build ships with the brokerage
-# subsystem disabled (VIBE_TRADING_ENABLE_BROKERAGE off by default), so these
+# subsystem disabled (VANTAGE_ENABLE_BROKERAGE off by default), so these
 # are excluded from the tool registry unless the master switch is enabled.
 _BROKER_TOOL_NAMES = {
     "trading_connections", "trading_select_connection", "trading_check",
@@ -220,7 +220,7 @@ def build_registry(
                         )
                         skip_msg = (
                             f"{server_name} live connector configured but not authorized — "
-                            f"run `vibe-trading connector authorize {profile_hint}` "
+                            f"run `vantage connector authorize {profile_hint}` "
                             f"on a desktop session"
                         )
                         logger.warning(skip_msg)

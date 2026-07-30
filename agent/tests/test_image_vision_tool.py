@@ -27,7 +27,7 @@ def tool() -> AnalyzeImageTool:
 
 @pytest.fixture()
 def png_in_allowed_root(tmp_path, monkeypatch) -> Path:
-    monkeypatch.setenv("VIBE_TRADING_ALLOWED_FILE_ROOTS", str(tmp_path))
+    monkeypatch.setenv("VANTAGE_ALLOWED_FILE_ROOTS", str(tmp_path))
     p = tmp_path / "chart.png"
     p.write_bytes(_PNG_BYTES)
     return p

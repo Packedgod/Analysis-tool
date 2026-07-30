@@ -38,7 +38,7 @@ _HOST_KEY = "moneycontrol"
 _BASE = "https://priceapi.moneycontrol.com/techCharts/indianMarket/stock"
 _SEARCH_URL = f"{_BASE}/search"
 _HISTORY_URL = f"{_BASE}/history"
-_MIN_INTERVAL = resolve_min_interval("VIBE_TRADING_MONEYCONTROL_MIN_INTERVAL", 0.4)
+_MIN_INTERVAL = resolve_min_interval("VANTAGE_MONEYCONTROL_MIN_INTERVAL", 0.4)
 
 # Symbol -> resolved Moneycontrol ticker (or None when it can't be resolved),
 # memoized for the process so repeated fetches skip the search round-trip.

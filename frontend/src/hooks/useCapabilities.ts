@@ -3,7 +3,7 @@
  * them process-wide.
  *
  * The only flag today is `brokerageEnabled`, mirroring the backend
- * VIBE_TRADING_ENABLE_BROKERAGE master switch. It defaults to `false` until the
+ * VANTAGE_ENABLE_BROKERAGE master switch. It defaults to `false` until the
  * fetch resolves so every live-trading surface stays hidden by default — the
  * research-only build never flashes broker UI while `/api` is in flight.
  */

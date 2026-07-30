@@ -223,7 +223,7 @@ def test_run_worker_uses_remote_mcp_tool_and_report_cites_canned_data(
     # write_file's path sandbox limits run_dir to a known set of roots.
     # ``tmp_path`` is a pytest scratch dir outside those defaults; whitelist
     # it for the duration of this test so the real write_file tool can run.
-    monkeypatch.setenv("VIBE_TRADING_ALLOWED_RUN_ROOTS", str(tmp_path))
+    monkeypatch.setenv("VANTAGE_ALLOWED_RUN_ROOTS", str(tmp_path))
 
     canned_payload = {"answer": "Bullish per fake KB", "source": "fake_kb"}
     state = _make_state(

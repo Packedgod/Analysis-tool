@@ -19,7 +19,7 @@ from src.tools.path_utils import safe_run_dir
 
 def _seed_hypothesis(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, *, universe: str):
     """Create a persisted hypothesis in an isolated registry."""
-    monkeypatch.setenv("VIBE_TRADING_HYPOTHESES_PATH", str(tmp_path / "hypotheses.json"))
+    monkeypatch.setenv("VANTAGE_HYPOTHESES_PATH", str(tmp_path / "hypotheses.json"))
     return HypothesisRegistry().create(
         title="Momentum in target universe",
         thesis="A momentum signal should outperform over the test window.",
@@ -54,7 +54,7 @@ def test_generate_backtest_config_writes_safe_config(
     assert payload["config"]["codes"] == ["399006.SZ"]
     assert payload["config"]["source"] == "local"
     run_dir = Path(payload["run_dir"])
-    assert run_dir.parent == tmp_path / ".vibe-trading" / "runs"
+    assert run_dir.parent == tmp_path / ".vantage" / "runs"
     assert run_dir.name.startswith("autopilot_")
     assert (run_dir / "code").is_dir()
     config = json.loads((run_dir / "config.json").read_text(encoding="utf-8"))
@@ -78,7 +78,7 @@ def test_generate_backtest_config_rejects_invalid_date_before_write(
 
     assert payload["status"] == "error"
     assert "start_date" in payload["error"]
-    assert not (tmp_path / ".vibe-trading" / "runs").exists()
+    assert not (tmp_path / ".vantage" / "runs").exists()
 
 
 def test_run_research_autopilot_uses_host_injected_session_id(
@@ -111,7 +111,7 @@ def test_run_research_autopilot_unknown_hypothesis_errors(
 ) -> None:
     """A missing hypothesis id returns a clean not-found error, not a crash."""
     monkeypatch.setattr(Path, "home", classmethod(lambda cls: tmp_path))
-    monkeypatch.setenv("VIBE_TRADING_HYPOTHESES_PATH", str(tmp_path / "hypotheses.json"))
+    monkeypatch.setenv("VANTAGE_HYPOTHESES_PATH", str(tmp_path / "hypotheses.json"))
 
     tool = RunResearchAutopilotTool(default_session_id="sess_x")
     payload = json.loads(tool.execute(hypothesis_id="hyp_missing"))
@@ -126,7 +126,7 @@ def test_generate_backtest_config_run_dir_passes_safe_run_dir(
     """The returned run_dir must be accepted by safe_run_dir.
 
     Regression for the high-severity defect: the tool wrote run_dir under
-    ~/.vibe-trading/runs, which safe_run_dir rejected, so the advertised
+    ~/.vantage/runs, which safe_run_dir rejected, so the advertised
     write_file -> backtest handoff could never execute.
     """
     monkeypatch.setattr(Path, "home", classmethod(lambda cls: tmp_path))
@@ -152,7 +152,7 @@ def test_generate_backtest_config_falls_back_on_unknown_source(
 ) -> None:
     """A free-text data_source that is not a real loader degrades to 'auto'."""
     monkeypatch.setattr(Path, "home", classmethod(lambda cls: tmp_path))
-    monkeypatch.setenv("VIBE_TRADING_HYPOTHESES_PATH", str(tmp_path / "hypotheses.json"))
+    monkeypatch.setenv("VANTAGE_HYPOTHESES_PATH", str(tmp_path / "hypotheses.json"))
     hypothesis = HypothesisRegistry().create(
         title="Free-text source",
         thesis="Momentum should outperform.",

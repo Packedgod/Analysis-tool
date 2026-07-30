@@ -15,7 +15,7 @@ describe("apiAuth", () => {
       expect(getApiAuthKey()).toBe("");
     });
     it("returns stored key", () => {
-      localStorage.setItem("vibe_trading_api_auth_key", "my-secret");
+      localStorage.setItem("vantage_api_auth_key", "my-secret");
       expect(getApiAuthKey()).toBe("my-secret");
     });
   });
@@ -23,17 +23,17 @@ describe("apiAuth", () => {
   describe("setApiAuthKey", () => {
     it("stores trimmed value", () => {
       setApiAuthKey("  abc-123  ");
-      expect(localStorage.getItem("vibe_trading_api_auth_key")).toBe("abc-123");
+      expect(localStorage.getItem("vantage_api_auth_key")).toBe("abc-123");
     });
     it("removes key when value is empty/whitespace", () => {
       setApiAuthKey("abc");
       setApiAuthKey("   ");
-      expect(localStorage.getItem("vibe_trading_api_auth_key")).toBeNull();
+      expect(localStorage.getItem("vantage_api_auth_key")).toBeNull();
     });
     it("removes key when value is empty string", () => {
       setApiAuthKey("abc");
       setApiAuthKey("");
-      expect(localStorage.getItem("vibe_trading_api_auth_key")).toBeNull();
+      expect(localStorage.getItem("vantage_api_auth_key")).toBeNull();
     });
   });
 

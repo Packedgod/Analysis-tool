@@ -14,8 +14,8 @@ __pycache__/
 *.pyc
 .pytest_cache/
 .ruff_cache/
-agent/vibe_trading.egg-info/
-agent/vibe_trading_ai.egg-info/
+agent/vantage_trading.egg-info/
+agent/vantage_trading_ai.egg-info/
 agent/__pycache__/
 
 # Runtime data (generated at runtime, not in repo)

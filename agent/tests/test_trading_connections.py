@@ -23,7 +23,7 @@ def test_remote_call_requires_enabled_tool(monkeypatch: pytest.MonkeyPatch) -> N
     server = SimpleNamespace(
         url="https://agent.robinhood.com/mcp/trading",
         enabled_tools=["get_portfolio"],
-        auth=SimpleNamespace(cache_dir="/tmp/vibe-no-token"),
+        auth=SimpleNamespace(cache_dir="/tmp/vantage-no-token"),
     )
     monkeypatch.setattr("src.config.loader.load_agent_config", lambda: _agent_config(server))
     monkeypatch.setattr("src.live.registry.has_cached_oauth_token", lambda *_: True)
@@ -39,7 +39,7 @@ def test_remote_call_requires_cached_oauth(monkeypatch: pytest.MonkeyPatch) -> N
     server = SimpleNamespace(
         url="https://agent.robinhood.com/mcp/trading",
         enabled_tools=["get_equity_positions"],
-        auth=SimpleNamespace(cache_dir="/tmp/vibe-no-token"),
+        auth=SimpleNamespace(cache_dir="/tmp/vantage-no-token"),
     )
     monkeypatch.setattr("src.config.loader.load_agent_config", lambda: _agent_config(server))
     monkeypatch.setattr("src.live.registry.has_cached_oauth_token", lambda *_: False)
@@ -127,7 +127,7 @@ def test_live_broker_tools_and_wrappers_absent_from_agent_registry(monkeypatch: 
     server = SimpleNamespace(
         url="https://agent.robinhood.com/mcp/trading",
         enabled_tools=["get_positions"],
-        auth=SimpleNamespace(cache_dir="/tmp/vibe-token"),
+        auth=SimpleNamespace(cache_dir="/tmp/vantage-token"),
     )
     agent_config = SimpleNamespace(mcp_servers={"robinhood": server})
 
@@ -151,7 +151,7 @@ def test_robinhood_generic_reads_use_current_agentic_mcp_tool_names(
             "get_equity_orders",
             "get_equity_quotes",
         ],
-        auth=SimpleNamespace(cache_dir="/tmp/vibe-token"),
+        auth=SimpleNamespace(cache_dir="/tmp/vantage-token"),
     )
 
     class _Adapter:

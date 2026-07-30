@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Vibe Analysis API Server - RESTful API for financial research and simulation.
+"""Vantage API Server - RESTful API for financial research and simulation.
 
 Thin assembler: creates the FastAPI app, mounts middleware, registers route
 modules, and re-exports symbols for test compatibility.  All shared
@@ -142,9 +142,9 @@ async def _lifespan(_app: "FastAPI"):
         except Exception:  # noqa: BLE001 - diagnostics must never block startup
             logger.exception("Background startup preflight failed")
 
-    threading.Thread(target=_diagnose, name="vibe-trading-preflight", daemon=True).start()
+    threading.Thread(target=_diagnose, name="vantage-preflight", daemon=True).start()
     _start_scheduled_research_executor()
-    if get_env_config().agent_tuning.vibe_trading_channels_auto_start:
+    if get_env_config().agent_tuning.vantage_channels_auto_start:
         await _start_channel_runtime()
     try:
         yield
@@ -154,7 +154,7 @@ async def _lifespan(_app: "FastAPI"):
 
 
 app = FastAPI(
-    title="Vibe Analysis API",
+    title="Vantage API",
     description="Evidence-first company research, financial analysis, simulations, and shadow-agent workflows",
     version=APP_VERSION,
     docs_url="/docs",
@@ -249,7 +249,7 @@ register_swarm_routes(app)
 
 from src.api.swarm_routes import _get_swarm_runtime  # noqa: F401, E402
 
-# --- Live trading (self-gates on VIBE_TRADING_ENABLE_BROKERAGE; default off) ---
+# --- Live trading (self-gates on VANTAGE_ENABLE_BROKERAGE; default off) ---
 from src.api.live_routes import register_live_routes  # noqa: E402
 register_live_routes(app)
 
@@ -293,7 +293,7 @@ register_auth_routes(app)
 #
 # Lightweight CRUD endpoints backed by ScheduledResearchJobStore. The endpoint
 # handlers only record and expose jobs; the optional executor lifecycle is
-# guarded separately by VIBE_TRADING_ENABLE_SCHEDULER.
+# guarded separately by VANTAGE_ENABLE_SCHEDULER.
 
 from src.api.scheduled_routes import register_scheduled_routes  # noqa: E402
 register_scheduled_routes(app)
@@ -331,7 +331,7 @@ def serve_main(argv: list[str] | None = None) -> int:
                     raise
                 return await super().get_response("index.html", scope)
 
-    parser = argparse.ArgumentParser(description="Vibe Analysis Server")
+    parser = argparse.ArgumentParser(description="Vantage Server")
     parser.add_argument("--port", type=int, default=8000, help="Listen port (default 8000)")
     parser.add_argument("--host", default="127.0.0.1", help="Bind address")
     parser.add_argument("--dev", action="store_true", help="Dev mode: spawn Vite on :5173")
@@ -371,7 +371,7 @@ def serve_main(argv: list[str] | None = None) -> int:
         print("[warn] Run: cd frontend && npm run build")
 
     print("=" * 50)
-    print("  Vibe Analysis Server")
+    print("  Vantage Server")
     print(f"  http://127.0.0.1:{args.port}")
     print("=" * 50)
 

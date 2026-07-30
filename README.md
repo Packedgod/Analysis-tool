@@ -1,7 +1,7 @@
-# Vibe Analysis
+# Vantage
 
-Vibe Analysis is a local, evidence-first financial research application. It is
-derived from the research, simulation, and shadow-agent parts of Vibe-Trading,
+Vantage is a local, evidence-first financial research application. It is
+derived from the research, simulation, and shadow-agent parts of Vantage,
 but has no broker connectivity, account access, mandate flow, or order tools.
 
 ## What it does
@@ -22,7 +22,7 @@ but has no broker connectivity, account access, mandate flow, or order tools.
 
 ## Start on this Windows device
 
-Open File Explorer and double-click `Start Vibe Analysis.cmd`. The application
+Open File Explorer and double-click `Start Vantage.cmd`. The application
 opens at <http://127.0.0.1:8900> and automatically restarts its local service if
 it stops. Launching from File Explorer is important because restricted terminal
 processes may not have outbound access to report, news, market-data, or model
@@ -65,10 +65,10 @@ not commit `.env`; it may contain credentials. Start the server with:
   23 sector/industry KPI packs are retrieved privately by the backend.
 - Backtests and shadow results are simulations, not investment advice.
 - Brokerage is permanently disabled in this product, regardless of environment
-  variables or copied Vibe-Trading configuration.
+  variables or copied Vantage configuration.
 
 ## License and attribution
 
 This fork retains the upstream MIT license and notices from
-[HKUDS/Vibe-Trading](https://github.com/HKUDS/Vibe-Trading).
+[HKUDS/Vantage](https://github.com/HKUDS/Vantage).
 

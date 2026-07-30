@@ -195,7 +195,7 @@ def test_broadening_flat_series_all_zero() -> None:
 
 @pytest.fixture()
 def allow_runs(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
-    monkeypatch.setenv("VIBE_TRADING_ALLOWED_RUN_ROOTS", str(tmp_path))
+    monkeypatch.setenv("VANTAGE_ALLOWED_RUN_ROOTS", str(tmp_path))
     return tmp_path
 
 

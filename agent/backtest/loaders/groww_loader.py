@@ -36,7 +36,7 @@ _HOST_KEY = "groww"
 _CHART_URL = (
     "https://groww.in/v1/api/charting_service/v4/chart/exchange/NSE/segment/CASH/{symbol}"
 )
-_MIN_INTERVAL = resolve_min_interval("VIBE_TRADING_GROWW_MIN_INTERVAL", 0.4)
+_MIN_INTERVAL = resolve_min_interval("VANTAGE_GROWW_MIN_INTERVAL", 0.4)
 _DAILY_INTERVAL_MINUTES = 1440
 # Epoch magnitude cut: daily candles stamp seconds (~1.6e9); some payloads use
 # milliseconds (~1.6e12). Anything above this threshold is treated as millis.

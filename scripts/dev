@@ -2,14 +2,14 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-STATE_DIR="${VIBE_DEV_STATE_DIR:-$ROOT/.vibe-dev}"
+STATE_DIR="${VANTAGE_DEV_STATE_DIR:-$ROOT/.vantage-dev}"
 LOG_DIR="$STATE_DIR/logs"
 PID_DIR="$STATE_DIR/pids"
 
-BACKEND_HOST="${VIBE_BACKEND_HOST:-127.0.0.1}"
-BACKEND_PORT="${VIBE_BACKEND_PORT:-8899}"
-FRONTEND_HOST="${VIBE_FRONTEND_HOST:-127.0.0.1}"
-FRONTEND_PORT="${VIBE_FRONTEND_PORT:-5899}"
+BACKEND_HOST="${VANTAGE_BACKEND_HOST:-127.0.0.1}"
+BACKEND_PORT="${VANTAGE_BACKEND_PORT:-8899}"
+FRONTEND_HOST="${VANTAGE_FRONTEND_HOST:-127.0.0.1}"
+FRONTEND_PORT="${VANTAGE_FRONTEND_PORT:-5899}"
 if [[ -n "${PYTHON:-}" ]]; then
   PYTHON_BIN="$PYTHON"
 elif [[ -x "$ROOT/.venv/bin/python" ]]; then
@@ -36,8 +36,8 @@ Commands:
   urls               Print local dev URLs
 
 Environment:
-  VIBE_BACKEND_PORT   Backend port (default: 8899)
-  VIBE_FRONTEND_PORT  Frontend port (default: 5899)
+  VANTAGE_BACKEND_PORT   Backend port (default: 8899)
+  VANTAGE_FRONTEND_PORT  Frontend port (default: 5899)
   PYTHON              Python binary (default: local .venv, then python3)
 USAGE
 }

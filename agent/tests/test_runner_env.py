@@ -27,11 +27,11 @@ def test_backtest_runtime_env_keeps_market_data_configuration(
         "TIINGO_API_KEY": "tiingo-key",
         "FMP_API_KEY": "fmp-key",
         "FRED_API_KEY": "fred-key",
-        "VIBE_TRADING_IWENCAI_KEY": "iwencai-key",
-        "VIBE_TRADING_SEC_UA": "Research Bot bot@example.com",
-        "VIBE_TRADING_DATA_CACHE": "1",
-        "VIBE_TRADING_ALLOWED_RUN_ROOTS": str(tmp_path),
-        "VIBE_TRADING_FMP_MIN_INTERVAL": "0.5",
+        "VANTAGE_IWENCAI_KEY": "iwencai-key",
+        "VANTAGE_SEC_UA": "Research Bot bot@example.com",
+        "VANTAGE_DATA_CACHE": "1",
+        "VANTAGE_ALLOWED_RUN_ROOTS": str(tmp_path),
+        "VANTAGE_FMP_MIN_INTERVAL": "0.5",
         "CCXT_EXCHANGE": "okx",
         "CCXT_TIMEOUT_MS": "12000",
         "OKX_TIMEOUT_S": "20",
@@ -68,9 +68,9 @@ def test_backtest_runtime_env_scrubs_service_and_broker_secrets(
         "LANGCHAIN_PROVIDER",
         "LANGCHAIN_MODEL_NAME",
         "API_AUTH_KEY",
-        "VIBE_TRADING_API_KEY",
-        "VIBE_TRADING_ENABLE_SHELL_TOOLS",
-        "VIBE_TRADING_ENABLE_ADVISORY",
+        "VANTAGE_API_KEY",
+        "VANTAGE_ENABLE_SHELL_TOOLS",
+        "VANTAGE_ENABLE_ADVISORY",
         "INVINOVERITAS_API_KEY",
         "FUTU_TRADE_PWD_MD5",
         "BINANCE_API_SECRET",
@@ -105,14 +105,14 @@ def test_backtest_runtime_env_prepends_runtime_pythonpath(
 
 
 def test_sandbox_credentials_absent_in_this_environment() -> None:
-    # No vibe-sandbox account here, so the UID-drop pre-check returns None and
+    # No vantage-sandbox account here, so the UID-drop pre-check returns None and
     # execute() must run WITHOUT a user= kwarg (the graceful fallback path).
     assert _resolve_sandbox_credentials() is None
 
 
 def test_prepare_sandbox_home_reexposes_only_loader_paths(tmp_path: Path) -> None:
     real_home = tmp_path / "home"
-    vt = real_home / ".vibe-trading"
+    vt = real_home / ".vantage"
     (vt / "cache").mkdir(parents=True)
     (vt / "memory").mkdir(parents=True)
     (vt / ".env").write_text("SECRET=1", encoding="utf-8")
@@ -120,7 +120,7 @@ def test_prepare_sandbox_home_reexposes_only_loader_paths(tmp_path: Path) -> Non
 
     sandbox = _prepare_sandbox_home(real_home)
     try:
-        dst_vt = sandbox / ".vibe-trading"
+        dst_vt = sandbox / ".vantage"
         # Loader-owned paths re-exposed (symlinked)...
         assert (dst_vt / "cache").exists()
         assert (dst_vt / "qveris.json").exists()
@@ -146,12 +146,12 @@ def test_make_rlimit_preexec_returns_callable_on_posix() -> None:
 
 
 def test_rlimit_as_bytes_respects_env_override(monkeypatch) -> None:
-    monkeypatch.setenv("VIBE_TRADING_SANDBOX_RLIMIT_AS_MB", "256")
+    monkeypatch.setenv("VANTAGE_SANDBOX_RLIMIT_AS_MB", "256")
     assert runner_mod._rlimit_as_bytes() == 256 * 1024 * 1024
 
 
 def test_rlimit_as_bytes_falls_back_on_invalid_env(monkeypatch) -> None:
-    monkeypatch.setenv("VIBE_TRADING_SANDBOX_RLIMIT_AS_MB", "not-a-number")
+    monkeypatch.setenv("VANTAGE_SANDBOX_RLIMIT_AS_MB", "not-a-number")
     assert runner_mod._rlimit_as_bytes() == runner_mod._DEFAULT_RLIMIT_AS_MB * 1024 * 1024
 
 
@@ -174,13 +174,13 @@ def test_execute_uses_ephemeral_home_and_cleans_up(tmp_path: Path) -> None:
     assert result.success, result.stderr
     home_line = result.stdout.strip()
     # The subprocess saw an ephemeral HOME, not the real one...
-    assert "vibe-sandbox-home-" in home_line
+    assert "vantage-sandbox-home-" in home_line
     # ...and it was cleaned up after the process exited.
     assert not Path(home_line).exists()
 
 
 def test_execute_falls_back_without_uid_drop_and_succeeds(tmp_path: Path) -> None:
-    # With no vibe-sandbox user, execute() must NOT pass user=/group= and must
+    # With no vantage-sandbox user, execute() must NOT pass user=/group= and must
     # complete normally — this is the path that fires in CI / dev / non-Docker.
     run_dir = tmp_path / "run"
     run_dir.mkdir()
@@ -195,12 +195,12 @@ def test_execute_falls_back_without_uid_drop_and_succeeds(tmp_path: Path) -> Non
 def test_execute_retries_without_uid_drop_when_drop_fails(
     monkeypatch, tmp_path: Path
 ) -> None:
-    # Simulate a host where vibe-sandbox exists but the drop is not permitted:
+    # Simulate a host where vantage-sandbox exists but the drop is not permitted:
     # execute() must catch the failure, warn, and re-run without user=/group=.
     monkeypatch.setattr(
         runner_mod,
         "_resolve_sandbox_credentials",
-        lambda: ("vibe-sandbox", "vibe-sandbox"),
+        lambda: ("vantage-sandbox", "vantage-sandbox"),
     )
     real_run = runner_mod.subprocess.run
     attempts: list[bool] = []
@@ -238,7 +238,7 @@ def test_execute_applies_address_space_rlimit(monkeypatch, tmp_path: Path) -> No
     _soft, hard = _resource.getrlimit(_resource.RLIMIT_NOFILE)
     expected = 512 if hard == _resource.RLIM_INFINITY else min(512, hard)
 
-    monkeypatch.setenv("VIBE_TRADING_SANDBOX_RLIMIT_AS_MB", "4096")
+    monkeypatch.setenv("VANTAGE_SANDBOX_RLIMIT_AS_MB", "4096")
     run_dir = tmp_path / "run"
     run_dir.mkdir()
     entry = _probe_entry(

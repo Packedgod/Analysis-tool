@@ -71,7 +71,7 @@ class LiveHaltRequest(BaseModel):
 class LiveAuthorizeRequest(BaseModel):
     """Kick off (or describe) the OAuth bootstrap for a live broker (C2).
 
-    Vibe-Trading never holds funds and never operates a venue, so the OAuth
+    Vantage never holds funds and never operates a venue, so the OAuth
     bootstrap runs through the broker's own user-authorized device flow on the
     client (CLI / desktop MCP), not a server-side redirect. This endpoint is the
     web on-ramp: it tells a Web UI user exactly how to discover/start the flow.
@@ -465,7 +465,7 @@ def register_live_routes(
 ) -> None:
     """Mount the live-trading routes onto ``app``.
 
-    Self-gates on the ``VIBE_TRADING_ENABLE_BROKERAGE`` master switch: when the
+    Self-gates on the ``VANTAGE_ENABLE_BROKERAGE`` master switch: when the
     live-brokerage subsystem is disabled (the research-only default) this mounts
     nothing, so every ``/live/*`` and ``/mandate/*`` endpoint returns 404 and no
     broker is reachable over HTTP. Callers that intentionally exercise the
@@ -475,7 +475,7 @@ def register_live_routes(
 
     if not brokerage_enabled():
         logger.info(
-            "live-brokerage disabled (VIBE_TRADING_ENABLE_BROKERAGE off); "
+            "live-brokerage disabled (VANTAGE_ENABLE_BROKERAGE off); "
             "/live and /mandate routes not mounted"
         )
         return
@@ -615,9 +615,9 @@ def register_live_routes(
             "connector_profile": connector_profile,
             "oauth_token_present": _oauth_token_present(broker),
             "instruction": (
-                f"Run `vibe-trading connector authorize {connector_profile}` "
+                f"Run `vantage connector authorize {connector_profile}` "
                 "from the device that will hold the broker session. This opens the "
-                "broker's own OAuth consent flow; Vibe-Trading never holds funds and "
+                "broker's own OAuth consent flow; Vantage never holds funds and "
                 "only relays intent once you authorize."
             ),
             "note": (

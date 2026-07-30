@@ -156,7 +156,7 @@ def _fetch_membership(code: str) -> str:
     """Fetch the industry / concept boards one stock belongs to.
 
     Args:
-        code: Vibe-Trading A-share symbol (e.g. ``"600519.SH"``).
+        code: Vantage A-share symbol (e.g. ``"600519.SH"``).
 
     Returns:
         A JSON envelope string with the resolved boards, or an error envelope

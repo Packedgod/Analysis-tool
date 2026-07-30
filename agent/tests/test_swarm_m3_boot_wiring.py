@@ -7,18 +7,18 @@ distinct file from the main agent config.
 
 The contract this file defends:
 
-  * ``VIBE_TRADING_SWARM_AGENT_CONFIG`` env var, when set, wins absolutely —
+  * ``VANTAGE_SWARM_AGENT_CONFIG`` env var, when set, wins absolutely —
     even if neighbouring ``swarm-agent.json`` / ``agent.json`` exist on disk.
-  * Without the env var, ``~/.vibe-trading/swarm-agent.json`` (the swarm-
+  * Without the env var, ``~/.vantage/swarm-agent.json`` (the swarm-
     specific operator file) is preferred over ``agent.json``.
-  * Without either swarm-specific file, ``~/.vibe-trading/agent.json``
+  * Without either swarm-specific file, ``~/.vantage/agent.json``
     (the main-agent config) is reused as a sane default — operators with a
     single-config setup don't have to duplicate it.
   * With nothing on disk and no env var, the resolver returns ``None`` so the
     runtime keeps today's local-only behaviour byte-for-byte (R-03).
 
 Tests use ``tmp_path`` to redirect the runtime root so they never touch the
-real ``~/.vibe-trading`` directory of whoever is running the suite.
+real ``~/.vantage`` directory of whoever is running the suite.
 """
 
 from __future__ import annotations
@@ -64,7 +64,7 @@ def test_resolve_swarm_agent_config_path_uses_env_var_when_set(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """``VIBE_TRADING_SWARM_AGENT_CONFIG`` is the absolute first-priority source.
+    """``VANTAGE_SWARM_AGENT_CONFIG`` is the absolute first-priority source.
 
     An operator who explicitly points the env var at a custom file MUST get
     that file even if the well-known ``swarm-agent.json`` and ``agent.json``
@@ -76,7 +76,7 @@ def test_resolve_swarm_agent_config_path_uses_env_var_when_set(
     _write_agent_json(env_pointed, "env_pointed")
     _write_agent_json(runtime_root / "swarm-agent.json", "swarm_specific")
     _write_agent_json(runtime_root / "agent.json", "main_agent")
-    monkeypatch.setenv("VIBE_TRADING_SWARM_AGENT_CONFIG", str(env_pointed))
+    monkeypatch.setenv("VANTAGE_SWARM_AGENT_CONFIG", str(env_pointed))
 
     resolved = _resolve_swarm_agent_config_path(runtime_root=runtime_root)
 
@@ -99,7 +99,7 @@ def test_resolve_swarm_agent_config_path_prefers_swarm_specific_file(
     config. When that file exists, the main ``agent.json`` is *ignored* for
     swarm — preventing accidental cross-pollination of allowlists.
     """
-    monkeypatch.delenv("VIBE_TRADING_SWARM_AGENT_CONFIG", raising=False)
+    monkeypatch.delenv("VANTAGE_SWARM_AGENT_CONFIG", raising=False)
     runtime_root = tmp_path / "runtime"
     _write_agent_json(runtime_root / "swarm-agent.json", "swarm_specific")
     _write_agent_json(runtime_root / "agent.json", "main_agent")
@@ -125,7 +125,7 @@ def test_resolve_swarm_agent_config_path_falls_back_to_main_agent_config(
     to the main ``agent.json`` so the operator's existing configuration stays
     the source of truth for both code paths.
     """
-    monkeypatch.delenv("VIBE_TRADING_SWARM_AGENT_CONFIG", raising=False)
+    monkeypatch.delenv("VANTAGE_SWARM_AGENT_CONFIG", raising=False)
     runtime_root = tmp_path / "runtime"
     _write_agent_json(runtime_root / "agent.json", "main_agent")
 
@@ -150,7 +150,7 @@ def test_resolve_swarm_agent_config_path_returns_none_when_nothing_configured(
     A ``None`` resolution flows through to ``SwarmRuntime(agent_config=None)``
     which the M1/M2 plumbing already handles.
     """
-    monkeypatch.delenv("VIBE_TRADING_SWARM_AGENT_CONFIG", raising=False)
+    monkeypatch.delenv("VANTAGE_SWARM_AGENT_CONFIG", raising=False)
     runtime_root = tmp_path / "runtime"
     runtime_root.mkdir()
 
@@ -177,7 +177,7 @@ def test_load_swarm_agent_config_returns_default_when_unconfigured(
     ``build_swarm_registry`` already treats that case identically to ``None``
     (verified by the M2 ``test_build_swarm_registry_with_empty_mcp_servers_is_local_only``).
     """
-    monkeypatch.delenv("VIBE_TRADING_SWARM_AGENT_CONFIG", raising=False)
+    monkeypatch.delenv("VANTAGE_SWARM_AGENT_CONFIG", raising=False)
     runtime_root = tmp_path / "runtime"
     runtime_root.mkdir()
 
@@ -197,7 +197,7 @@ def test_load_swarm_agent_config_loads_swarm_specific_file(
     ``swarm_specific`` server name we pinned in the file is the one that
     surfaces on the returned ``AgentConfig.mcp_servers`` mapping.
     """
-    monkeypatch.delenv("VIBE_TRADING_SWARM_AGENT_CONFIG", raising=False)
+    monkeypatch.delenv("VANTAGE_SWARM_AGENT_CONFIG", raising=False)
     runtime_root = tmp_path / "runtime"
     _write_agent_json(runtime_root / "swarm-agent.json", "swarm_specific")
     _write_agent_json(runtime_root / "agent.json", "main_agent")

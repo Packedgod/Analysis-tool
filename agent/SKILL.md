@@ -1,11 +1,11 @@
 ---
-name: vibe-analysis
+name: vantage
 version: 0.1.0
 description: Evidence-first company reports, financial analysis, qualitative research, strategy simulations, and shadow-agent workflows without brokerage.
 dependencies:
   python: ">=3.11"
   pip:
-    - vibe-analysis-ai
+    - vantage-ai
 env:
   - name: OPENAI_API_KEY
     description: OpenAI-compatible API key for the main agent and research teams.
@@ -14,11 +14,11 @@ env:
     description: Model name exposed by the configured OpenAI-compatible endpoint.
     required: true
 mcp:
-  command: vibe-analysis-mcp
+  command: vantage-mcp
   args: []
 ---
 
-# Vibe Analysis
+# Vantage
 
 Use this toolkit for evidence-backed public-company research and historical
 simulation. It has no broker, account, mandate, or order capability.

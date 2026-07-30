@@ -39,9 +39,9 @@ _BROKER_TOOLS = {
 
 def _enable(monkeypatch, on: bool) -> None:
     if on:
-        monkeypatch.setenv("VIBE_TRADING_ENABLE_BROKERAGE", "1")
+        monkeypatch.setenv("VANTAGE_ENABLE_BROKERAGE", "1")
     else:
-        monkeypatch.delenv("VIBE_TRADING_ENABLE_BROKERAGE", raising=False)
+        monkeypatch.delenv("VANTAGE_ENABLE_BROKERAGE", raising=False)
     reset_env_config()
 
 

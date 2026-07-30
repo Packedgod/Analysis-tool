@@ -117,7 +117,7 @@ def bench_equity():
 
 
 if __name__ == "__main__":
-    print("Vibe-Trading Performance Benchmark")
+    print("Vantage Performance Benchmark")
     print("=" * 50)
     print()
 
@@ -126,7 +126,7 @@ if __name__ == "__main__":
     print(f"Bottleneck available: {HAS_BOTTLENECK}")
     from src.config.accessor import get_env_config
 
-    print(f"VIBE_TRADING_DISABLE_BOTTLENECK: {get_env_config().agent_tuning.vibe_trading_disable_bottleneck}")
+    print(f"VANTAGE_DISABLE_BOTTLENECK: {get_env_config().agent_tuning.vantage_disable_bottleneck}")
     print()
 
     bench_operators()

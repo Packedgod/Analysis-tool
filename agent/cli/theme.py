@@ -1,4 +1,4 @@
-"""Centralised Rich Style table for the Vibe-Trading CLI.
+"""Centralised Rich Style table for the Vantage CLI.
 
 All visible colour decisions for the CLI live here so the look stays consistent
 with the web app (see ``frontend/src/index.css`` design tokens). The brand
@@ -46,7 +46,7 @@ def _is_dark_terminal(console: Console) -> bool:
     Rich does not expose a foolproof "dark mode?" probe, so we use a best-effort
     chain:
 
-    1. Explicit override via ``VIBE_TRADING_THEME`` env var (``dark``/``light``).
+    1. Explicit override via ``VANTAGE_THEME`` env var (``dark``/``light``).
     2. ``COLORFGBG`` (set by xterm/rxvt/Konsole): the part after ``;`` is the
        background colour index. ``0`` (black) → dark, anything else → light.
     3. macOS Terminal.app sets ``TERM_PROGRAM=Apple_Terminal`` without a colour
@@ -63,7 +63,7 @@ def _is_dark_terminal(console: Console) -> bool:
 
     from src.config.accessor import get_env_config
 
-    override = get_env_config().paths.vibe_trading_theme.strip().lower()
+    override = get_env_config().paths.vantage_theme.strip().lower()
     if override in {"dark", "light"}:
         return override == "dark"
 
@@ -214,7 +214,7 @@ class Theme:
 
     Example:
         >>> from cli.theme import Theme, get_console
-        >>> get_console().print("Vibe-Trading", style=Theme.primary)
+        >>> get_console().print("Vantage", style=Theme.primary)
     """
 
     primary: Final[Style] = _styles.primary

@@ -16,11 +16,11 @@ def get_runtime_root(config_path: Path | None = None) -> Path:
 
     Returns:
         The directory containing the explicit structured config file when one
-        is provided, otherwise the default ``~/.vibe-trading`` runtime root.
+        is provided, otherwise the default ``~/.vantage`` runtime root.
     """
     if config_path is not None:
         return config_path.expanduser().parent
-    return Path.home() / ".vibe-trading"
+    return Path.home() / ".vantage"
 
 
 def get_config_candidates(config_path: Path | None = None) -> list[Path]:
@@ -75,7 +75,7 @@ def get_workspace_path() -> Path:
     """Return the workspace path for channel state data.
 
     For channel adapters that need to persist state (e.g. conversation
-    references, auth tokens), this returns ``~/.vibe-trading/workspace``.
+    references, auth tokens), this returns ``~/.vantage/workspace``.
     """
     p = get_runtime_root() / "workspace"
     p.mkdir(parents=True, exist_ok=True)

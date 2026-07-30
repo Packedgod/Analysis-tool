@@ -309,7 +309,7 @@ def test_tool_call_id_alone_does_not_mark_evidence_verified(tmp_path: Path) -> N
 
 def test_complete_goal_with_verified_evidence(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     store = _store(tmp_path)
-    monkeypatch.setenv("VIBE_TRADING_ALLOWED_FILE_ROOTS", str(tmp_path))
+    monkeypatch.setenv("VANTAGE_ALLOWED_FILE_ROOTS", str(tmp_path))
     goal = store.replace_goal(
         session_id="session-1",
         objective="Evaluate NVDA momentum.",
@@ -361,7 +361,7 @@ def test_completion_allows_mixed_verified_and_historical_evidence(
 ) -> None:
     """Audit rows may cite old evidence as long as each criterion has verified evidence."""
     store = _store(tmp_path)
-    monkeypatch.setenv("VIBE_TRADING_ALLOWED_FILE_ROOTS", str(tmp_path))
+    monkeypatch.setenv("VANTAGE_ALLOWED_FILE_ROOTS", str(tmp_path))
     goal = store.replace_goal(
         session_id="session-1",
         objective="Evaluate NVDA momentum.",
@@ -416,7 +416,7 @@ def test_artifact_evidence_requires_allowed_path_and_hash(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     store = _store(tmp_path)
-    monkeypatch.setenv("VIBE_TRADING_ALLOWED_FILE_ROOTS", str(tmp_path))
+    monkeypatch.setenv("VANTAGE_ALLOWED_FILE_ROOTS", str(tmp_path))
     goal = store.replace_goal(
         session_id="session-1",
         objective="Evaluate NVDA momentum.",

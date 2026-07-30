@@ -221,8 +221,8 @@ def retry_with_budget(
 # Opt-in local loader cache.
 # ---------------------------------------------------------------------------
 
-LOADER_CACHE_ENV = "VIBE_TRADING_DATA_CACHE"
-LOADER_CACHE_ROOT_ENV = "VIBE_TRADING_DATA_CACHE_ROOT"
+LOADER_CACHE_ENV = "VANTAGE_DATA_CACHE"
+LOADER_CACHE_ROOT_ENV = "VANTAGE_DATA_CACHE_ROOT"
 _LOADER_CACHE_TRUE_VALUES = {"1", "true", "yes", "on"}
 # Bump when the key payload or on-disk layout changes so stale entries are
 # simply never matched (old files become unreachable garbage, safe to delete).
@@ -233,17 +233,17 @@ def loader_cache_enabled() -> bool:
     """Return whether the local market-data cache is explicitly enabled."""
     from src.config.accessor import get_env_config
 
-    return get_env_config().data.vibe_trading_data_cache
+    return get_env_config().data.vantage_data_cache
 
 
 def loader_cache_root() -> Path:
     """Return the root directory for opt-in loader cache files."""
     from src.config.accessor import get_env_config
 
-    root = get_env_config().data.vibe_trading_data_cache_root
+    root = get_env_config().data.vantage_data_cache_root
     if root and root.strip():
         return Path(root).expanduser()
-    return Path.home() / ".vibe-trading" / "cache" / "loaders"
+    return Path.home() / ".vantage" / "cache" / "loaders"
 
 
 def make_loader_cache_key(
@@ -565,7 +565,7 @@ def _cache_index_columns(frame: pd.DataFrame) -> list[str]:
     used: set[str] = set()
     index_columns: list[str] = []
     for pos, name in enumerate(frame.index.names):
-        base = str(name) if name is not None else f"__vibe_loader_index_{pos}__"
+        base = str(name) if name is not None else f"__vantage_loader_index_{pos}__"
         candidate = base
         suffix = 1
         while candidate in columns or candidate in used:

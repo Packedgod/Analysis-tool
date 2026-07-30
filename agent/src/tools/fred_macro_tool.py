@@ -34,7 +34,7 @@ logger = logging.getLogger(__name__)
 _OBSERVATIONS_URL = "https://api.stlouisfed.org/fred/series/observations"
 
 _FRED_HOST_KEY = "fred"
-_FRED_MIN_INTERVAL_ENV = "VIBE_TRADING_FRED_MIN_INTERVAL"
+_FRED_MIN_INTERVAL_ENV = "VANTAGE_FRED_MIN_INTERVAL"
 _FRED_DEFAULT_MIN_INTERVAL = 0.6
 _FRED_TIMEOUT_S = 15.0
 

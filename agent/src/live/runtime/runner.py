@@ -237,7 +237,7 @@ def _pin_mandate_prompt(broker: str, mandate: Mandate, now: datetime) -> str:
         f"Broker: {broker}\n"
         f"Tick time (UTC): {now.isoformat(timespec='seconds')}\n"
         f"Mandate expires (UTC): {mandate.consent.expires_at}\n\n"
-        "=== HARD CAPS (vibe-enforced; broker funding is the absolute ceiling) ===\n"
+        "=== HARD CAPS (vantage-enforced; broker funding is the absolute ceiling) ===\n"
         f"- Account funding (USD): {caps.account_funding_usd}\n"
         f"- Max single-order notional (USD): {caps.max_order_notional_usd}\n"
         f"- Max total exposure (USD): {caps.max_total_exposure_usd}\n"

@@ -129,8 +129,8 @@ def test_goal_evidence_tool_binds_runtime_artifact(
     artifact = run_dir / "artifacts" / "metrics.csv"
     artifact.parent.mkdir(parents=True)
     artifact.write_text("symbol,return\nNVDA,0.12\n", encoding="utf-8")
-    monkeypatch.setenv("VIBE_TRADING_ALLOWED_RUN_ROOTS", str(run_root))
-    monkeypatch.setenv("VIBE_TRADING_ALLOWED_FILE_ROOTS", str(run_root))
+    monkeypatch.setenv("VANTAGE_ALLOWED_RUN_ROOTS", str(run_root))
+    monkeypatch.setenv("VANTAGE_ALLOWED_FILE_ROOTS", str(run_root))
 
     store = GoalStore(tmp_path / "goals.db")
     start = StartResearchGoalTool(default_session_id="session-1", store=store)

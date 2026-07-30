@@ -103,7 +103,7 @@ def test_goal_status_without_session_does_not_create_session(monkeypatch) -> Non
     def fail_create(*args, **kwargs):  # noqa: ANN001
         raise AssertionError("status should not create a session")
 
-    monkeypatch.delenv("VIBE_GOAL_SESSION_ID", raising=False)
+    monkeypatch.delenv("VANTAGE_GOAL_SESSION_ID", raising=False)
     monkeypatch.setattr(goal_cmd, "_create_cli_session", fail_create)
 
     assert goal_cmd.run(SimpleNamespace(), "status") == 0

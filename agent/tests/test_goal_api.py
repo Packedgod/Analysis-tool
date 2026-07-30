@@ -10,8 +10,8 @@ import api_server
 
 
 def _client(tmp_path: Path, monkeypatch) -> TestClient:
-    monkeypatch.setenv("VIBE_TRADING_GOAL_DB_PATH", str(tmp_path / "goals.db"))
-    monkeypatch.setenv("VIBE_TRADING_ALLOWED_RUN_ROOTS", str(tmp_path / "runs"))
+    monkeypatch.setenv("VANTAGE_GOAL_DB_PATH", str(tmp_path / "goals.db"))
+    monkeypatch.setenv("VANTAGE_ALLOWED_RUN_ROOTS", str(tmp_path / "runs"))
     monkeypatch.setattr(api_server, "_goal_store", None)
     monkeypatch.setattr(api_server, "_session_service", None)
     monkeypatch.setattr(api_server, "SESSIONS_DIR", tmp_path / "sessions")

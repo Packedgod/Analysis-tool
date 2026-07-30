@@ -87,7 +87,7 @@ def test_missing_codex_token_raises_login_hint(monkeypatch: pytest.MonkeyPatch) 
     monkeypatch.setattr(oauth_cli_kit, "get_token", _missing_token)
     adapter = OpenAICodexLLM(model=DEFAULT_CODEX_MODEL)
 
-    with pytest.raises(RuntimeError, match="vibe-trading provider login openai-codex"):
+    with pytest.raises(RuntimeError, match="vantage provider login openai-codex"):
         adapter._headers()
 
 

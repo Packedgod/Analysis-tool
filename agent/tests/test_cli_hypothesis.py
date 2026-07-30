@@ -1,4 +1,4 @@
-"""Tests for the ``vibe-trading hypothesis`` CLI subcommands."""
+"""Tests for the ``vantage hypothesis`` CLI subcommands."""
 
 from __future__ import annotations
 

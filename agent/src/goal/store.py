@@ -31,8 +31,8 @@ from src.goal.models import (
 from src.goal.policy import normalize_required_text, reject_live_execution_objective
 from src.tools.path_utils import safe_document_path, safe_run_id
 
-_DEFAULT_DB_PATH = Path.home() / ".vibe-trading" / "sessions.db"
-_DB_PATH_ENV = "VIBE_TRADING_GOAL_DB_PATH"
+_DEFAULT_DB_PATH = Path.home() / ".vantage" / "sessions.db"
+_DB_PATH_ENV = "VANTAGE_GOAL_DB_PATH"
 
 _CURRENT_STATUSES = {
     GoalStatus.ACTIVE,
@@ -71,7 +71,7 @@ def _json_loads(value: str | None, default: object) -> object:
 
 def _default_db_path() -> Path:
     """Return the configured goal ledger database path."""
-    raw_path = get_env_config().paths.vibe_trading_goal_db_path.strip()
+    raw_path = get_env_config().paths.vantage_goal_db_path.strip()
     if raw_path:
         return Path(raw_path).expanduser()
     return _DEFAULT_DB_PATH
@@ -107,7 +107,7 @@ class GoalStore:
 
         Args:
             db_path: SQLite database path. When omitted,
-                ``VIBE_TRADING_GOAL_DB_PATH`` can override the default.
+                ``VANTAGE_GOAL_DB_PATH`` can override the default.
         """
         self.db_path = Path(db_path) if db_path is not None else _default_db_path()
         self.db_path.parent.mkdir(parents=True, exist_ok=True)

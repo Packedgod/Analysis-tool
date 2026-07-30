@@ -75,7 +75,7 @@ def _session_id(ctx: Any, *, title: str = "Goal research", create: bool) -> str 
         return str(existing)
     from src.config.accessor import get_env_config
 
-    env_session_id = get_env_config().paths.vibe_goal_session_id
+    env_session_id = get_env_config().paths.vantage_goal_session_id
     if env_session_id:
         return env_session_id
     if not create:

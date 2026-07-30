@@ -85,7 +85,7 @@ _DECISION_PAUSE = "pause_for_reauth"
 #: Environment variable controlling advisory review activation.
 #: Truthy values (case-insensitive): ``"1"``, ``"true"``, ``"yes"``.
 #: Default: off (advisory layer is purely observational and opt-in).
-_ADVISORY_ENABLED_ENV = "VIBE_TRADING_ENABLE_ADVISORY"
+_ADVISORY_ENABLED_ENV = "VANTAGE_ENABLE_ADVISORY"
 _ADVISORY_TRUTHY = frozenset({"1", "true", "yes"})
 
 
@@ -251,7 +251,7 @@ class LiveOrderGuardTool(MCPRemoteTool):
         """Return a live USD price for the intent's symbol, fail-closed.
 
         Prefers the broker's mapped READ quote tool so the price is the broker's
-        own; falls back to Vibe-Trading's data loaders
+        own; falls back to Vantage's data loaders
         (:func:`src.live.enforcement.last_price_usd`, standard auto-fallback)
         when the broker quote is unavailable. Returns ``None`` when no source
         yields a usable price.
@@ -391,7 +391,7 @@ class LiveOrderGuardTool(MCPRemoteTool):
         Never raises — all exceptions are caught and converted to
         REVIEW_UNAVAILABLE.
         """
-        if not get_env_config().agent_tuning.vibe_trading_enable_advisory:
+        if not get_env_config().agent_tuning.vantage_enable_advisory:
             return None
 
         providers = get_advisory_providers()

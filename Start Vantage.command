@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Double-click this file in Finder to launch Vibe Analysis on macOS.
+# Double-click this file in Finder to launch Vantage on macOS.
 #
 # It starts (or restarts) the local recovery service, waits for the server to
 # come up on http://127.0.0.1:8900, and opens the research workspace in your
@@ -15,11 +15,11 @@ WATCHDOG="$PROJECT/scripts/analysis_watchdog.sh"
 PID_FILE="$PROJECT/.runtime/watchdog.pid"
 LOG_DIR="$PROJECT/logs"
 HOST="127.0.0.1"
-PORT="${VIBE_ANALYSIS_PORT:-8900}"
+PORT="${VANTAGE_ANALYSIS_PORT:-8900}"
 URL="http://$HOST:$PORT/"
 
 if [ ! -f "$WATCHDOG" ]; then
-  echo "The Vibe Analysis watchdog is missing ($WATCHDOG)."
+  echo "The Vantage watchdog is missing ($WATCHDOG)."
   read -r -p "Press Return to close..." _
   exit 1
 fi
@@ -51,20 +51,20 @@ if command -v lsof >/dev/null 2>&1; then
   done
 fi
 
-echo "Starting Vibe Analysis..."
+echo "Starting Vantage..."
 # Launch the watchdog detached so it survives this launcher exiting.
 nohup bash "$WATCHDOG" >/dev/null 2>&1 &
 
 # Wait up to ~120s for the server to report healthy.
 for _ in $(seq 1 120); do
   if curl -fsS --max-time 2 "http://$HOST:$PORT/health" >/dev/null 2>&1; then
-    echo "Vibe Analysis is ready. Opening the research workspace..."
+    echo "Vantage is ready. Opening the research workspace..."
     open "$URL"
     exit 0
   fi
   sleep 1
 done
 
-echo "Vibe Analysis did not start in time. Review $LOG_DIR/server.err.log"
+echo "Vantage did not start in time. Review $LOG_DIR/server.err.log"
 read -r -p "Press Return to close..." _
 exit 1

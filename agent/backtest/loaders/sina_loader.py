@@ -32,7 +32,7 @@ _BASE_URL = (
     "var%20x=/US_MinKService.getDailyK"
 )
 _HOST_KEY = "sina"
-_MIN_INTERVAL_ENV = "VIBE_TRADING_SINA_MIN_INTERVAL"
+_MIN_INTERVAL_ENV = "VANTAGE_SINA_MIN_INTERVAL"
 _DEFAULT_MIN_INTERVAL = 0.5
 
 # Sina wraps the payload as ``var x=([...]);`` — the JSON array sits inside an

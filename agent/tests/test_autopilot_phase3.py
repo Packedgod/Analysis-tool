@@ -27,9 +27,9 @@ from src.tools.autopilot_tool import (
 def isolated_env(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     """Isolate the hypothesis registry and allow tmp_path as a run root."""
     monkeypatch.setenv(
-        "VIBE_TRADING_HYPOTHESES_PATH", str(tmp_path / "hypotheses.json")
+        "VANTAGE_HYPOTHESES_PATH", str(tmp_path / "hypotheses.json")
     )
-    monkeypatch.setenv("VIBE_TRADING_ALLOWED_RUN_ROOTS", str(tmp_path))
+    monkeypatch.setenv("VANTAGE_ALLOWED_RUN_ROOTS", str(tmp_path))
     return tmp_path
 
 

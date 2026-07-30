@@ -79,7 +79,7 @@ def _download_frame() -> pd.DataFrame:
 def test_fetch_passes_inclusive_end_date_to_yfinance_as_exclusive_end(monkeypatch: pytest.MonkeyPatch) -> None:
     import backtest.loaders.yfinance_loader as yfl
 
-    monkeypatch.delenv("VIBE_TRADING_DATA_CACHE", raising=False)
+    monkeypatch.delenv("VANTAGE_DATA_CACHE", raising=False)
     calls = []
 
     def fake_download(tickers, start_date, end_date, interval):
@@ -97,7 +97,7 @@ def test_fetch_passes_inclusive_end_date_to_yfinance_as_exclusive_end(monkeypatc
 def test_fallback_single_symbol_download_uses_inclusive_end_date(monkeypatch: pytest.MonkeyPatch) -> None:
     import backtest.loaders.yfinance_loader as yfl
 
-    monkeypatch.delenv("VIBE_TRADING_DATA_CACHE", raising=False)
+    monkeypatch.delenv("VANTAGE_DATA_CACHE", raising=False)
     calls = []
 
     def fake_download(tickers, start_date, end_date, interval):

@@ -93,10 +93,10 @@ class TestParallelBench:
 
         mock_reg = self._setup_mocks(monkeypatch)
 
-        monkeypatch.setenv("VIBE_TRADING_BENCH_WORKERS", "1")
+        monkeypatch.setenv("VANTAGE_BENCH_WORKERS", "1")
         seq = run_bench("test_zoo", "mock", "2020-2021")
 
-        monkeypatch.setenv("VIBE_TRADING_BENCH_WORKERS", "2")
+        monkeypatch.setenv("VANTAGE_BENCH_WORKERS", "2")
         par = run_bench("test_zoo", "mock", "2020-2021")
 
         assert seq["status"] == "ok"
@@ -107,7 +107,7 @@ class TestParallelBench:
         from src.factors.bench_runner import run_bench
 
         mock_reg = self._setup_mocks(monkeypatch, n_alphas=3)
-        monkeypatch.setenv("VIBE_TRADING_BENCH_WORKERS", "2")
+        monkeypatch.setenv("VANTAGE_BENCH_WORKERS", "2")
 
         calls = []
         result = run_bench(
@@ -122,7 +122,7 @@ class TestParallelBench:
         from src.factors.bench_runner import run_bench
 
         mock_reg = self._setup_mocks(monkeypatch, n_alphas=5)
-        monkeypatch.setenv("VIBE_TRADING_BENCH_WORKERS", "2")
+        monkeypatch.setenv("VANTAGE_BENCH_WORKERS", "2")
 
         result = run_bench(
             "test_zoo", "mock", "2020-2021",
@@ -137,7 +137,7 @@ class TestParallelBench:
         from src.factors.bench_runner import run_bench
 
         mock_reg = self._setup_mocks(monkeypatch, n_alphas=2)
-        monkeypatch.setenv("VIBE_TRADING_BENCH_WORKERS", "2")
+        monkeypatch.setenv("VANTAGE_BENCH_WORKERS", "2")
 
         result = run_bench("test_zoo", "mock", "2020-2021", registry=mock_reg)
 
@@ -148,7 +148,7 @@ class TestParallelBench:
         from src.factors.bench_runner import run_bench
 
         mock_reg = self._setup_mocks(monkeypatch, n_alphas=2)
-        monkeypatch.setenv("VIBE_TRADING_BENCH_WORKERS", "not-an-int")
+        monkeypatch.setenv("VANTAGE_BENCH_WORKERS", "not-an-int")
 
         result = run_bench("test_zoo", "mock", "2020-2021", registry=mock_reg)
 

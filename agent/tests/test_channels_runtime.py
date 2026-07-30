@@ -173,7 +173,7 @@ def test_registry_marks_lazy_sdk_adapter_unavailable(monkeypatch: pytest.MonkeyP
     status = inspect_channel("discord").to_dict()
 
     assert status["available"] is False
-    assert status["install_hint"] == "pip install 'vibe-trading-ai[discord]'"
+    assert status["install_hint"] == "pip install 'vantage-ai[discord]'"
 
 
 def test_channel_manager_skips_enabled_adapter_when_lazy_sdk_missing(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -188,7 +188,7 @@ def test_channel_manager_skips_enabled_adapter_when_lazy_sdk_missing(monkeypatch
     assert status["enabled"] is True
     assert status["available"] is False
     assert status["loaded"] is False
-    assert status["install_hint"] == "pip install 'vibe-trading-ai[discord]'"
+    assert status["install_hint"] == "pip install 'vantage-ai[discord]'"
 
 
 def test_websocket_turn_wall_accepts_optional_chat_id() -> None:
@@ -291,7 +291,7 @@ def test_channel_runtime_handles_pairing_commands_without_agent(tmp_path: Path, 
     async def scenario() -> None:
         from src.channels.runtime import ChannelRuntime
 
-        monkeypatch.setenv("VIBE_TRADING_DATA_DIR", str(tmp_path / "data"))
+        monkeypatch.setenv("VANTAGE_DATA_DIR", str(tmp_path / "data"))
         bus = MessageBus()
         service = FakeSessionService()
         runtime = ChannelRuntime(

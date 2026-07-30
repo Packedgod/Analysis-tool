@@ -41,8 +41,8 @@ wiki/.vite/
 wiki/.wrangler/
 .wrangler/
 wiki/.cache/
-.vibe-dev/
-.vibe-record/
+.vantage-dev/
+.vantage-record/
 .cache/
 .remotion/
 
@@ -64,8 +64,8 @@ data/overnight*.log
 data/*.log
 data/test_write.txt
 agent/.pytest_tmp/
-agent/vibe_trading.egg-info/
-agent/vibe_trading_ai.egg-info/
+agent/vantage_trading.egg-info/
+agent/vantage_trading_ai.egg-info/
 agent/tests/e2e_backtest/
 dist/
 build/
@@ -102,7 +102,7 @@ wiki/
 /tools/
 Dockerfile
 docker-compose.yml
-scripts/vibe_watchdog.ps1
+scripts/vantage_watchdog.ps1
 .pytest_tmp/
 *.egg-info/
 

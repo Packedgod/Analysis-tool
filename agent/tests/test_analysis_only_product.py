@@ -7,12 +7,12 @@ from src.tools import build_registry
 
 
 def test_brokerage_cannot_be_enabled(monkeypatch) -> None:
-    monkeypatch.setenv("VIBE_TRADING_ENABLE_BROKERAGE", "true")
+    monkeypatch.setenv("VANTAGE_ENABLE_BROKERAGE", "true")
     assert brokerage_enabled() is False
 
 
 def test_registry_has_analysis_and_shadow_tools_but_no_broker_tools(monkeypatch) -> None:
-    monkeypatch.setenv("VIBE_TRADING_ENABLE_BROKERAGE", "true")
+    monkeypatch.setenv("VANTAGE_ENABLE_BROKERAGE", "true")
     registry = build_registry(include_shell_tools=False)
     names = set(registry._tools)
 
@@ -29,9 +29,9 @@ def test_public_capability_endpoint_always_reports_no_brokerage(monkeypatch) -> 
     from fastapi.testclient import TestClient
     import api_server
 
-    monkeypatch.setenv("VIBE_TRADING_ENABLE_BROKERAGE", "true")
+    monkeypatch.setenv("VANTAGE_ENABLE_BROKERAGE", "true")
     response = TestClient(api_server.app).get("/api")
 
     assert response.status_code == 200
-    assert response.json()["service"] == "Vibe Analysis API"
+    assert response.json()["service"] == "Vantage API"
     assert response.json()["capabilities"]["brokerage"] is False

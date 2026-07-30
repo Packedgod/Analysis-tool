@@ -37,7 +37,7 @@ _BASE_URL = "https://www.alphavantage.co/query"
 # Throttle/session bucket shared by all Alpha Vantage calls. The free tier is
 # quota-limited per key/IP, so requests are spaced out by default.
 _HOST_KEY = "alphavantage"
-_MIN_INTERVAL_ENV = "VIBE_TRADING_ALPHAVANTAGE_MIN_INTERVAL"
+_MIN_INTERVAL_ENV = "VANTAGE_ALPHAVANTAGE_MIN_INTERVAL"
 _DEFAULT_MIN_INTERVAL = 1.0
 
 _API_KEY_ENV = "ALPHAVANTAGE_API_KEY"

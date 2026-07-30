@@ -25,7 +25,7 @@ HYPOTHESIS_STATUSES = (
     "monitoring",
 )
 _STATUS_SET = set(HYPOTHESIS_STATUSES)
-_ENV_PATH = "VIBE_TRADING_HYPOTHESES_PATH"
+_ENV_PATH = "VANTAGE_HYPOTHESES_PATH"
 _TOKEN_RE = re.compile(r"[a-zA-Z0-9]{2,}|[\u4e00-\u9fff]")
 
 
@@ -33,13 +33,13 @@ def default_hypotheses_path() -> Path:
     """Return the configured hypotheses JSON path.
 
     Returns:
-        Env override path when ``VIBE_TRADING_HYPOTHESES_PATH`` is set,
-        otherwise ``~/.vibe-trading/hypotheses.json``.
+        Env override path when ``VANTAGE_HYPOTHESES_PATH`` is set,
+        otherwise ``~/.vantage/hypotheses.json``.
     """
-    override = get_env_config().paths.vibe_trading_hypotheses_path.strip()
+    override = get_env_config().paths.vantage_hypotheses_path.strip()
     if override:
         return Path(override).expanduser()
-    return Path.home() / ".vibe-trading" / "hypotheses.json"
+    return Path.home() / ".vantage" / "hypotheses.json"
 
 
 def _utc_now() -> str:
@@ -91,7 +91,7 @@ class Hypothesis:
         universe: Target universe, market, or asset set.
         signal_definition: Signal logic in plain text.
         data_sources: Data sources expected or used.
-        skills: Relevant Vibe-Trading skills.
+        skills: Relevant Vantage skills.
         run_cards: Linked backtest/run-card artifacts.
         invalidation_notes: Notes describing rejection or invalidation logic.
         created_at: UTC creation timestamp.
@@ -150,7 +150,7 @@ class HypothesisRegistry:
 
         Args:
             path: Optional storage path. Defaults to env override or
-                ``~/.vibe-trading/hypotheses.json``.
+                ``~/.vantage/hypotheses.json``.
         """
         self.path = path or default_hypotheses_path()
         self.path.parent.mkdir(parents=True, exist_ok=True)
@@ -176,7 +176,7 @@ class HypothesisRegistry:
             universe: Target market or asset universe.
             signal_definition: Signal logic.
             data_sources: Source names.
-            skills: Related Vibe-Trading skills.
+            skills: Related Vantage skills.
             invalidation_notes: Initial invalidation notes.
 
         Returns:

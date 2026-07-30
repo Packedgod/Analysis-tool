@@ -7,7 +7,7 @@ category: data-source
 
 ## Overview
 
-The U.S. Securities and Exchange Commission (SEC) publishes free, no-auth JSON endpoints for every reporting company on its EDGAR system: a ticker-to-CIK directory, a recent-filings index, and the full set of XBRL ("companyfacts") financial concepts a company has reported. This skill documents how Vibe-Trading fetches that data through the bundled `sec_edgar_client` transport and the `get_sec_filings` agent tool.
+The U.S. Securities and Exchange Commission (SEC) publishes free, no-auth JSON endpoints for every reporting company on its EDGAR system: a ticker-to-CIK directory, a recent-filings index, and the full set of XBRL ("companyfacts") financial concepts a company has reported. This skill documents how Vantage fetches that data through the bundled `sec_edgar_client` transport and the `get_sec_filings` agent tool.
 
 This is the **fetch** skill — it covers how to get filing-index rows, document URLs, and us-gaap metric series out of EDGAR. The separate `edgar-sec-filings` skill is the **methodology** layer (how to read a 10-K, score insider activity, interpret 8-K items); for any actual data retrieval it delegates here.
 
@@ -63,8 +63,8 @@ A runnable end-to-end example lives at `sec-edgar/scripts/sec_filings_example.py
 
 ## Notes
 
-- **Free, no API key**: EDGAR is public. The only requirement is a descriptive `User-Agent` carrying a contact address; the client ships a compliant default and honors the `VIBE_TRADING_SEC_UA` override.
-- **Rate-limited by IP**: the SEC throttles per source IP and temporarily blocks clients that burst without a contact UA. Every request routes through the shared `backtest.loaders._http` throttle under the `"sec"` host bucket (≈0.12s spacing floor, overridable via `VIBE_TRADING_SEC_MIN_INTERVAL`). Do not bypass the client with raw `requests` loops.
+- **Free, no API key**: EDGAR is public. The only requirement is a descriptive `User-Agent` carrying a contact address; the client ships a compliant default and honors the `VANTAGE_SEC_UA` override.
+- **Rate-limited by IP**: the SEC throttles per source IP and temporarily blocks clients that burst without a contact UA. Every request routes through the shared `backtest.loaders._http` throttle under the `"sec"` host bucket (≈0.12s spacing floor, overridable via `VANTAGE_SEC_MIN_INTERVAL`). Do not bypass the client with raw `requests` loops.
 - **United States only**: a non-U.S. symbol will not resolve to a CIK.
 - **Transport, not a backtest loader**: `sec_edgar_client` is a thin REST client, not a `DataLoaderProtocol`. There is no `source: "sec_edgar"` backtest mode — EDGAR feeds the `get_sec_filings` tool, not the bar-loading layer.
 - **Reporting lag**: filings appear after the company submits; XBRL companyfacts trail the filing. Insider (Form 4) and 13F latency caveats are covered in the `edgar-sec-filings` methodology skill.

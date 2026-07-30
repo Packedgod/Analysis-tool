@@ -47,7 +47,7 @@ def live_root(tmp_path: Path):
 
     ``src.live.paths.live_root`` and ``broker_dir`` both resolve through
     ``get_runtime_root`` at call time, so patching it isolates halt + mandate
-    state for halt.py / store.py without touching the real ~/.vibe-trading.
+    state for halt.py / store.py without touching the real ~/.vantage.
     """
     with patch.object(live_paths, "get_runtime_root", return_value=tmp_path):
         yield tmp_path
@@ -207,8 +207,8 @@ class TestConnectorHaltResume:
         assert halt_flag_set("robinhood") is True
 
         out = capsys.readouterr().out
-        assert "vibe-trading connector resume" in out
-        assert "vibe-trading live" not in out
+        assert "vantage connector resume" in out
+        assert "vantage live" not in out
 
     def test_resume_without_profile_uses_selected_connector(
         self, live_root: Path, monkeypatch: pytest.MonkeyPatch
@@ -401,11 +401,11 @@ class TestLiveAuthorize:
     def test_authorize_honors_timeout_env_override(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        """VIBE_LIVE_AUTHORIZE_TIMEOUT_SECONDS overrides the 300 s default."""
+        """VANTAGE_LIVE_AUTHORIZE_TIMEOUT_SECONDS overrides the 300 s default."""
         from cli._legacy import cmd_live_authorize
         from src.config.schema import MCPServerConfig
 
-        monkeypatch.setenv("VIBE_LIVE_AUTHORIZE_TIMEOUT_SECONDS", "900")
+        monkeypatch.setenv("VANTAGE_LIVE_AUTHORIZE_TIMEOUT_SECONDS", "900")
         cfg = MCPServerConfig.model_validate(
             {
                 "type": "streamableHttp",
@@ -430,7 +430,7 @@ class TestLiveAuthorize:
         """Empty / non-numeric / non-positive env values fall back to 300 s."""
         from cli._legacy import _authorize_timeout_seconds
 
-        monkeypatch.setenv("VIBE_LIVE_AUTHORIZE_TIMEOUT_SECONDS", raw)
+        monkeypatch.setenv("VANTAGE_LIVE_AUTHORIZE_TIMEOUT_SECONDS", raw)
         assert _authorize_timeout_seconds() == 300.0
 
 

@@ -1,4 +1,4 @@
-const STORAGE_KEY = "vibe_trading_api_auth_key";
+const STORAGE_KEY = "vantage_api_auth_key";
 
 export function getApiAuthKey(): string {
   return window.localStorage.getItem(STORAGE_KEY) || "";

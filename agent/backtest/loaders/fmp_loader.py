@@ -34,7 +34,7 @@ _BASE_URL = "https://financialmodelingprep.com/api/v3/historical-price-full"
 
 # Shared throttle/session bucket for every FMP request in this process.
 _HOST_KEY = "fmp"
-_MIN_INTERVAL_ENV = "VIBE_TRADING_FMP_MIN_INTERVAL"
+_MIN_INTERVAL_ENV = "VANTAGE_FMP_MIN_INTERVAL"
 _DEFAULT_MIN_INTERVAL_S = 0.3
 
 # FMP daily bars carry these numeric fields; emitted in this column order.

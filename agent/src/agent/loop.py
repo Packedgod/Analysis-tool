@@ -197,7 +197,7 @@ def _tool_timeout_seconds() -> float:
     if ov is not None:
         return ov
     from src.config.accessor import get_env_config
-    return get_env_config().agent_tuning.vibe_trading_tool_timeout_seconds
+    return get_env_config().agent_tuning.vantage_tool_timeout_seconds
 
 
 def _goal_max_continuations() -> int:
@@ -205,7 +205,7 @@ def _goal_max_continuations() -> int:
     if ov is not None:
         return ov
     from src.config.accessor import get_env_config
-    return get_env_config().agent_tuning.vibe_trading_goal_max_continuations
+    return get_env_config().agent_tuning.vantage_goal_max_continuations
 
 logger = logging.getLogger(__name__)
 

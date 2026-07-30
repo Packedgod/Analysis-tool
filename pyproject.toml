@@ -1,9 +1,8 @@
 [project]
-name = "vibe-analysis-ai"
+name = "vantage-ai"
 version = "0.1.11"
 description = "Evidence-first company research, financial analysis, and strategy simulation"
 requires-python = ">=3.11"
-license = "MIT"
 readme = "README.md"
 authors = [
     {name = "HKUDS", email = "hkuds@connect.hku.hk"},
@@ -61,11 +60,11 @@ dependencies = [
 ]
 
 [project.urls]
-Upstream = "https://github.com/HKUDS/Vibe-Trading"
+Upstream = "https://github.com/HKUDS/Vantage"
 
 [project.scripts]
-vibe-analysis = "cli:main"
-vibe-analysis-mcp = "mcp_server:main"
+vantage = "cli:main"
+vantage-mcp = "mcp_server:main"
 
 [tool.setuptools]
 package-dir = {"" = "agent"}

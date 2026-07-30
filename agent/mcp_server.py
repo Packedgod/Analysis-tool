@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Vibe-Trading MCP Server — expose finance research tools to any MCP client.
+"""Vantage MCP Server — expose finance research tools to any MCP client.
 
 Works with OpenClaw, Claude Desktop, Cursor, and any MCP-compatible client.
 Zero API key required for HK/US/crypto research markets (yfinance, OKX,
@@ -23,13 +23,13 @@ Usage:
 
 OpenClaw config (~/.openclaw/config.yaml):
     skills:
-      - name: vibe-trading
+      - name: vantage
         command: python /path/to/agent/mcp_server.py
 
 Claude Desktop config:
     {
       "mcpServers": {
-        "vibe-trading": {
+        "vantage": {
           "command": "python",
           "args": ["/path/to/agent/mcp_server.py"]
         }
@@ -63,7 +63,7 @@ from src.market_data import (
     get_loader,
 )
 
-mcp = FastMCP("Vibe-Trading", version=APP_VERSION)
+mcp = FastMCP("Vantage", version=APP_VERSION)
 
 logger = logging.getLogger(__name__)
 
@@ -82,7 +82,7 @@ def _env_shell_tools_enabled() -> bool:
     """Return whether shell tools were explicitly enabled for network MCP."""
     from src.config.accessor import get_env_config
 
-    return get_env_config().api.vibe_trading_enable_shell_tools
+    return get_env_config().api.vantage_enable_shell_tools
 
 
 def _get_skills_loader():
@@ -320,7 +320,7 @@ def add_goal_evidence(
         claim_id: Optional claim this evidence supports or contradicts.
         evidence_type: Evidence category, default evidence.
         tool_call_id: Source tool call id for traceability; it does not verify evidence by itself.
-        run_id: Vibe-Trading run id. It verifies evidence only when the run directory exists.
+        run_id: Vantage run id. It verifies evidence only when the run directory exists.
         source_provider: Data/provider name such as yfinance, OKX, tushare.
         source_type: Source category such as market_data, document, backtest.
         source_uri: Optional source URL/path.
@@ -1086,7 +1086,7 @@ def get_market_data(
 # Each wrapper delegates to the auto-discovered local registry, exactly like
 # factor_analysis / pattern_recognition above. The registry returns a clean
 # JSON error envelope when a key-gated tool (get_macro_series needs
-# FRED_API_KEY, iwencai_search needs VIBE_TRADING_IWENCAI_KEY) is absent — see
+# FRED_API_KEY, iwencai_search needs VANTAGE_IWENCAI_KEY) is absent — see
 # ``_execute_key_gated`` below, which honours that contract even though the
 # tool is excluded from the registry by ``check_available()``. Every tool below
 # is strictly read-only data — no order/trading tool is ever surfaced via MCP.
@@ -1099,7 +1099,7 @@ def get_market_data(
 # answer with a generic "Tool not found". That contradicts the documented
 # contract above (a clean, env-var-named error). For these tools we therefore
 # fall through to the tool's own ``execute()`` — whose missing-key envelope
-# names the exact env var (``FRED_API_KEY`` / ``VIBE_TRADING_IWENCAI_KEY``).
+# names the exact env var (``FRED_API_KEY`` / ``VANTAGE_IWENCAI_KEY``).
 def _key_gated_tool_classes() -> dict[str, Any]:
     """Return the {tool_name: tool_class} map for key-gated MCP tools.
 
@@ -1490,7 +1490,7 @@ def iwencai_search(query: str, limit: int = 20) -> str:
     iWenCai is a Chinese-market semantic stock screener. Phrase the question in
     plain language (Chinese works best) and get back the matching China A-share
     (SH/SZ) securities with the metric columns iWenCai parsed from the question.
-    Read-only; requires the VIBE_TRADING_IWENCAI_KEY access key (without it the
+    Read-only; requires the VANTAGE_IWENCAI_KEY access key (without it the
     tool returns a not-available error).
 
     Args:
@@ -1780,7 +1780,7 @@ def extract_shadow_strategy(
 
     Run `analyze_trade_journal` first if the journal hasn't been parsed.
     Returns shadow_id + rules preview. Profile persists to
-    ~/.vibe-trading/shadow_accounts/.
+    ~/.vantage/shadow_accounts/.
 
     Args:
         journal_path: Path to the CSV/Excel broker export.
@@ -1890,11 +1890,11 @@ def scan_shadow_signals(
 
 
 def main():
-    """Entry point for `vibe-trading-mcp` CLI command."""
+    """Entry point for `vantage-mcp` CLI command."""
     global _include_shell_tools, _registry
     import argparse
 
-    parser = argparse.ArgumentParser(description="Vibe-Trading MCP Server")
+    parser = argparse.ArgumentParser(description="Vantage MCP Server")
     parser.add_argument("--transport", choices=["stdio", "sse"], default="stdio", help="MCP transport (default: stdio)")
     parser.add_argument("--port", type=int, default=8900, help="SSE port (only used with --transport sse)")
     args = parser.parse_args()

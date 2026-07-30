@@ -14,8 +14,8 @@ SEC rate-limits by source IP and asks every client to send a descriptive
 ``User-Agent`` carrying a contact address; bursting without one earns a
 temporary block. Every request therefore routes through the shared
 :mod:`backtest.loaders._http` throttle under the ``"sec"`` host bucket, and the
-UA defaults to a Vibe-Trading contact string overridable via
-``VIBE_TRADING_SEC_UA``.
+UA defaults to a Vantage contact string overridable via
+``VANTAGE_SEC_UA``.
 
 This module is a thin transport client, not a :class:`DataLoaderProtocol`
 implementation: it returns raw decoded JSON for downstream loaders/tools to
@@ -40,16 +40,16 @@ _HOST_KEY = "sec"
 # SEC asks for no more than ~10 requests/second; 0.12s spacing keeps us well
 # under that even with jitter, and is the floor mandated by the parcel contract.
 _MIN_INTERVAL_DEFAULT = 0.12
-_MIN_INTERVAL_ENV = "VIBE_TRADING_SEC_MIN_INTERVAL"
+_MIN_INTERVAL_ENV = "VANTAGE_SEC_MIN_INTERVAL"
 
 _TICKERS_URL = "https://www.sec.gov/files/company_tickers.json"
 _SUBMISSIONS_URL = "https://data.sec.gov/submissions/CIK{cik}.json"
 _COMPANY_FACTS_URL = "https://data.sec.gov/api/xbrl/companyfacts/CIK{cik}.json"
 
-_UA_ENV = "VIBE_TRADING_SEC_UA"
+_UA_ENV = "VANTAGE_SEC_UA"
 # SEC's fair-access policy wants a real contact in the UA. Override via env to
 # present your own address; this default keeps the client compliant out of box.
-_DEFAULT_SEC_UA = f"Vibe-Trading/1.0 (contact: vibe-trading@example.com) {DEFAULT_USER_AGENT}"
+_DEFAULT_SEC_UA = f"Vantage/1.0 (contact: vantage@example.com) {DEFAULT_USER_AGENT}"
 
 # Process-wide memoized ticker->CIK map ("AAPL" -> "0000320193"), built lazily.
 _TICKER_CACHE: Optional[Dict[str, str]] = None
@@ -62,10 +62,10 @@ def _min_interval() -> float:
 
 
 def _user_agent() -> str:
-    """Return the compliant contact UA, honoring the ``VIBE_TRADING_SEC_UA`` override."""
+    """Return the compliant contact UA, honoring the ``VANTAGE_SEC_UA`` override."""
     from src.config.accessor import get_env_config
 
-    override = get_env_config().data.vibe_trading_sec_ua
+    override = get_env_config().data.vantage_sec_ua
     if override and override.strip():
         return override.strip()
     return _DEFAULT_SEC_UA

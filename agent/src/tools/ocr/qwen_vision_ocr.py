@@ -59,7 +59,7 @@ class QwenVisionOcrEngine:
         b64 = self._numpy_to_base64(image)
         from src.config.accessor import get_env_config
 
-        model = get_env_config().ocr.vibe_trading_ocr_qwen_model or _DEFAULT_MODEL
+        model = get_env_config().ocr.vantage_ocr_qwen_model or _DEFAULT_MODEL
 
         try:
             response = self._client.chat.completions.create(

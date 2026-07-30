@@ -41,12 +41,12 @@ if ChatOpenAI is not None:
         multi-turn continuations.
         """
 
-        _vibe_provider: Optional[str] = PrivateAttr(default=None)
+        _vantage_provider: Optional[str] = PrivateAttr(default=None)
 
-        def __init__(self, *args: Any, vibe_provider: str | None = None, **kwargs: Any) -> None:
+        def __init__(self, *args: Any, vantage_provider: str | None = None, **kwargs: Any) -> None:
             """Initialize while retaining the resolved provider name."""
             super().__init__(*args, **kwargs)
-            self._vibe_provider = vibe_provider
+            self._vantage_provider = vantage_provider
 
         def _capabilities(self):
             model = (
@@ -55,7 +55,7 @@ if ChatOpenAI is not None:
                 or getattr(self, "model_name_", None)
                 or ""
             )
-            return get_provider_capabilities(self._vibe_provider, str(model))
+            return get_provider_capabilities(self._vantage_provider, str(model))
 
         @staticmethod
         def _extract_tool_call_thought_signature(tool_call: Any) -> Optional[str]:
@@ -285,9 +285,9 @@ else:
 
 AGENT_DIR = Path(__file__).resolve().parents[2]
 
-# .env search order: ~/.vibe-trading/.env → agent/.env → $CWD/.env
+# .env search order: ~/.vantage/.env → agent/.env → $CWD/.env
 _ENV_CANDIDATES = [
-    Path.home() / ".vibe-trading" / ".env",
+    Path.home() / ".vantage" / ".env",
     AGENT_DIR / ".env",
     Path.cwd() / ".env",
 ]
@@ -296,7 +296,7 @@ _ENV_CANDIDATES = [
 # .env path (it leaks the OS username / home / CWD). The label names
 # which slot won - the entire P08 R1 signal - using compile-time
 # constants only.
-_ENV_LABELS = ("~/.vibe-trading/.env", "<AGENT_DIR>/.env", "<CWD>/.env")
+_ENV_LABELS = ("~/.vantage/.env", "<AGENT_DIR>/.env", "<CWD>/.env")
 
 logger = logging.getLogger(__name__)
 
@@ -372,7 +372,7 @@ def _redact_proxy_url(name: str, raw: str | None) -> str:
 
 def _deepseek_adapter_mode() -> str:
     """Return the configured DeepSeek adapter mode."""
-    mode = get_env_config().llm.vibe_trading_deepseek_adapter.strip().lower()
+    mode = get_env_config().llm.vantage_deepseek_adapter.strip().lower()
     aliases = {
         "compat": "openai-compatible",
         "compatible": "openai-compatible",
@@ -477,7 +477,7 @@ def _sync_provider_env() -> None:
 
     if provider in {"openai-codex", "openai_codex"}:
         codex_url = get_env_config().llm.openai_codex_base_url
-        # SDK-side env setup, not Vibe-Trading config reads
+        # SDK-side env setup, not Vantage config reads
         os.environ["OPENAI_API_BASE"] = codex_url
         os.environ["OPENAI_BASE_URL"] = codex_url
         os.environ.pop("OPENAI_API_KEY", None)
@@ -496,7 +496,7 @@ def _sync_provider_env() -> None:
     if provider == "ollama" and base_url:
         base_url = _normalize_ollama_base_url(base_url)
 
-    # SDK-side env setup, not Vibe-Trading config reads
+    # SDK-side env setup, not Vantage config reads
     if api_key:
         os.environ["OPENAI_API_KEY"] = api_key
     if base_url:
@@ -610,7 +610,7 @@ def build_llm(*, model_name: Optional[str] = None, callbacks: Any = None) -> Any
                 return native_llm
             if adapter_mode == "native":
                 raise RuntimeError(
-                    "VIBE_TRADING_DEEPSEEK_ADAPTER=native requires langchain-deepseek"
+                    "VANTAGE_DEEPSEEK_ADAPTER=native requires langchain-deepseek"
                 )
 
     if ChatOpenAI is None:
@@ -638,7 +638,7 @@ def build_llm(*, model_name: Optional[str] = None, callbacks: Any = None) -> Any
         "max_retries": get_env_config().llm.max_retries,
         "callbacks": callbacks,
         "extra_body": {"reasoning": {"effort": effort}} if effort and caps.openrouter_reasoning_body else None,
-        "vibe_provider": provider,
+        "vantage_provider": provider,
     }
     if caps.default_headers:
         headers = dict(caps.default_headers)

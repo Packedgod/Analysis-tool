@@ -77,7 +77,7 @@ function summarizeLimits(limits: LiveMandateLimits | undefined): string {
 }
 
 function fallbackAuthorizeInstruction(): string {
-  return "Run `vibe-trading connector list`, choose the broker profile, then run `vibe-trading connector authorize <profile>` from the desktop session that will hold the broker connection.";
+  return "Run `vantage connector list`, choose the broker profile, then run `vantage connector authorize <profile>` from the desktop session that will hold the broker connection.";
 }
 
 function BrokerRow({

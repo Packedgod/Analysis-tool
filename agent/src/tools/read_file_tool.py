@@ -60,7 +60,7 @@ class ReadFileTool(BaseTool):
         if skills_dir.exists():
             allowed_roots.append(skills_dir.resolve())
 
-        # Add configured extra file roots (VIBE_TRADING_ALLOWED_FILE_ROOTS)
+        # Add configured extra file roots (VANTAGE_ALLOWED_FILE_ROOTS)
         for extra_root in allowed_file_roots():
             if extra_root not in allowed_roots:
                 allowed_roots.append(extra_root)

@@ -1,9 +1,9 @@
-"""Shadow Account persistence (~/.vibe-trading/shadow_accounts/).
+"""Shadow Account persistence (~/.vantage/shadow_accounts/).
 
 Layout:
-    ~/.vibe-trading/shadow_accounts/<shadow_id>.json   ShadowProfile
-    ~/.vibe-trading/shadow_runs/<shadow_id>/           backtest run dir
-    ~/.vibe-trading/shadow_reports/<shadow_id>.pdf     rendered report
+    ~/.vantage/shadow_accounts/<shadow_id>.json   ShadowProfile
+    ~/.vantage/shadow_runs/<shadow_id>/           backtest run dir
+    ~/.vantage/shadow_reports/<shadow_id>.pdf     rendered report
 """
 
 from __future__ import annotations
@@ -20,7 +20,7 @@ from src.shadow_account.models import ShadowProfile, ShadowRule
 
 def _root() -> Path:
     """Return the Shadow Account root directory (auto-created)."""
-    root = Path.home() / ".vibe-trading"
+    root = Path.home() / ".vantage"
     root.mkdir(parents=True, exist_ok=True)
     return root
 

@@ -54,7 +54,7 @@ VALID_SOURCES: set[str] = {
     "nse",           # official NSE India exchange feed
     "moneycontrol",  # Moneycontrol public price/history feed
     "groww",         # Groww public (login-free) charting feed
-    "india_broker",  # dormant broker-history bridge (needs VIBE_TRADING_ENABLE_BROKERAGE)
+    "india_broker",  # dormant broker-history bridge (needs VANTAGE_ENABLE_BROKERAGE)
     "local",
     "auto",
 }
@@ -122,7 +122,7 @@ def _ensure_registered() -> None:
 
 # Sources that must NEVER silently fall through to a network loader when the
 # caller asked for them explicitly. ``local`` reads the user's own configured
-# files (``~/.vibe-trading/data-bridge/config.yaml``); its ``markets`` set spans
+# files (``~/.vantage/data-bridge/config.yaml``); its ``markets`` set spans
 # every market only so the cross-market auto-resolver can *reach* it, not so an
 # unavailable ``local`` request can degrade into an unrelated network source.
 # An explicit ``local`` request that is unavailable is a config problem the user
@@ -232,7 +232,7 @@ def get_loader_cls_with_fallback(source: str) -> Type[Any]:
         raise NoAvailableSourceError(
             f"Data source '{source}' is unavailable and does not fall back to a "
             f"network source. Check your local Data Bridge config "
-            f"(~/.vibe-trading/data-bridge/config.yaml) — it must exist and list "
+            f"(~/.vantage/data-bridge/config.yaml) — it must exist and list "
             f"at least one source."
         )
 

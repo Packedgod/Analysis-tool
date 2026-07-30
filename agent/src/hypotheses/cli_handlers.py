@@ -1,4 +1,4 @@
-"""CLI handlers for ``vibe-trading hypothesis {list,show,invalidate}``.
+"""CLI handlers for ``vantage hypothesis {list,show,invalidate}``.
 
 All logic lives here; ``agent/cli.py`` only wires this in via :func:`add_subparser`
 and :func:`dispatch`. Handlers print to stdout (Rich when available, plain
@@ -7,7 +7,7 @@ one-line stderr message; tracebacks are suppressed unless ``--verbose`` is set
 on the namespace.
 
 Storage path resolution defers to :func:`default_hypotheses_path`, so callers
-(and tests) can override via the ``VIBE_TRADING_HYPOTHESES_PATH`` env var or by
+(and tests) can override via the ``VANTAGE_HYPOTHESES_PATH`` env var or by
 passing ``--path``.
 """
 
@@ -244,7 +244,7 @@ def add_subparser(subparsers: Any) -> argparse.ArgumentParser:
         default=None,
         help=(
             "Override registry JSON path (also respects "
-            "VIBE_TRADING_HYPOTHESES_PATH env var)"
+            "VANTAGE_HYPOTHESES_PATH env var)"
         ),
     )
     hyp_sub = hyp_parser.add_subparsers(dest="hypothesis_command")
@@ -307,7 +307,7 @@ def dispatch(args: argparse.Namespace) -> int:
         if _HYP_PARSER is not None:
             _HYP_PARSER.print_help()
         else:
-            _err("hypothesis requires a subcommand. Try: vibe-trading hypothesis list")
+            _err("hypothesis requires a subcommand. Try: vantage hypothesis list")
         return 1
     handler = _DISPATCH.get(sub)
     if handler is None:

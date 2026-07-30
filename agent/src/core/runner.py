@@ -35,8 +35,8 @@ logger = logging.getLogger(__name__)
 # precondition and degrade to the previous behaviour with a WARNING. The
 # always-on control for VT-001 is the AST scrubber in backtest/runner.py, not
 # any of this.
-_SANDBOX_USER = "vibe-sandbox"
-# The only paths under ~/.vibe-trading re-exposed into the ephemeral sandbox
+_SANDBOX_USER = "vantage-sandbox"
+# The only paths under ~/.vantage re-exposed into the ephemeral sandbox
 # HOME. Data loaders that run in the same subprocess resolve these via
 # Path.home(); everything else in the real home (.env, sessions.db, memory/,
 # live/ mandate+audit ledger, shadow_*, dotfiles) stays unreadable to generated
@@ -47,14 +47,14 @@ _SANDBOX_HOME_REEXPOSE = ("cache", "data-bridge", "qveris.json")
 # OOMs legitimate backtests; 4 GB keeps a DoS ceiling without false failures.
 # Operator-tunable for large minute-level runs.
 _DEFAULT_RLIMIT_AS_MB = 4096
-_SANDBOX_RLIMIT_AS_MB_ENV = "VIBE_TRADING_SANDBOX_RLIMIT_AS_MB"
+_SANDBOX_RLIMIT_AS_MB_ENV = "VANTAGE_SANDBOX_RLIMIT_AS_MB"
 _SANDBOX_RLIMIT_NOFILE = 512
 
 
 def _resolve_sandbox_credentials() -> tuple[str, str] | None:
     """Return ``(user, group)`` for the privilege-dropped subprocess, else None.
 
-    None (run without a UID drop) is returned whenever the ``vibe-sandbox``
+    None (run without a UID drop) is returned whenever the ``vantage-sandbox``
     account is absent or the platform has no ``pwd`` module — i.e. every
     environment except the hardened Docker image that pre-creates the account and
     is granted CAP_SETUID/CAP_SETGID. A user that exists but cannot actually be
@@ -113,16 +113,16 @@ def _prepare_sandbox_home(real_home: Path | None) -> Path:
     """Create an ephemeral HOME and symlink in only the loader-owned paths.
 
     The generated strategy runs in the same subprocess as the data loaders, so
-    the ephemeral home re-exposes the narrow set of ``~/.vibe-trading`` paths the
+    the ephemeral home re-exposes the narrow set of ``~/.vantage`` paths the
     loaders need (opt-in cache, local data-bridge config, qveris config) and
     nothing else. Symlinks are used so the opt-in loader cache still persists
     across runs; ``shutil.rmtree`` later removes the links, never their targets.
     """
-    sandbox = Path(tempfile.mkdtemp(prefix="vibe-sandbox-home-"))
+    sandbox = Path(tempfile.mkdtemp(prefix="vantage-sandbox-home-"))
     if real_home is not None:
-        src_root = real_home / ".vibe-trading"
+        src_root = real_home / ".vantage"
         if src_root.is_dir():
-            dst_root = sandbox / ".vibe-trading"
+            dst_root = sandbox / ".vantage"
             dst_root.mkdir(parents=True, exist_ok=True)
             for rel in _SANDBOX_HOME_REEXPOSE:
                 src = src_root / rel
@@ -200,10 +200,10 @@ _RUNTIME_ENV_KEYS = frozenset(
         "TIINGO_API_KEY",
         "FMP_API_KEY",
         "FRED_API_KEY",
-        "VIBE_TRADING_IWENCAI_KEY",
-        "VIBE_TRADING_SEC_UA",
-        "VIBE_TRADING_DATA_CACHE",
-        "VIBE_TRADING_ALLOWED_RUN_ROOTS",
+        "VANTAGE_IWENCAI_KEY",
+        "VANTAGE_SEC_UA",
+        "VANTAGE_DATA_CACHE",
+        "VANTAGE_ALLOWED_RUN_ROOTS",
         "CCXT_EXCHANGE",
         "CCXT_TIMEOUT_MS",
         "CCXT_FETCH_BUDGET_S",
@@ -214,18 +214,18 @@ _RUNTIME_ENV_KEYS = frozenset(
         "RSSHUB_FETCH_BUDGET_S",
         "FUTU_HOST",
         "FUTU_PORT",
-        "VIBE_TRADING_EASTMONEY_MIN_INTERVAL",
-        "VIBE_TRADING_SINA_MIN_INTERVAL",
-        "VIBE_TRADING_STOOQ_MIN_INTERVAL",
-        "VIBE_TRADING_YAHOO_MIN_INTERVAL",
-        "VIBE_TRADING_SEC_MIN_INTERVAL",
-        "VIBE_TRADING_FINNHUB_MIN_INTERVAL",
-        "VIBE_TRADING_ALPHAVANTAGE_MIN_INTERVAL",
-        "VIBE_TRADING_TIINGO_MIN_INTERVAL",
-        "VIBE_TRADING_FMP_MIN_INTERVAL",
-        "VIBE_TRADING_FRED_MIN_INTERVAL",
-        "VIBE_TRADING_IWENCAI_MIN_INTERVAL",
-        "VIBE_TRADING_THS_MIN_INTERVAL",
+        "VANTAGE_EASTMONEY_MIN_INTERVAL",
+        "VANTAGE_SINA_MIN_INTERVAL",
+        "VANTAGE_STOOQ_MIN_INTERVAL",
+        "VANTAGE_YAHOO_MIN_INTERVAL",
+        "VANTAGE_SEC_MIN_INTERVAL",
+        "VANTAGE_FINNHUB_MIN_INTERVAL",
+        "VANTAGE_ALPHAVANTAGE_MIN_INTERVAL",
+        "VANTAGE_TIINGO_MIN_INTERVAL",
+        "VANTAGE_FMP_MIN_INTERVAL",
+        "VANTAGE_FRED_MIN_INTERVAL",
+        "VANTAGE_IWENCAI_MIN_INTERVAL",
+        "VANTAGE_THS_MIN_INTERVAL",
     }
     | _PROXY_ENV_KEYS
 )
@@ -435,7 +435,7 @@ class Runner:
         return env
 
     def _run_sandboxed(self, cmd: list[str], run_kwargs: dict[str, Any]) -> "subprocess.CompletedProcess[str]":
-        """Run the subprocess, dropping to ``vibe-sandbox`` when the host allows it.
+        """Run the subprocess, dropping to ``vantage-sandbox`` when the host allows it.
 
         When the UID drop is unavailable — no such user (the common case outside
         the hardened container) or the caller lacks CAP_SETUID — a clear WARNING
@@ -496,7 +496,7 @@ class Runner:
             cmd.extend(cli_args)
 
         # VT-001 defense-in-depth: give the generated-code subprocess an ephemeral
-        # HOME (so it can't read the persistent ~/.vibe-trading secrets/state),
+        # HOME (so it can't read the persistent ~/.vantage secrets/state),
         # drop to an unprivileged UID where the hardened container supports it,
         # and cap its address space / fd count on top of the wall-clock timeout.
         real_home = None

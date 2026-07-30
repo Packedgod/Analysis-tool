@@ -31,7 +31,7 @@ from src.strategy_store.models import (
 # Constants
 # ---------------------------------------------------------------------------
 
-_DEFAULT_DB_PATH = Path.home() / ".vibe-trading" / "strategy_store.db"
+_DEFAULT_DB_PATH = Path.home() / ".vantage" / "strategy_store.db"
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -64,7 +64,7 @@ def _default_db_path() -> Path:
     """Return the configured strategy-store database path."""
     from src.config.accessor import get_env_config
 
-    raw_path = get_env_config().paths.vibe_trading_strategy_store_db_path.strip()
+    raw_path = get_env_config().paths.vantage_strategy_store_db_path.strip()
     if raw_path:
         return Path(raw_path).expanduser()
     return _DEFAULT_DB_PATH
@@ -102,8 +102,8 @@ class SqliteStrategyStore:
 
         Args:
             db_path: SQLite database path.  When omitted,
-                ``VIBE_TRADING_STRATEGY_STORE_DB_PATH`` can override the
-                default ``~/.vibe-trading/strategy_store.db``.
+                ``VANTAGE_STRATEGY_STORE_DB_PATH`` can override the
+                default ``~/.vantage/strategy_store.db``.
         """
         self.db_path = (
             Path(db_path) if db_path is not None else _default_db_path()

@@ -276,7 +276,7 @@ def test_orchestrator_catches_exception() -> None:
 def test_gate_advisory_disabled_by_default(
     live_runtime: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    monkeypatch.delenv("VIBE_TRADING_ENABLE_ADVISORY", raising=False)
+    monkeypatch.delenv("VANTAGE_ENABLE_ADVISORY", raising=False)
     _write_mandate(live_runtime, _mandate())
     adapter = _MockAdapter()
     guard = _guard(adapter)
@@ -303,7 +303,7 @@ def test_gate_advisory_disabled_by_default(
 def test_gate_advisory_enabled_with_mock_provider(
     live_runtime: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    monkeypatch.setenv("VIBE_TRADING_ENABLE_ADVISORY", "1")
+    monkeypatch.setenv("VANTAGE_ENABLE_ADVISORY", "1")
 
     mock_provider = MockAdvisory(
         verdict=Verdict.APPROVE_WITH_CONCERNS,
@@ -345,7 +345,7 @@ def test_gate_advisory_enabled_with_mock_provider(
 def test_gate_advisory_reject_is_observational(
     live_runtime: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    monkeypatch.setenv("VIBE_TRADING_ENABLE_ADVISORY", "1")
+    monkeypatch.setenv("VANTAGE_ENABLE_ADVISORY", "1")
 
     register_advisory_provider(
         MockAdvisory(
@@ -378,7 +378,7 @@ def test_gate_advisory_reject_is_observational(
 def test_gate_advisory_provider_failure_is_observational(
     live_runtime: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    monkeypatch.setenv("VIBE_TRADING_ENABLE_ADVISORY", "1")
+    monkeypatch.setenv("VANTAGE_ENABLE_ADVISORY", "1")
 
     register_advisory_provider(
         MockAdvisory(raise_on_review=True, provider_id="failing_mock")

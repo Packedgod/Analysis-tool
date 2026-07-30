@@ -26,7 +26,7 @@ logger = logging.getLogger(__name__)
 
 # Free, no-key engines aggregated by ddgs, tried in order. A single engine
 # returning nothing or being rate-limited no longer fails the whole search.
-# Override (or pin to one engine) via VIBE_TRADING_SEARCH_BACKENDS.
+# Override (or pin to one engine) via VANTAGE_SEARCH_BACKENDS.
 _DEFAULT_BACKENDS = "duckduckgo, google, bing, brave, mojeek, yahoo"
 _MAX_ATTEMPTS = 3
 _BACKOFF_BASE_SECONDS = 0.8
@@ -239,7 +239,7 @@ class WebSearchTool(BaseTool):
         """
         query = kwargs["query"]
         max_results = min(int(kwargs.get("max_results", 5)), 10)
-        backends = (get_env_config().agent_tuning.vibe_trading_search_backends or _DEFAULT_BACKENDS).strip() or "auto"
+        backends = (get_env_config().agent_tuning.vantage_search_backends or _DEFAULT_BACKENDS).strip() or "auto"
 
         # Point-in-time branch: when a window is requested, only dated news
         # results are admissible and each is filtered fail-closed to the window.
@@ -349,9 +349,9 @@ class WebSearchTool(BaseTool):
         # Fallback chain when every ddgs backend is blocked (common behind
         # restricted egress, e.g. CN hosts without VPN): sogou first (best CN
         # query quality), then cn.bing (real URLs, broader). Toggle via
-        # VIBE_TRADING_SEARCH_BING_FALLBACK (default on).
+        # VANTAGE_SEARCH_BING_FALLBACK (default on).
         fb_err = "disabled"
-        if get_env_config().agent_tuning.vibe_trading_search_bing_fallback:
+        if get_env_config().agent_tuning.vantage_search_bing_fallback:
             for fb_name, fb_fn in (("sogou", _sogou_search), ("bing_cn", _bing_cn_search)):
                 try:
                     raw = fb_fn(query, max_results=max_results)
@@ -381,8 +381,8 @@ class WebSearchTool(BaseTool):
                     f"Web search failed after {_MAX_ATTEMPTS} attempts "
                     f"(backends: {backends if supports_backend else 'duckduckgo'}): {last_error}. "
                     f"CN fallbacks (sogou, bing_cn): {fb_err}. "
-                    "Retry shortly, set VIBE_TRADING_SEARCH_BACKENDS to a different engine list, "
-                    "set VIBE_TRADING_SEARCH_BING_FALLBACK=0 to disable CN fallback, or read a "
+                    "Retry shortly, set VANTAGE_SEARCH_BACKENDS to a different engine list, "
+                    "set VANTAGE_SEARCH_BING_FALLBACK=0 to disable CN fallback, or read a "
                     "known URL directly with read_url."
                 ),
             },
