@@ -213,6 +213,55 @@ def _align(
     return dates, close, pos, ret
 
 
+def _rebalance_dates(
+    dates: pd.DatetimeIndex, freq: Optional[str]
+) -> Optional[set]:
+    """Timestamps on which the portfolio is allowed to rebalance.
+
+    A ``None`` return means "every bar" (legacy behaviour, backward-compatible
+    default): the caller rebalances on every timestamp. Otherwise the returned
+    set holds the first bar of each calendar period so positions are only reset
+    to target on those bars and simply drift with the market in between — the
+    correct semantics for a periodic (e.g. annual) rebalance.
+
+    Args:
+        dates: The full ordered bar index of the backtest.
+        freq: Rebalance frequency. ``None``/``""``/``"bar"``/``"none"`` → every
+            bar. Annual: ``"annual"``/``"yearly"``/``"a"``/``"y"``. Also accepts
+            ``"quarterly"``/``"q"``, ``"monthly"``/``"m"``, ``"weekly"``/``"w"``.
+
+    Returns:
+        A set of rebalance timestamps, or ``None`` for the every-bar default.
+    """
+    if freq is None:
+        return None
+    key = str(freq).strip().lower()
+    if key in ("", "bar", "none", "per_bar", "every_bar", "everybar"):
+        return None
+    idx = pd.DatetimeIndex(dates)
+    if len(idx) == 0:
+        return set()
+    if key in ("a", "y", "annual", "annually", "yearly", "year"):
+        group = list(idx.year)
+    elif key in ("q", "quarterly", "quarter"):
+        group = list(zip(idx.year, idx.quarter))
+    elif key in ("m", "monthly", "month"):
+        group = list(zip(idx.year, idx.month))
+    elif key in ("w", "weekly", "week"):
+        iso = idx.isocalendar()
+        group = list(zip(iso["year"], iso["week"]))
+    else:
+        logger.warning("Unknown rebalance_freq %r; defaulting to every bar", freq)
+        return None
+    seen: set = set()
+    out: set = set()
+    for ts, g in zip(idx, group):
+        if g not in seen:
+            seen.add(g)
+            out.add(ts)
+    return out
+
+
 def _load_optimizer(config: Dict[str, Any]) -> Optional[Callable]:
     """Dynamically load an optimizer function from config.
 
@@ -506,7 +555,10 @@ class BaseEngine(ABC):
         valid_codes = [c for c in valid_codes if c in target_pos.columns]
 
         # 4. Bar-by-bar execution
-        self._execute_bars(dates, data_map, close_df, target_pos, valid_codes)
+        self._execute_bars(
+            dates, data_map, close_df, target_pos, valid_codes,
+            rebalance_freq=config.get("rebalance_freq"),
+        )
 
         # 5. Build output series
         equity_series = pd.Series(
@@ -607,24 +659,37 @@ class BaseEngine(ABC):
         close_df: pd.DataFrame,
         target_pos: pd.DataFrame,
         codes: List[str],
+        rebalance_freq: Optional[str] = None,
     ) -> None:
-        """Bar-by-bar execution with market rule enforcement."""
+        """Bar-by-bar execution with market rule enforcement.
+
+        ``rebalance_freq`` gates *when* positions are reset to their target
+        weights. ``None`` (default) rebalances every bar — the historical
+        behaviour. A periodic value (e.g. ``"annual"``) rebalances only on the
+        first bar of each period and lets positions drift with the market in
+        between, so an "annual rebalance" actually trades once per year rather
+        than every bar. Per-bar hooks and equity snapshots still run every bar.
+        """
+        rebal_dates = _rebalance_dates(dates, rebalance_freq)
         for i, ts in enumerate(dates):
             self._bar_idx = i
 
-            # a. Per-bar hooks (funding fees, liquidation checks)
+            # a. Per-bar hooks (funding fees, liquidation checks) — always.
             for c in codes:
                 if ts in data_map[c].index:
                     self.on_bar(c, data_map[c].loc[ts], ts)
 
-            # b. Rebalance each symbol to target weight
-            equity = self._calc_equity(close_df, ts)
-            for c in codes:
-                try:
-                    target_w = float(target_pos.at[ts, c]) if ts in target_pos.index else 0.0
-                    self._rebalance(c, target_w, data_map.get(c), ts, equity)
-                except Exception as exc:
-                    logger.warning("Rebalance failed for %s at %s: %s", c, ts, exc)
+            # b. Rebalance each symbol to target weight, but only on scheduled
+            #    rebalance bars (every bar when rebal_dates is None). Between
+            #    rebalances positions are left to drift with the market.
+            if rebal_dates is None or ts in rebal_dates:
+                equity = self._calc_equity(close_df, ts)
+                for c in codes:
+                    try:
+                        target_w = float(target_pos.at[ts, c]) if ts in target_pos.index else 0.0
+                        self._rebalance(c, target_w, data_map.get(c), ts, equity)
+                    except Exception as exc:
+                        logger.warning("Rebalance failed for %s at %s: %s", c, ts, exc)
 
             # c. Record equity snapshot
             snap_equity = self._calc_equity(close_df, ts)
