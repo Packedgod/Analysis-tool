@@ -67,8 +67,3 @@ not commit `.env`; it may contain credentials. Start the server with:
 - Brokerage is permanently disabled in this product, regardless of environment
   variables or copied Vantage configuration.
 
-## License and attribution
-
-This fork retains the upstream MIT license and notices from
-[HKUDS/Vantage](https://github.com/HKUDS/Vantage).
-
