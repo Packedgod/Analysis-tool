@@ -26,14 +26,26 @@ const OVERLAY_OPTIONS: { id: Overlay; label: string; group: string }[] = [
 const RANGE_BARS: Record<Range, number> = { "1M": 22, "3M": 63, "6M": 126, "1Y": 252, ALL: Infinity };
 const OVERLAY_COLORS = ["#f59e0b", "#8b5cf6", "#3b82f6", "#ec4899", "#10b981", "#f97316", "#6366f1"];
 
+/** A horizontal price line drawn across the price pane (entry/target/stop, or
+ *  a user-authored threshold). Colour is resolved by the caller so the chart
+ *  stays agnostic about what a level *means*. */
+export interface PriceLevel {
+  price: number;
+  label: string;
+  color: string;
+  /** Dashed by default; solid reads as "actual", dashed as "intended". */
+  solid?: boolean;
+}
+
 interface Props {
   data: PriceBar[];
   markers?: TradeMarker[];
   indicators?: Record<string, IndicatorPoint[]>;
+  levels?: PriceLevel[];
   height?: number;
 }
 
-export function CandlestickChart({ data, markers, indicators, height = 500 }: Props) {
+export function CandlestickChart({ data, markers, indicators, levels, height = 500 }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<ReturnType<typeof echarts.init> | null>(null);
   const [sub, setSub] = useState<Sub>("vol");
@@ -147,6 +159,21 @@ export function CandlestickChart({ data, markers, indicators, height = 500 }: Pr
       label: { color: "#fff", fontSize: 10, fontWeight: "bold" as const },
     }));
 
+    // Horizontal price levels — marked positions and screening thresholds.
+    const levelLines = (levels || [])
+      .filter((l) => Number.isFinite(l.price))
+      .map((l) => ({
+        yAxis: l.price,
+        lineStyle: { color: l.color, width: 1.5, type: (l.solid ? "solid" : "dashed") as "solid" | "dashed" },
+        label: {
+          formatter: `${l.label}  ${l.price}`,
+          position: "insideEndTop" as const,
+          color: l.color,
+          fontSize: 10,
+          fontFamily: "JetBrains Mono, monospace",
+        },
+      }));
+
     // Volume
     const vol = data.map((d, i) => ({
       value: d.volume,
@@ -247,13 +274,14 @@ export function CandlestickChart({ data, markers, indicators, height = 500 }: Pr
           name: "K", type: "candlestick", data: candle, xAxisIndex: 0, yAxisIndex: 0,
           itemStyle: { color: t.upColor, color0: t.downColor, borderColor: t.upColor, borderColor0: t.downColor },
           markPoint: marks.length > 0 ? { data: marks, symbolSize: 28, tooltip: { formatter: (p: { name?: string; value?: string }) => p.name || p.value || "" } } : undefined,
+          markLine: levelLines.length > 0 ? { symbol: "none", silent: true, data: levelLines } : undefined,
         },
         ...overlaySeries,
         ...extraSeries,
         ...subSeries,
       ],
     }, true);
-  }, [data, markers, baseData, indicatorCache, extraIndicators, sub, range, overlays, dark]);
+  }, [data, markers, levels, baseData, indicatorCache, extraIndicators, sub, range, overlays, dark]);
 
   if (data.length === 0) {
     return <div className="text-muted-foreground text-sm p-4">{i18n.t("charts.noPriceData")}</div>;

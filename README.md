@@ -60,9 +60,13 @@ not commit `.env`; it may contain credentials. Start the server with:
   history, benchmark comparison, and an automatic `portfolio_report.xlsx`.
 - The workbook separates STCG/LTCG exits and leaves tax rates as editable
   post-simulation inputs so pre-tax results are never changed retroactively.
-- Every analysis is keyed to the user-verified `Stocks_Sector` registry:
-  70 common fundamentals, sector benchmarks, weighted qualitative layers, and
-  23 sector/industry KPI packs are retrieved privately by the backend.
+- Every prompt is governed by the two-workbook backend backbone in
+  `agent/data/analysis_backbone/`: `Stocks_Sector.xlsx` supplies 70 common
+  fundamentals, sector benchmarks, weighted qualitative layers, and 23
+  sector/industry KPI packs; `India_Macro_Market_Briefing.xlsx` supplies the
+  authoritative macro readings, cycle placement, linkage map, positioning,
+  triggers, caveats, and suitability rules. The backend preserves workbook
+  formulas and their last calculated values with filename/sheet/row provenance.
 - Backtests and shadow results are simulations, not investment advice.
 - Brokerage is permanently disabled in this product, regardless of environment
   variables or copied Vantage configuration.

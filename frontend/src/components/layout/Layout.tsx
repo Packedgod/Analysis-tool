@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { useEffect, useRef, useState } from "react";
 import { Link, Outlet, useLocation, useSearchParams } from "react-router-dom";
-import { BarChart3, Bot, Check, ChevronDown, FileText, Languages, Palette, Plus, Trash2, Pencil, MessageSquare, ChevronsLeft, ChevronsRight, Settings, Loader2 } from "lucide-react";
+import { BarChart3, Bot, Check, ChevronDown, FileText, FlaskConical, Languages, LineChart, Palette, Plus, Trash2, Pencil, MessageSquare, ChevronsLeft, ChevronsRight, Settings, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { THEMES, useDarkMode } from "@/hooks/useDarkMode";
 import { api, type SessionItem } from "@/lib/api";
@@ -30,6 +30,8 @@ export function Layout() {
   const NAV = [
     { to: "/", icon: BarChart3, label: "Research Home" },
     { to: "/agent", icon: Bot, label: "Analysis" },
+    { to: "/market", icon: LineChart, label: "Market Pulse" },
+    { to: "/quant-labs", icon: FlaskConical, label: "Quant Labs" },
     { to: "/reports", icon: FileText, label: "Reports" },
     { to: "/settings", icon: Settings, label: "Settings" },
   ];

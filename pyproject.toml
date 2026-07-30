@@ -3,6 +3,7 @@ name = "vantage-ai"
 version = "0.1.11"
 description = "Evidence-first company research, financial analysis, and strategy simulation"
 requires-python = ">=3.11"
+license = "MIT"
 readme = "README.md"
 authors = [
     {name = "HKUDS", email = "hkuds@connect.hku.hk"},
