@@ -294,6 +294,27 @@ def run_validation(
             bars_per_year=bars_per_year,
         )
 
+    # Overfitting-honesty statistics (PSR / Deflated Sharpe / MinTRL). Cheap and
+    # closed-form, so it runs whenever any validation is requested — but never
+    # on an empty config (preserving the {}-in/{}-out contract) and never fatal:
+    # a failure here degrades to an "error" note rather than losing the other
+    # checks. ``n_trials`` should be set to the size of the strategy search
+    # (e.g. an alpha-zoo sweep) for an honest multiple-testing correction.
+    if v_cfg:
+        try:
+            from backtest.overfitting import overfitting_report
+
+            of_cfg = v_cfg.get("overfitting")
+            of_cfg = of_cfg if isinstance(of_cfg, dict) else {}
+            period_returns = equity_curve.pct_change().dropna().to_numpy()
+            results["overfitting"] = overfitting_report(
+                period_returns,
+                n_trials=int(of_cfg.get("n_trials", 1)),
+                bars_per_year=bars_per_year,
+            )
+        except Exception as exc:  # noqa: BLE001 — optional section, never fatal
+            results["overfitting"] = {"error": str(exc)}
+
     return results
 
 
