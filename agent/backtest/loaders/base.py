@@ -379,7 +379,20 @@ def cached_loader_fetch(
     for the common per-symbol loader loop: return the cached frame when present,
     otherwise call ``fetch`` and cache a non-empty result. Cache read/write
     failures are non-fatal and fall back to ``fetch``.
+
+    Point-in-time: when an as-of clock is engaged the shared cache is bypassed
+    entirely and the fetched frame is clipped to the as-of date. Sharing one
+    cache between live and historical callers would otherwise let a clipped
+    frame be served to a live caller (or vice versa) under the same key. The
+    whole block is inert when no clock is set — the default.
     """
+    from backtest import as_of as _as_of  # local import: keeps loaders import-light
+
+    if _as_of.is_engaged():
+        if _as_of.window_is_empty(start_date, end_date):
+            return None
+        return _as_of.enforce_frame(fetch(), label=symbol)
+
     cached = loader_cache_get(
         source=source,
         symbol=symbol,

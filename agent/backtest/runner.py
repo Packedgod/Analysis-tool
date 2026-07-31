@@ -1146,13 +1146,21 @@ def _sanitize_data_map(data_map: dict) -> dict:
     single-source, runtime fallback, and any future loader), so the per-loader
     checks no longer have to be added one at a time.
 
+    The same convergence point also enforces the point-in-time clock: when an
+    as-of date is engaged, bars dated after it are withheld here regardless of
+    which loader produced them, so a look-ahead leak cannot enter through a
+    source that skipped the cached fetch path. Inert when no clock is set.
+
     Args:
         data_map: ``code -> DataFrame`` map as returned by a loader fetch.
 
     Returns:
         The same mapping with each frame's invalid bars removed.
     """
-    return {code: validate_ohlc(frame) for code, frame in data_map.items()}
+    from backtest import as_of as _as_of
+
+    sanitized = {code: validate_ohlc(frame) for code, frame in data_map.items()}
+    return _as_of.enforce_data_map(sanitized)
 
 
 class _AutoLoader:
