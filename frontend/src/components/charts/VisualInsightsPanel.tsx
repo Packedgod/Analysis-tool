@@ -289,7 +289,7 @@ function InsightTables({ insights }: { insights: RunInsights }) {
         <article key={`${table.source}-${table.title}-${index}`} className="overflow-hidden rounded-2xl border bg-card shadow-sm">
           <div className="flex items-center justify-between border-b px-4 py-3"><div><h3 className="text-sm font-semibold">{table.title}</h3><p className="text-[11px] text-muted-foreground">{table.source}</p></div><Table2 className="h-4 w-4 text-primary" /></div>
           <div className="max-h-[440px] overflow-auto">
-            <table className="w-full text-xs">
+            <table className="data-table w-full text-xs">
               <thead className="sticky top-0 z-10 bg-muted/95 backdrop-blur"><tr>{table.columns.map((column) => <th key={column} className="whitespace-nowrap border-b px-3 py-2 text-left font-semibold">{column}</th>)}</tr></thead>
               <tbody>{table.rows.map((row, rowIndex) => <tr key={rowIndex} className="border-b last:border-0 hover:bg-primary/5">{table.columns.map((_, cellIndex) => <td key={cellIndex} className="max-w-xs px-3 py-2 tabular-nums">{row[cellIndex] ?? ""}</td>)}</tr>)}</tbody>
             </table>

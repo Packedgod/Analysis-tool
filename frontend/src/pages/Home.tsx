@@ -187,7 +187,7 @@ export function Home() {
 
       <main className="mx-auto max-w-[1540px] space-y-5 px-4 py-5 sm:px-5 lg:px-7 lg:py-7">
         <section className="grid gap-5 xl:grid-cols-[minmax(0,1.55fr)_minmax(360px,.72fr)]">
-          <article className="terminal-card market-grid relative min-h-[490px] overflow-hidden rounded-[22px] border p-5 sm:p-7 lg:p-9">
+          <article className="terminal-card market-grid relative min-h-[400px] overflow-hidden rounded-[22px] border p-5 sm:p-6 lg:p-7">
             <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_78%_36%,hsl(var(--primary)/0.18),transparent_28%)]" />
             <div className="relative z-10 flex h-full flex-col">
               <div className="flex flex-wrap items-center justify-between gap-3">
@@ -200,17 +200,20 @@ export function Home() {
                 </div>
               </div>
 
-              <div className="mt-9 max-w-4xl">
-                <p className="mb-3 font-mono text-xs uppercase tracking-[0.22em] text-muted-foreground">Vantage research terminal</p>
-                <h1 className="text-4xl font-semibold leading-[0.98] tracking-[-0.05em] sm:text-5xl lg:text-7xl">
+              {/* Density pass: the statement still leads, but at a scale that
+                  leaves room for data below the fold rather than owning the
+                  screen — a research terminal should show work, not a poster. */}
+              <div className="mt-6 max-w-4xl">
+                <p className="mb-2 font-mono text-[10px] uppercase tracking-[0.22em] text-muted-foreground">Vantage research terminal</p>
+                <h1 className="text-3xl font-semibold leading-[1.02] tracking-[-0.04em] sm:text-4xl lg:text-5xl">
                   See the evidence.<br /><span className="text-primary">Understand the equity.</span>
                 </h1>
-                <p className="mt-5 max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base">
+                <p className="mt-3 max-w-2xl text-[13px] leading-5 text-muted-foreground">
                   One workspace for source-linked company research, interactive financials, portfolio simulation, risk diagnostics, and audit-ready reports.
                 </p>
               </div>
 
-              <div className="mt-auto grid gap-3 pt-8 sm:grid-cols-2 lg:grid-cols-4">
+              <div className="mt-auto grid gap-2.5 pt-6 sm:grid-cols-2 lg:grid-cols-4">
                 {WORKFLOW.map(({ label, detail, icon: Icon }, index) => (
                   <div key={label} className="group rounded-xl border bg-background/35 p-3 backdrop-blur-sm transition hover:-translate-y-0.5 hover:border-primary/35 hover:bg-primary/5">
                     <div className="flex items-center justify-between">
@@ -292,17 +295,40 @@ export function Home() {
               <div><p className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">Market pulse</p><h2 className="mt-1 text-base font-semibold">Observed leaders</h2></div>
               <div className="flex items-center gap-2 font-mono text-[9px] text-muted-foreground"><Zap className="h-3.5 w-3.5 text-primary" /> {market.source}</div>
             </div>
-            <div className="divide-y">
-              {performers.length ? performers.map((item, index) => (
-                <div key={item.symbol} className="flex items-center gap-3 px-5 py-3 transition hover:bg-primary/[0.035]">
-                  <span className="w-4 font-mono text-[9px] text-muted-foreground">0{index + 1}</span>
-                  <StockMark item={item} small />
-                  <div className="min-w-0 flex-1"><p className="truncate text-xs font-semibold">{item.name}</p><p className="font-mono text-[9px] text-muted-foreground">{item.symbol}</p></div>
-                  <p className="font-mono text-xs tabular-nums">₹{formatPrice(item.price)}</p>
-                  <p className={cn("w-16 text-right font-mono text-[10px] font-semibold", item.change_percent >= 0 ? "text-success" : "text-danger")}>{item.change_percent >= 0 ? "+" : ""}{item.change_percent.toFixed(2)}%</p>
-                </div>
-              )) : <div className="p-7 text-sm text-muted-foreground">Waiting for a verified market snapshot.</div>}
-            </div>
+            {performers.length ? (
+              <div className="max-h-[320px] overflow-auto">
+                <table className="data-table">
+                  <thead>
+                    <tr>
+                      <th className="w-8">#</th>
+                      <th>Instrument</th>
+                      <th className="num">Last</th>
+                      <th className="num w-20">Chg%</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {performers.map((item, index) => (
+                      <tr key={item.symbol}>
+                        <td className="font-mono text-[9px] text-muted-foreground">{String(index + 1).padStart(2, "0")}</td>
+                        <td>
+                          <div className="flex min-w-0 items-center gap-2">
+                            <StockMark item={item} small />
+                            <span className="min-w-0">
+                              <span className="block truncate text-[12px] font-medium leading-tight">{item.name}</span>
+                              <span className="block font-mono text-[9px] text-muted-foreground">{item.symbol}</span>
+                            </span>
+                          </div>
+                        </td>
+                        <td className="num">₹{formatPrice(item.price)}</td>
+                        <td className={cn("num font-semibold", item.change_percent >= 0 ? "val-up" : "val-down")}>
+                          {item.change_percent >= 0 ? "+" : ""}{item.change_percent.toFixed(2)}%
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : <div className="p-7 text-sm text-muted-foreground">Waiting for a verified market snapshot.</div>}
           </article>
 
           <article className="terminal-card relative min-h-[310px] overflow-hidden rounded-[20px] border bg-card/90 p-5">

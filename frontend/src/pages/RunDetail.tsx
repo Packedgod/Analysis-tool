@@ -435,7 +435,7 @@ function RunCardTab({ card }: { card: RunCard }) {
             defaultSpan: 12,
             content: artifacts.length > 0 ? (
               <div className="overflow-x-auto">
-                <table className="w-full text-sm">
+                <table className="data-table w-full text-sm">
                   <thead>
                     <tr className="border-b text-left text-muted-foreground">
                       <th className="py-2 pr-4">{i18n.t("runDetail.path")}</th>
@@ -657,7 +657,7 @@ function TradesTab({ run }: { run: RunData }) {
   if (trades.length === 0) return <div className="p-8 text-muted-foreground text-sm">{i18n.t("runDetail.noTrades")}</div>;
   return (
     <div className="p-4">
-      <table className="w-full text-sm">
+      <table className="data-table w-full text-sm">
         <thead>
           <tr className="border-b text-left text-muted-foreground">
             <th className="py-2 pr-4">{i18n.t("runDetail.time")}</th>

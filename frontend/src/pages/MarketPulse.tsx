@@ -689,7 +689,7 @@ function ScreenerTable({ rows, loading, unavailable, passing, activeStandardCoun
       </div>
 
       <div className="overflow-x-auto">
-        <table className="w-full min-w-[880px] text-left">
+        <table className="data-table w-full min-w-[880px] text-left">
           <thead>
             <tr className="border-b">
               <th className="px-4 py-2.5"><span className="eyebrow text-[9px]">Security</span></th>

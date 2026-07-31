@@ -314,7 +314,7 @@ export function Compare() {
       {/* Metrics table */}
       {(leftData || rightData) && (
         <div className="border rounded-xl overflow-hidden">
-          <table className="w-full text-sm">
+          <table className="data-table w-full text-sm">
             <thead>
               <tr className="border-b bg-muted/40">
                 <th className="text-left px-4 py-2.5 text-muted-foreground font-medium">{i18n.t("compare.metric")}</th>

@@ -577,7 +577,7 @@ function DetailView({ alphaId }: DetailProps) {
       <section className="space-y-2">
         <h2 className="text-sm font-medium text-muted-foreground">{i18n.t("alphaZoo.metadata")}</h2>
         <div className="border rounded-xl overflow-hidden">
-          <table className="w-full text-sm">
+          <table className="data-table w-full text-sm">
             <tbody>
               <MetaRow
                 label={i18n.t("alphaZoo.theme")}
@@ -1037,7 +1037,7 @@ function TopTable({ title, rows }: { title: string; rows: AlphaBenchTopRow[] }) 
           {i18n.t("alphaZoo.noRows")}
         </div>
       ) : (
-        <table className="w-full text-sm">
+        <table className="data-table w-full text-sm">
           <thead>
             <tr className="border-b">
               <th className="text-left px-4 py-2 text-xs text-muted-foreground font-medium">{i18n.t("alphaZoo.id")}</th>

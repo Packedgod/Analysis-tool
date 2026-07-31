@@ -122,7 +122,7 @@ function WalkForwardSection({ wf }: { wf: NonNullable<ValidationData["walk_forwa
         <Stat label={i18n.t("validation.windows")} value={String(wf.n_windows)} />
       </div>
       {/* Per-window table */}
-      <table className="w-full text-xs">
+      <table className="data-table w-full text-xs">
         <thead>
           <tr className="border-b text-left text-muted-foreground">
             <th className="py-1.5 pr-3">#</th>
