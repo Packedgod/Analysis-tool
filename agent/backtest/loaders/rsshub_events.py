@@ -366,6 +366,16 @@ class RSSHubEventProvider:
         feed_names = list(feeds) if feeds is not None else self.list_feeds()
         as_of_date = pd.Timestamp(as_of).normalize()
 
+        # A globally engaged point-in-time clock is a ceiling on the caller's
+        # boundary, never a relaxation: a study standing at 2021 must not see
+        # 2026 headlines even if the caller passed the later date. Inert when
+        # the clock is unset.
+        from backtest import as_of as _as_of
+
+        _cutoff = _as_of.get_as_of()
+        if _cutoff is not None and _cutoff < as_of_date:
+            as_of_date = _cutoff
+
         code_list = list(codes)
         rows: list[dict[str, Any]] = []
         attempted = 0

@@ -51,6 +51,45 @@ class EvidenceWindow:
         return f"{self.start.isoformat()}..{self.end.isoformat()}"
 
 
+def as_of_ceiling() -> date | None:
+    """The active point-in-time clock as a plain date, or ``None`` when live.
+
+    Bridges :mod:`backtest.as_of` into the evidence layer without making this
+    module depend on it at import time.
+    """
+    try:
+        from backtest import as_of as _as_of
+
+        stamp = _as_of.get_as_of()
+    except Exception:  # noqa: BLE001 — the clock is optional infrastructure
+        return None
+    return stamp.date() if stamp is not None else None
+
+
+def _apply_as_of(window: EvidenceWindow | None) -> EvidenceWindow | None:
+    """Bound *window* by the point-in-time clock (identity when unset).
+
+    With a clock engaged, an unrequested window becomes an open-ended-past
+    window ending at the as-of date, so evidence published later cannot be
+    cited; an explicitly requested window has its end clamped down. A window
+    lying entirely after the as-of date is a contradiction and fails loudly
+    rather than silently returning future evidence.
+    """
+    ceiling = as_of_ceiling()
+    if ceiling is None:
+        return window
+    if window is None:
+        return EvidenceWindow(date(_MIN_YEAR, 1, 1), ceiling)
+    if window.start > ceiling:
+        raise ValueError(
+            f"evidence window {window.label} starts after the as-of date "
+            f"({ceiling.isoformat()}); it requests evidence that did not exist yet"
+        )
+    if window.end > ceiling:
+        return EvidenceWindow(window.start, ceiling)
+    return window
+
+
 def parse_window(
     *, year: int | None = None, start_date: str | None = None, end_date: str | None = None
 ) -> EvidenceWindow | None:
@@ -59,7 +98,18 @@ def parse_window(
     Fails loudly (``ValueError``) on an invalid year or an inverted/half range,
     rather than silently running the search unconstrained — the very leak the
     window exists to prevent.
+
+    When a point-in-time clock is engaged the result is additionally bounded by
+    it, so every evidence tool built on this helper inherits the as-of date
+    without needing its own filter.
     """
+    return _apply_as_of(_parse_window_raw(year=year, start_date=start_date, end_date=end_date))
+
+
+def _parse_window_raw(
+    *, year: int | None = None, start_date: str | None = None, end_date: str | None = None
+) -> EvidenceWindow | None:
+    """Build the caller-requested window, before any as-of bounding."""
     if year is not None:
         try:
             value = int(year)

@@ -103,6 +103,23 @@ def _extract_concept_series(
     df["filed"] = pd.to_datetime(df["filed"], errors="coerce").dt.normalize()
     df["value"] = pd.to_numeric(df["value"], errors="coerce")
     df = df.dropna(subset=["period_end", "filed", "value"])
+
+    # Point-in-time clock: a figure filed after the as-of date was unknowable
+    # then, whatever period it describes — restating history with a later
+    # filing is the classic fundamentals look-ahead. Filtering on ``filed``
+    # (not ``period_end``) is what makes this correct. Inert when unset.
+    from backtest import as_of as _as_of
+
+    _cutoff = _as_of.get_as_of()
+    if _cutoff is not None and not df.empty:
+        _before = len(df)
+        df = df[df["filed"] <= _cutoff]
+        if len(df) < _before:
+            logger.debug(
+                "as-of %s: withheld %d filing(s) not yet published",
+                _cutoff.date(), _before - len(df),
+            )
+
     if df.empty:
         return pd.DataFrame(columns=columns)
 
