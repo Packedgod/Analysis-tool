@@ -66,6 +66,11 @@ class BacktestConfigSchema(BaseModel):
     engine: str = "daily"
     fundamental_fields: Optional[Dict[str, List[str]]] = None
     event_feeds: Optional[List[Dict[str, Any]]] = None
+    # Point-in-time study date. When set, the whole run is executed as of this
+    # date and no data published after it can reach the engine. Declared
+    # explicitly (rather than riding on extra="allow") so a malformed value
+    # fails loudly — an as-of silently ignored is precisely a look-ahead leak.
+    as_of: Optional[str] = None
 
     @field_validator("codes")
     @classmethod
@@ -83,6 +88,17 @@ class BacktestConfigSchema(BaseModel):
             pd.Timestamp(v)
         except Exception:
             raise ValueError(f"invalid date format: {v!r} (expected YYYY-MM-DD)")
+        return v
+
+    @field_validator("as_of")
+    @classmethod
+    def valid_as_of(cls, v: Optional[str]) -> Optional[str]:
+        if v is None or (isinstance(v, str) and not v.strip()):
+            return None
+        try:
+            pd.Timestamp(v)
+        except Exception:
+            raise ValueError(f"invalid as_of date: {v!r} (expected YYYY-MM-DD)")
         return v
 
     @field_validator("interval")
@@ -842,6 +858,17 @@ def main(run_dir: Path) -> None:
         sys.exit(1)
 
     config = raw_config
+
+    # Engage the point-in-time clock for the remainder of this run (process
+    # exits when it finishes, so no scope teardown is needed). Everything
+    # downstream — every loader fetch, the convergence sanitizer, the engine —
+    # is then bounded by this date. Absent/blank as_of leaves the clock unset,
+    # which is a strict no-op and the live-data default.
+    from backtest import as_of as _as_of
+    if config.get("as_of"):
+        _as_of.set_as_of(config["as_of"])
+        logger.info("point-in-time run: data bounded to as_of=%s", config["as_of"])
+
     source = config.get("source", "tushare")
     # Normalize before market grouping, loader selection, and engine creation.
     # Otherwise bare NSE names (RELIANCE, TCS, etc.) fall through to the

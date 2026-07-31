@@ -42,20 +42,43 @@ def _clean(value: Any) -> Any:
     return value
 
 
+# Relative-period strings this endpoint accepts, as day counts. Used only when
+# a point-in-time clock is engaged, to convert "5y" (which yfinance anchors to
+# *today*) into an explicit window ending at the as-of date.
+_PERIOD_DAYS = {"1mo": 31, "3mo": 92, "6mo": 183, "1y": 365, "2y": 730,
+                "3y": 1095, "5y": 1826, "10y": 3653}
+
+
 def _history(tickers: list[str], period: str = "2y", interval: str = "1d") -> dict[str, pd.DataFrame]:
     import yfinance as yf
+
+    from backtest import as_of as _as_of
 
     names = [t.strip().upper() for t in tickers if t.strip()]
     if not names or len(names) > 20:
         raise ValueError("Provide between 1 and 20 tickers")
-    raw = yf.download(names, period=period, interval=interval, auto_adjust=True, progress=False, threads=True, timeout=12)
+
+    cutoff = _as_of.get_as_of()
+    if cutoff is None:
+        raw = yf.download(names, period=period, interval=interval, auto_adjust=True, progress=False, threads=True, timeout=12)
+    else:
+        # A relative period is anchored to today, so under a clock it would ask
+        # for a window that is mostly in the future and get clipped to nothing.
+        # Translate it into an explicit window ending at the as-of date.
+        span = pd.Timedelta(days=_PERIOD_DAYS.get(str(period).lower(), 730))
+        end = cutoff + pd.Timedelta(days=1)  # yfinance end is exclusive
+        raw = yf.download(names, start=(cutoff - span).date().isoformat(), end=end.date().isoformat(),
+                          interval=interval, auto_adjust=True, progress=False, threads=True, timeout=12)
     if raw.empty:
         raise ValueError("Yahoo Finance returned no market data")
     result: dict[str, pd.DataFrame] = {}
     for symbol in names:
         frame = raw.xs(symbol, axis=1, level=1, drop_level=True) if isinstance(raw.columns, pd.MultiIndex) else raw.copy()
         frame = frame.rename(columns={str(c): str(c).title() for c in frame.columns}).dropna(how="all")
-        if "Close" in frame and len(frame) >= 10:
+        # Belt-and-braces: this path fetches Yahoo directly rather than through
+        # the loader chokepoint, so the clock is enforced here too.
+        frame = _as_of.enforce_frame(frame, label=symbol)
+        if frame is not None and "Close" in frame and len(frame) >= 10:
             result[symbol] = frame
     if not result:
         raise ValueError("No ticker had enough valid historical observations")
@@ -75,6 +98,8 @@ class BacktestRequest(BaseModel):
     slow: int = Field(50, ge=3, le=400)
     initial_cash: float = Field(100000, gt=0)
     fee_bps: float = Field(5, ge=0, le=500)
+    # Point-in-time: run this study as of a past date. Omitted/None = live data.
+    as_of: str | None = None
 
 
 class PairsRequest(BaseModel):
@@ -84,6 +109,8 @@ class PairsRequest(BaseModel):
     lookback: int = Field(60, ge=20, le=252)
     entry_z: float = Field(2.0, gt=0.5, le=5)
     exit_z: float = Field(0.5, ge=0, le=2)
+    # Point-in-time: run this study as of a past date. Omitted/None = live data.
+    as_of: str | None = None
 
 
 class OptionsRequest(BaseModel):
@@ -106,6 +133,8 @@ class OrderBookRequest(BaseModel):
 class TickersRequest(BaseModel):
     tickers: list[str] = ["AAPL", "MSFT", "GOOGL", "AMZN"]
     period: str = "3y"
+    # Point-in-time: run this study as of a past date. Omitted/None = live data.
+    as_of: str | None = None
 
 
 class PortfolioRequest(TickersRequest):
@@ -120,6 +149,8 @@ class MonteCarloRequest(BaseModel):
     simulations: int = Field(2500, ge=100, le=20000)
     initial_value: float = Field(100000, gt=0)
     seed: int = 42
+    # Point-in-time: run this study as of a past date. Omitted/None = live data.
+    as_of: str | None = None
 
 
 class SurfaceRequest(BaseModel):
@@ -135,6 +166,8 @@ class SentimentRequest(BaseModel):
 class FactorRequest(BaseModel):
     ticker: str = "AAPL"
     period: str = "5y"
+    # Point-in-time: run this study as of a past date. Omitted/None = live data.
+    as_of: str | None = None
 
 
 def _backtest(req: BacktestRequest) -> dict[str, Any]:
@@ -282,7 +315,20 @@ def register_quant_lab_routes(app: FastAPI, require_auth: Callable[..., Any]) ->
     async def labs(): return {"labs":[{"id":i,"name":n} for i,n in catalog],"principle":"Observed data and simulations are explicitly separated"}
     def mount(path:str, model:Any, fn:Callable[[Any],dict[str,Any]]):
         async def endpoint(body):
-            try: return _clean(fn(body))
+            # Single point where every lab honours the point-in-time clock: a
+            # request carrying as_of runs entirely inside that scope, so no data
+            # published after the date can reach the computation. Requests
+            # without as_of leave the clock unset — live behaviour, unchanged.
+            from backtest import as_of as _as_of
+            requested = getattr(body, "as_of", None)
+            try:
+                with _as_of.as_of_scope(requested or None):
+                    result = _clean(fn(body))
+                    if requested:
+                        audit = _as_of.audit_block()
+                        if isinstance(result, dict):
+                            result["point_in_time"] = _clean(audit)
+                    return result
             except ValueError as exc: raise HTTPException(400,str(exc)) from exc
             except Exception as exc: raise HTTPException(502,f"{path} data or computation unavailable: {type(exc).__name__}") from exc
         endpoint.__annotations__={"body":model}
