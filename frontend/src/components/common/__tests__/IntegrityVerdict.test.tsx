@@ -126,3 +126,29 @@ describe("GovernanceRisk", () => {
     expect(container).toBeEmptyDOMElement();
   });
 });
+
+describe("GroundingSummary", () => {
+  it("names every un-sourced figure rather than showing a bare tick", async () => {
+    const { GroundingSummary } = await import("../GroundedText");
+    render(
+      <GroundingSummary
+        report={{ n_claims: 3, n_grounded: 2, n_ungrounded: 1, grounding_ratio: 0.667, ungrounded: ["91%"] }}
+      />,
+    );
+    expect(screen.getByText(/1 figure not traceable/i)).toBeInTheDocument();
+    expect(screen.getByText("91%")).toBeInTheDocument();
+    expect(screen.getByText("2/3 traced")).toBeInTheDocument();
+  });
+
+  it("confirms a fully-sourced report", async () => {
+    const { GroundingSummary } = await import("../GroundedText");
+    render(<GroundingSummary report={{ n_claims: 5, n_grounded: 5, n_ungrounded: 0, grounding_ratio: 1, ungrounded: [] }} />);
+    expect(screen.getByText(/every figure traces to a source/i)).toBeInTheDocument();
+  });
+
+  it("renders nothing when there are no numeric claims to audit", async () => {
+    const { GroundingSummary } = await import("../GroundedText");
+    const { container } = render(<GroundingSummary report={{ n_claims: 0 }} />);
+    expect(container).toBeEmptyDOMElement();
+  });
+});

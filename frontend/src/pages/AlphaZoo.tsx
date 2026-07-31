@@ -29,6 +29,7 @@ import {
   Library,
 } from "lucide-react";
 import { toast } from "sonner";
+import { SelectionVerdict } from "@/components/common/IntegrityVerdict";
 import { cn } from "@/lib/utils";
 import {
   api,
@@ -1006,6 +1007,11 @@ function ResultPanel({ result }: { result: AlphaBenchResult }) {
           </div>
         ))}
       </div>
+
+      {/* Selection verdict sits above the top-by-IR table: the best IR out of
+          hundreds screened is upward-biased, so the ranking is misleading
+          without it. */}
+      <SelectionVerdict selection={result.selection} />
 
       {/* Top tables */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">

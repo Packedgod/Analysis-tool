@@ -114,6 +114,52 @@ class TestFieldAliasing:
         assert normalize_payload_rows({"nope": 1}) == []
 
 
+class TestNsePledgeMerge:
+    """Joining NSE's two feeds: shareholding (many quarters) + pledge (latest)."""
+
+    def _merge(self, sh, pl):
+        from src.tools.promoter_pledge_tool import _merge_pledge
+
+        return _merge_pledge(sh, pl)
+
+    def test_pledge_overlaid_on_matching_quarter(self) -> None:
+        out = self._merge(
+            [{"period": "31-MAR-2026", "promoter_pct": 50.1},
+             {"period": "30-JUN-2026", "promoter_pct": 51.32}],
+            [{"period": "30-Jun-2026", "pledged_pct_of_total": 1.23}],
+        )
+        latest = [r for r in out if r["period"] == "30-JUN-2026"][0]
+        assert latest["pledged_pct_of_total"] == 1.23
+        # the non-matching quarter stays undisclosed, NOT zero
+        earlier = [r for r in out if r["period"] == "31-MAR-2026"][0]
+        assert "pledged_pct_of_total" not in earlier
+
+    def test_case_insensitive_period_join(self) -> None:
+        # NSE spells the same quarter 30-JUN-2026 and 30-Jun-2026 across feeds.
+        out = self._merge(
+            [{"period": "30-JUN-2026", "promoter_pct": 51.32}],
+            [{"period": "30-Jun-2026", "pledged_pct_of_total": 1.23}],
+        )
+        assert out[0]["pledged_pct_of_total"] == 1.23
+
+    def test_pledge_only_quarter_is_kept(self) -> None:
+        out = self._merge([], [{"period": "30-Jun-2026", "pledged_pct_of_total": 1.23}])
+        assert len(out) == 1
+
+    def test_no_pledge_feed_leaves_series_untouched(self) -> None:
+        sh = [{"period": "30-JUN-2026", "promoter_pct": 51.32}]
+        assert self._merge(sh, []) is sh
+
+    def test_percent_of_total_converts_to_percent_of_promoter(self) -> None:
+        # The reporting trap: NSE quotes pledge as % of TOTAL equity. Read as
+        # % of promoter holding it would understate risk ~2x.
+        out = analyze_promoter_risk(
+            [{"period": "30-JUN-2026", "promoter_pct": 51.32, "pledged_pct_of_total": 1.23}]
+        )
+        assert round(out["pledge_pct_of_promoter"], 2) == 2.40
+        assert out["pledge_pct_of_total_equity"] == 1.23
+
+
 class TestToolLayer:
     def _run(self, **kw):
         return json.loads(PromoterPledgeTool().execute(**kw))
@@ -137,6 +183,7 @@ class TestToolLayer:
         import src.tools.promoter_pledge_tool as mod
 
         monkeypatch.setattr(mod, "_fetch_nse_shareholding", lambda symbol: [])
+        monkeypatch.setattr(mod, "_fetch_nse_pledge", lambda symbol: [])
         out = self._run(symbol="RELIANCE.NS")
         assert out["status"] == "unavailable"
 
@@ -148,10 +195,26 @@ class TestToolLayer:
             lambda symbol: [{"period": "2024-06-30", "promoter_pct": 50.0,
                              "pledged_pct_of_promoter": 30.0}],
         )
+        monkeypatch.setattr(mod, "_fetch_nse_pledge", lambda symbol: [])
         out = self._run(symbol="RELIANCE.NS")
         assert out["status"] == "ok"
         assert out["source"] == "nse_corporate_api"
         assert out["pledge_severity"] == "high"
+
+    def test_both_feeds_are_combined(self, monkeypatch) -> None:
+        import src.tools.promoter_pledge_tool as mod
+
+        monkeypatch.setattr(
+            mod, "_fetch_nse_shareholding",
+            lambda symbol: [{"period": "30-JUN-2026", "promoter_pct": 51.32}],
+        )
+        monkeypatch.setattr(
+            mod, "_fetch_nse_pledge",
+            lambda symbol: [{"period": "30-Jun-2026", "pledged_pct_of_total": 1.23}],
+        )
+        out = self._run(symbol="RELIANCE.NS")
+        assert out["status"] == "ok"
+        assert round(out["pledge_pct_of_promoter"], 2) == 2.40
 
     def test_tool_metadata_and_discovery(self) -> None:
         from src.tools import build_registry

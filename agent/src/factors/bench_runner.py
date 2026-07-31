@@ -306,6 +306,17 @@ def run_bench(
     rows_by_ir = sorted(rows, key=lambda r: r["ir"], reverse=True)
     rows_by_ic = sorted(rows, key=lambda r: r["ic_mean"])
 
+    # Multiple-testing correction for the screen itself. The best IR out of
+    # hundreds of candidates is upward-biased; computed here because this is
+    # the only place the full IR distribution exists (rows are stripped before
+    # the wire). One small dict, never fatal.
+    try:
+        from backtest.overfitting import selection_deflation
+
+        selection = selection_deflation([r["ir"] for r in rows])
+    except Exception as exc:  # noqa: BLE001 — honesty layer is optional
+        selection = {"error": str(exc)}
+
     def _slim(r: dict[str, Any]) -> dict[str, Any]:
         return {
             "id": r["id"],
@@ -342,6 +353,7 @@ def run_bench(
             "by_theme": theme_breakdown(rows),
             "top5_by_ir": [_slim(r) for r in rows_by_ir[: min(5, top)]],
             "dead_examples": [_slim(r) for r in rows_by_ic[:5]],
+            "selection": selection,
             "rows": rows,
             "skipped": skipped,
             "meta": universe_meta,

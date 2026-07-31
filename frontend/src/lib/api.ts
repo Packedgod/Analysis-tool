@@ -1057,6 +1057,16 @@ export interface AlphaBenchResult {
   top5_by_ir: AlphaBenchTopRow[];
   dead_examples: AlphaBenchTopRow[];
   by_theme: Record<string, { alive: number; reversed: number; dead: number }>;
+  /** Multiple-testing correction: does the best IR beat the best-of-N null? */
+  selection?: {
+    n_trials?: number | null;
+    best_score?: number | null;
+    expected_best_under_null?: number | null;
+    survives_selection?: boolean | null;
+    interpretation?: string | null;
+    note?: string | null;
+    error?: string | null;
+  };
 }
 
 export interface AlphaCompareRequest {

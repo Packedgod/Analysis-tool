@@ -775,6 +775,9 @@ def _result_for_wire(result: dict[str, Any]) -> dict[str, Any]:
         "by_theme",
         "n_alphas_tested",
         "meta",
+        # Multiple-testing verdict for the screen. Small, and the whole point of
+        # a top-by-IR table is unreadable without it.
+        "selection",
     )
     for k in keep:
         if k in result:

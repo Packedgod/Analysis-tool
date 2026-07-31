@@ -35,6 +35,8 @@ logger = logging.getLogger(__name__)
 
 _BASE = "https://www.nseindia.com"
 _SHAREHOLDING_URL = f"{_BASE}/api/corporate-share-holdings-master"
+# Pledge disclosures live on a separate endpoint from the shareholding pattern.
+_PLEDGE_URL = f"{_BASE}/api/corporate-pledgedata"
 
 # Field aliases seen across NSE payloads / screener exports, mapped to the
 # analysis core's canonical names. Matching is case/space/underscore-insensitive.
@@ -45,6 +47,13 @@ _FIELD_ALIASES: Dict[str, str] = {
     # NSE's corporate-share-holdings-master spells the promoter and public
     # columns this way; verified against live payloads for NSE equities.
     "prandprgrp": "promoter_pct", "publicval": "public_pct",
+    # NSE's corporate-pledgedata. `shp` is the shareholding-pattern quarter and
+    # `percSharesPledged` is pledged as a percentage of TOTAL issued shares —
+    # verified arithmetically (numSharesPledged / totIssuedShares), not of
+    # promoter holding. Mapping it to the wrong convention would understate
+    # pledge risk by roughly the inverse of the promoter stake (~2x).
+    "shp": "period", "percpromoterholding": "promoter_pct",
+    "percsharespledged": "pledged_pct_of_total",
     "pledgedpctofpromoter": "pledged_pct_of_promoter",
     "pledgedpromoter": "pledged_pct_of_promoter",
     "pledged": "pledged_pct_of_promoter",
@@ -82,7 +91,16 @@ def normalize_payload_rows(rows: Any) -> List[Dict[str, Any]]:
 
 
 def _fetch_nse_shareholding(symbol: str) -> List[Dict[str, Any]]:
-    """Best-effort NSE fetch; returns [] on any failure (never raises)."""
+    """Best-effort NSE shareholding-pattern fetch; [] on any failure."""
+    return _fetch_nse_endpoint(symbol, _SHAREHOLDING_URL)
+
+
+def _fetch_nse_endpoint(symbol: str, url: str) -> List[Dict[str, Any]]:
+    """Best-effort fetch of one NSE corporate endpoint; [] on any failure.
+
+    Never raises: these endpoints are undocumented and rate-limited, and a gap
+    must degrade to "unknown" rather than break the caller.
+    """
     try:
         from backtest.loaders._http import resolve_min_interval, throttled_get
         from backtest.loaders.nse_loader import _prime_session  # reuse primed cookie jar
@@ -97,7 +115,7 @@ def _fetch_nse_shareholding(symbol: str) -> List[Dict[str, Any]]:
         try:
             _prime_session(force=attempt > 0)
             resp = throttled_get(
-                _SHAREHOLDING_URL,
+                url,
                 host_key="nse",
                 min_interval=min_interval,
                 params={"index": "equities", "symbol": bare},
@@ -128,12 +146,53 @@ def _fetch_nse_shareholding(symbol: str) -> List[Dict[str, Any]]:
     return []
 
 
+def _period_key(period: Any) -> str:
+    """Normalise a quarter label so the two NSE feeds can be joined.
+
+    Shareholding quotes ``30-JUN-2026`` and pledge quotes ``30-Jun-2026``; a
+    case-sensitive join would silently never match and drop every pledge value.
+    """
+    return str(period).strip().upper()
+
+
+def _fetch_nse_pledge(symbol: str) -> List[Dict[str, Any]]:
+    """Best-effort NSE pledge-disclosure fetch; [] on any failure."""
+    return _fetch_nse_endpoint(symbol, _PLEDGE_URL)
+
+
+def _merge_pledge(
+    shareholding: List[Dict[str, Any]], pledge: List[Dict[str, Any]]
+) -> List[Dict[str, Any]]:
+    """Overlay pledge disclosures onto the shareholding series by quarter.
+
+    The two NSE feeds are separate: shareholding carries many quarters, pledge
+    typically only the latest disclosure. Quarters without a pledge row keep a
+    ``None`` pledge — deliberately *not* zero, since "not disclosed" and "no
+    pledging" are different claims and conflating them is the failure mode this
+    whole panel exists to prevent.
+    """
+    by_period = {_period_key(row.get("period")): row for row in pledge if row.get("period")}
+    if not by_period:
+        return shareholding
+    merged: List[Dict[str, Any]] = []
+    for row in shareholding:
+        match = by_period.get(_period_key(row.get("period")))
+        if match:
+            row = {**row, **{k: v for k, v in match.items() if k != "period" and v is not None}}
+        merged.append(row)
+    # A pledge disclosure for a quarter absent from the shareholding series is
+    # still evidence; keep it rather than discarding the newest datapoint.
+    known = {_period_key(r.get("period")) for r in shareholding}
+    merged.extend(row for key, row in by_period.items() if key not in known)
+    return merged
+
+
 def get_promoter_pledge(symbol: str | None, records: Any) -> str:
     """Analyse promoter pledge risk from supplied records or an NSE fetch."""
     rows = normalize_payload_rows(records) if records else []
     source = "supplied_records"
     if not rows and symbol:
-        rows = _fetch_nse_shareholding(symbol)
+        rows = _merge_pledge(_fetch_nse_shareholding(symbol), _fetch_nse_pledge(symbol))
         source = "nse_corporate_api"
     if not rows:
         return json.dumps({
