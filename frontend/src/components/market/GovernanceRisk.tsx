@@ -62,6 +62,29 @@ export function GovernanceRisk({
   risk?: PromoterRisk | null;
   className?: string;
 }) {
+  // A stale/renamed upstream schema is worth saying out loud: silently hiding
+  // the panel would let a reader assume governance was checked and came back
+  // clean. "Unavailable" (no data at all) stays hidden; drift does not.
+  if (risk?.status === "schema_drift") {
+    return (
+      <section className={cn("rounded-xl border bg-card/90 p-4", className)}>
+        <div className="panel-head">
+          <h3 className="panel-title">Governance · promoter pledge</h3>
+          <span className="pill pill-warning">source changed</span>
+        </div>
+        <div className="verdict verdict-unknown">
+          <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-warning" />
+          <div>
+            <p className="verdict-title text-warning">Pledge status unknown</p>
+            <p className="mt-1 text-xs leading-5 text-foreground/80">
+              The filing source changed shape, so pledge and shareholding could not be read.
+              Treat as unverified — this is <strong>not</strong> evidence of zero pledging.
+            </p>
+          </div>
+        </div>
+      </section>
+    );
+  }
   if (!risk || risk.status !== "ok") return null;
 
   const severity = String(risk.pledge_severity ?? "unknown");

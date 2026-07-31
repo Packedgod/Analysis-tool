@@ -160,6 +160,87 @@ class TestNsePledgeMerge:
         assert out["pledge_pct_of_total_equity"] == 1.23
 
 
+class TestSchemaDriftGuard:
+    """A feed that parses structurally but maps nothing must fail loudly.
+
+    This is the failure that actually happened: NSE's columns were unmapped, so
+    every value came back null while the envelope still said ``status: "ok"`` —
+    a broken feed reporting success. "Unknown" and "no pledging" are different
+    claims and must never be conflated.
+    """
+
+    def _run(self, **kw):
+        return json.loads(PromoterPledgeTool().execute(**kw))
+
+    def test_unmapped_payload_reports_drift_not_ok(self, monkeypatch) -> None:
+        import src.tools.promoter_pledge_tool as mod
+
+        drifted = mod.normalize_payload_rows(
+            [{"date": "30-JUN-2026", "SOME_RENAMED_PROMOTER_COL": "51.32"}]
+        )
+        monkeypatch.setattr(mod, "_fetch_nse_shareholding", lambda symbol: drifted)
+        monkeypatch.setattr(mod, "_fetch_nse_pledge", lambda symbol: [])
+        out = self._run(symbol="RELIANCE.NS")
+        assert out["status"] == "schema_drift"
+        assert "UNKNOWN" in out["error"]
+
+    def test_partial_mapping_is_still_ok(self, monkeypatch) -> None:
+        # Promoter stake alone is genuine signal; only a total mapping failure
+        # is drift, otherwise a feed that drops one optional column would alarm.
+        import src.tools.promoter_pledge_tool as mod
+
+        monkeypatch.setattr(
+            mod, "_fetch_nse_shareholding",
+            lambda symbol: [{"period": "30-JUN-2026", "promoter_pct": 51.32}],
+        )
+        monkeypatch.setattr(mod, "_fetch_nse_pledge", lambda symbol: [])
+        assert self._run(symbol="RELIANCE.NS")["status"] == "ok"
+
+    def test_has_mapped_values_helper(self) -> None:
+        from src.tools.promoter_pledge_tool import has_mapped_values
+
+        assert has_mapped_values([{"period": "x", "promoter_pct": 1.0}]) is True
+        assert has_mapped_values([{"period": "x"}]) is False
+        assert has_mapped_values([]) is False
+
+    def test_unmapped_keys_lists_the_offenders(self) -> None:
+        from src.tools.promoter_pledge_tool import unmapped_keys
+
+        keys = unmapped_keys([{"date": "x", "brandNewColumn": 1, "pr_and_prgrp": "50"}])
+        assert "brandNewColumn" in keys
+        # recognised columns must not be reported as drift
+        assert "pr_and_prgrp" not in keys and "date" not in keys
+
+
+class TestNseFieldContract:
+    """Pin the exact upstream column names this tool depends on.
+
+    These are undocumented NSE endpoints. If someone edits the alias table,
+    this fails immediately rather than the breakage surfacing as silent nulls
+    in production months later.
+    """
+
+    def test_shareholding_columns_are_mapped(self) -> None:
+        rows = normalize_payload_rows([{
+            "date": "30-JUN-2026", "pr_and_prgrp": "50.48", "public_val": "49.52",
+        }])
+        assert rows[0]["period"] == "30-JUN-2026"
+        assert rows[0]["promoter_pct"] == "50.48"
+        assert rows[0]["public_pct"] == "49.52"
+
+    def test_pledge_columns_are_mapped(self) -> None:
+        rows = normalize_payload_rows([{
+            "shp": "30-Jun-2026", "percPromoterHolding": "    51.32",
+            "percSharesPledged": "1.23",
+        }])
+        assert rows[0]["period"] == "30-Jun-2026"
+        assert rows[0]["promoter_pct"] == "    51.32"   # whitespace tolerated downstream
+        # percSharesPledged is a share of TOTAL issued shares, NOT promoter
+        # holding — verified as numSharesPledged/totIssuedShares upstream.
+        assert rows[0]["pledged_pct_of_total"] == "1.23"
+        assert "pledged_pct_of_promoter" not in rows[0]
+
+
 class TestToolLayer:
     def _run(self, **kw):
         return json.loads(PromoterPledgeTool().execute(**kw))

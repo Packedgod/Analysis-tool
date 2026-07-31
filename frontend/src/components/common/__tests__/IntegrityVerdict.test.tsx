@@ -152,3 +152,17 @@ describe("GroundingSummary", () => {
     expect(container).toBeEmptyDOMElement();
   });
 });
+
+describe("GovernanceRisk schema drift", () => {
+  it("says pledge is unknown rather than hiding the panel", () => {
+    render(<GovernanceRisk risk={{ status: "schema_drift" }} />);
+    expect(screen.getByText(/pledge status unknown/i)).toBeInTheDocument();
+    // must never be read as evidence of a clean book
+    expect(screen.getByText(/not.*evidence of zero pledging/i)).toBeInTheDocument();
+  });
+
+  it("still hides when there is simply no data", () => {
+    const { container } = render(<GovernanceRisk risk={{ status: "unavailable" }} />);
+    expect(container).toBeEmptyDOMElement();
+  });
+});

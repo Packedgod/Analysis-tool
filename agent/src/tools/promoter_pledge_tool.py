@@ -137,13 +137,59 @@ def _fetch_nse_endpoint(symbol: str, url: str) -> List[Dict[str, Any]]:
         except ValueError:
             return []
         # Accept either a bare list or the common {"data": [...]} envelope.
+        raw = payload
         if isinstance(payload, dict):
-            for key in ("data", "records", "shareholdings"):
-                if isinstance(payload.get(key), list):
-                    return normalize_payload_rows(payload[key])
-            return []
-        return normalize_payload_rows(payload)
+            raw = next(
+                (payload[key] for key in ("data", "records", "shareholdings")
+                 if isinstance(payload.get(key), list)),
+                None,
+            )
+            if raw is None:
+                return []
+        rows = normalize_payload_rows(raw)
+        # Loud on drift: rows that parse structurally but carry no recognised
+        # value column mean the provider renamed something. Log the offending
+        # keys so a rename is a one-line fix instead of a re-probe.
+        if rows and not has_mapped_values(rows):
+            logger.warning(
+                "possible schema drift at %s for %s: no recognised value columns; "
+                "unmapped keys seen: %s",
+                url, symbol, unmapped_keys(raw),
+            )
+        return rows
     return []
+
+
+# The fields that carry actual signal. A payload that yields periods but none
+# of these has not "returned no pledging" — it has failed to parse, and saying
+# so is the difference between a safe degradation and a false clean reading.
+_VALUE_FIELDS = (
+    "promoter_pct", "pledged_pct_of_promoter", "pledged_pct_of_total",
+    "fii_pct", "dii_pct", "public_pct",
+)
+
+
+def has_mapped_values(rows: List[Dict[str, Any]]) -> bool:
+    """Whether any row carries at least one usable value field."""
+    return any(row.get(field) is not None for row in rows for field in _VALUE_FIELDS)
+
+
+def unmapped_keys(raw_rows: Any, limit: int = 12) -> List[str]:
+    """Keys present in the provider payload that no alias recognises.
+
+    Surfaced in the drift diagnostic so a rename is immediately actionable
+    rather than requiring someone to re-probe the endpoint by hand.
+    """
+    seen: List[str] = []
+    if not isinstance(raw_rows, list):
+        return seen
+    for row in raw_rows:
+        if not isinstance(row, dict):
+            continue
+        for key in row:
+            if _FIELD_ALIASES.get(_canonical_key(key)) is None and key not in seen:
+                seen.append(key)
+    return seen[:limit]
 
 
 def _period_key(period: Any) -> str:
@@ -203,6 +249,23 @@ def get_promoter_pledge(symbol: str | None, records: Any) -> str:
                 "undocumented and may have changed shape or blocked the request; "
                 "supply quarterly rows via `records` "
                 "([{period, promoter_pct, pledged_pct_of_promoter, ...}]) to analyse."
+            ),
+        }, ensure_ascii=False)
+
+    # Rows arrived but nothing mapped: the provider renamed its columns. This
+    # must NOT read as a successful analysis with empty values — that is the
+    # failure mode that silently reports "unknown" pledging on a live company.
+    if not has_mapped_values(rows):
+        return json.dumps({
+            "status": "schema_drift",
+            "symbol": symbol,
+            "source": source,
+            "periods_seen": len(rows),
+            "error": (
+                f"Fetched {len(rows)} period(s) but no recognised value columns — the "
+                "upstream schema has changed. Treat pledge and shareholding as UNKNOWN, "
+                "not as zero. Update _FIELD_ALIASES in promoter_pledge_tool (the "
+                "unmapped keys are in the warning log) or supply `records` directly."
             ),
         }, ensure_ascii=False)
 
