@@ -322,25 +322,33 @@ class ReportAuditTool(BaseTool):
     name = "report_audit"
     description = (
         "Audit a research report's numeric data points for accuracy before "
-        "publishing. Two sub-commands via `command`: 'extract' parses a "
-        "markdown report and returns a random sample (~15%, clamped 3-30) of "
-        "its financial data points to verify; 'verdict' compares each sampled "
-        "point's reported value against one or two authoritative fetched values "
-        "at 1% tolerance and returns a PASS/FAIL gate (one failure fails the "
-        "report). Workflow: read the report, extract here, verify each sample "
-        "point against market-data/financial-statement tools, then verdict here."
+        "publishing. Sub-commands via `command`: 'extract' parses a markdown "
+        "report and returns a random sample (~15%, clamped 3-30) of its financial "
+        "data points to verify; 'verdict' compares each sampled point's reported "
+        "value against one or two authoritative fetched values at 1% tolerance "
+        "and returns a PASS/FAIL gate (one failure fails the report); 'grounding' "
+        "checks every figure in the report against the `sources` you fetched and "
+        "flags any number that is not traceable to a source (numeric-provenance "
+        "guard). Workflow: read the report, extract here, verify each sample point "
+        "against market-data/financial-statement tools, then verdict here; run "
+        "grounding to catch un-sourced figures the sampler may not have covered."
     )
     parameters = {
         "type": "object",
         "properties": {
             "command": {
                 "type": "string",
-                "enum": ["extract", "verdict"],
+                "enum": ["extract", "verdict", "grounding"],
                 "description": "Which audit phase to run.",
             },
             "report_text": {
                 "type": "string",
-                "description": "extract: full markdown text of the report to audit.",
+                "description": "extract/grounding: full markdown text of the report to audit.",
+            },
+            "sources": {
+                "type": "array", "items": {"type": "string"},
+                "description": "grounding: fetched source texts (tool outputs, filings, "
+                               "workbook rows) the report's numbers must trace to.",
             },
             "ratio": {
                 "type": "number", "default": 0.15,
@@ -407,6 +415,24 @@ class ReportAuditTool(BaseTool):
                     return _err("results (non-empty list) is required for verdict")
                 result = render_verdict(
                     results, report_name=str(kwargs.get("report_name") or ""),
+                )
+            elif command == "grounding":
+                report_text = kwargs.get("report_text")
+                if not isinstance(report_text, str) or not report_text.strip():
+                    return _err("report_text (non-empty markdown) is required for grounding")
+                sources = kwargs.get("sources")
+                if isinstance(sources, str):
+                    sources = [sources]
+                if not isinstance(sources, list):
+                    sources = []
+                from src.agent.grounding_audit import audit_grounding
+
+                result = audit_grounding(report_text, [str(s) for s in sources])
+                result["hint"] = (
+                    "Every entry in `ungrounded` is a figure in the report that does "
+                    "not appear in the provided sources — verify or remove it before "
+                    "publishing. Derived numbers can appear here; confirm each is "
+                    "computed from sourced values."
                 )
             else:
                 return _err(f"unknown command: {command}")

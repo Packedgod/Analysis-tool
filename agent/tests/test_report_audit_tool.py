@@ -180,7 +180,7 @@ def test_tool_metadata() -> None:
     assert tool.is_readonly is True
     assert tool.repeatable is True
     assert tool.parameters["required"] == ["command"]
-    assert set(tool.parameters["properties"]["command"]["enum"]) == {"extract", "verdict"}
+    assert set(tool.parameters["properties"]["command"]["enum"]) == {"extract", "verdict", "grounding"}
 
 
 def test_tool_is_auto_discovered() -> None:
