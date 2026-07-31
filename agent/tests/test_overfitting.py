@@ -17,6 +17,7 @@ from backtest.overfitting import (
     min_track_record_length,
     overfitting_report,
     probabilistic_sharpe_ratio,
+    selection_deflation,
 )
 from backtest.validation import run_validation
 
@@ -112,6 +113,29 @@ class TestOverfittingReport:
     def test_insufficient_data_note(self) -> None:
         rep = overfitting_report([0.01, -0.02])
         assert "note" in rep
+
+
+class TestSelectionDeflation:
+    def test_clear_winner_survives(self) -> None:
+        noise = list(np.random.default_rng(0).normal(0.0, 0.1, 40))
+        out = selection_deflation([0.9, *noise])
+        assert out["survives_selection"] is True
+        assert out["expected_best_under_null"] < out["best_score"]
+
+    def test_more_trials_raise_the_bar(self) -> None:
+        scores = list(np.random.default_rng(1).normal(0.0, 0.1, 50))
+        low = selection_deflation(scores, n_trials=10)["expected_best_under_null"]
+        high = selection_deflation(scores, n_trials=1000)["expected_best_under_null"]
+        assert high > low
+
+    def test_degenerate_returns_note(self) -> None:
+        assert "note" in selection_deflation([0.5])
+        assert "note" in selection_deflation([])
+
+    def test_json_safe(self) -> None:
+        import json
+
+        json.loads(json.dumps(selection_deflation([0.2, -0.1, 0.3, 0.05, 0.1])))
 
 
 class TestRunValidationIntegration:

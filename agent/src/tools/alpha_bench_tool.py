@@ -817,6 +817,17 @@ def run_alpha_bench(**kwargs: Any) -> dict[str, Any]:
     results.sort(key=lambda r: r["ir"], reverse=True)
     top = results[:top_n]
 
+    # Honest multiple-testing correction for factor selection: is the best IR
+    # actually beyond what screening this many candidates would produce by luck?
+    # Additive and never fatal — a raw "top by IR" table without this silently
+    # rewards selection noise, which is exactly how competitors mislead.
+    try:
+        from backtest.overfitting import selection_deflation
+
+        selection = selection_deflation([r["ir"] for r in results])
+    except Exception as exc:  # noqa: BLE001 — optional honesty layer, never fatal
+        selection = {"error": str(exc)}
+
     output_dir.mkdir(parents=True, exist_ok=True)
     ts = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
     report_path = output_dir / f"alpha_bench_{ts}.html"
@@ -844,6 +855,7 @@ def run_alpha_bench(**kwargs: Any) -> dict[str, Any]:
         "n_alphas_tested": len(results),
         "n_skipped": len(failures),
         "top": top,
+        "selection": selection,
     }
 
 

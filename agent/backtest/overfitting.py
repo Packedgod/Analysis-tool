@@ -144,6 +144,53 @@ def deflated_sharpe_ratio(
     return {"dsr": dsr, "deflated_benchmark_sr": sr_star, "n_trials": int(n_trials)}
 
 
+def selection_deflation(
+    scores: Sequence[float], n_trials: Optional[int] = None
+) -> Dict[str, Any]:
+    """Honest multiple-testing correction for the *best* score in a search.
+
+    When you screen many strategies/factors and keep the top one, its score is
+    upward-biased: even with zero true edge, the best of N noisy trials looks
+    good. This returns the score you would expect *by luck alone* as the best of
+    ``n_trials`` (the expected maximum under the null), using the cross-sectional
+    dispersion of the observed scores as the null scale, and flags whether the
+    observed best actually clears it.
+
+    Args:
+        scores: The selection statistic for every trial (e.g. each alpha's IR).
+        n_trials: Number of trials; defaults to ``len(scores)``.
+
+    Returns:
+        A JSON-safe dict; degenerate input yields a ``note`` rather than raising.
+    """
+    vals = np.asarray([s for s in scores if np.isfinite(s)], dtype=float)
+    n = int(vals.size)
+    trials = int(n_trials) if n_trials is not None else n
+    if n < 2 or trials < 2:
+        return {"note": "need >=2 finite trials for a selection correction", "n_trials": trials}
+    dispersion = float(vals.std(ddof=1))
+    best = float(vals.max())
+    expected_max = _expected_max_sharpe(dispersion ** 2, trials)
+    survives = best > expected_max
+    return {
+        "n_trials": trials,
+        "best_score": _r(best),
+        "score_dispersion": _r(dispersion),
+        "expected_best_under_null": _r(expected_max),
+        "excess_over_null": _r(best - expected_max),
+        "survives_selection": bool(survives),
+        "interpretation": (
+            f"Best of {trials} screened candidates scores {best:.3f}; luck alone "
+            f"across {trials} trials would be expected to produce ~{expected_max:.3f}. "
+            + (
+                "It clears the multiple-testing bar."
+                if survives
+                else "It does NOT clear the bar — likely selection noise, not a real edge."
+            )
+        ),
+    }
+
+
 def _r(x: Any, ndigits: int = 4) -> Optional[float]:
     """Round to a JSON-safe float; None for nan/inf/non-numeric."""
     try:
