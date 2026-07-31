@@ -703,6 +703,27 @@ export interface ValidationData {
     sharpe_std: number;
     error?: string;
   };
+  /**
+   * Overfitting-honesty statistics (backtest/overfitting.py). Present whenever
+   * validation ran: the deflated Sharpe is the number that survives correction
+   * for track-record length, non-normality and multiple testing.
+   */
+  overfitting?: {
+    sharpe_annualized?: number | null;
+    sharpe_per_period?: number | null;
+    skew?: number | null;
+    kurtosis?: number | null;
+    n_periods?: number | null;
+    n_trials?: number | null;
+    probabilistic_sharpe_ratio?: number | null;
+    deflated_sharpe_ratio?: number | null;
+    deflated_benchmark_sharpe_annualized?: number | null;
+    min_track_record_length_periods?: number | null;
+    credible_at_95?: boolean | null;
+    interpretation?: string | null;
+    note?: string | null;
+    error?: string | null;
+  };
 }
 
 export interface RunData {

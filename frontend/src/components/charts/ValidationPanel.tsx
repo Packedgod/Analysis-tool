@@ -1,5 +1,6 @@
 import i18n from '@/i18n';
 import { cn } from "@/lib/utils";
+import { IntegrityVerdict } from "@/components/common/IntegrityVerdict";
 import type { ValidationData } from "@/lib/api";
 
 interface Props {
@@ -169,13 +170,17 @@ export function ValidationPanel({ data }: Props) {
   const hasMC = !!data.monte_carlo;
   const hasBS = !!data.bootstrap;
   const hasWF = !!data.walk_forward;
+  const hasOF = !!data.overfitting;
 
-  if (!hasMC && !hasBS && !hasWF) {
+  if (!hasMC && !hasBS && !hasWF && !hasOF) {
     return <p className="p-8 text-sm text-muted-foreground">{i18n.t("validation.noData")}</p>;
   }
 
   return (
     <div className="p-4 space-y-6">
+      {/* Verdict first: the user should meet "is this real?" before they meet
+          the individual test statistics that flatter a strategy in isolation. */}
+      {hasOF && <IntegrityVerdict report={data.overfitting} />}
       {hasMC && <MonteCarloSection mc={data.monte_carlo!} />}
       {hasBS && <BootstrapSection bs={data.bootstrap!} />}
       {hasWF && <WalkForwardSection wf={data.walk_forward!} />}
