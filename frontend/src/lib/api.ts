@@ -127,6 +127,13 @@ function appendQueryParam(url: string, key: string, value: string): string {
 }
 
 export const api = {
+  runQuantLab: (lab: string, body: Record<string, unknown>) =>
+    request<QuantLabResult>(`/quant/${encodeURIComponent(lab)}`, {
+      method: "POST",
+      body: JSON.stringify(body),
+      networkRetries: 1,
+    }),
+  listQuantLabs: () => request<QuantLabsCatalog>("/quant/labs"),
   uploadFile,
   startAnalysis: (brief: AnalysisBriefRequest) => request<AnalysisStartResponse>("/analysis/start", {
     method: "POST",
@@ -138,6 +145,17 @@ export const api = {
   // surface in the research-only build without probing the gated /live routes.
   getApiInfo: (signal?: AbortSignal) => request<ApiInfo>("/api", { signal }),
   getMarketOverview: (signal?: AbortSignal) => request<MarketOverview>("/market/overview", { signal }),
+  // --- Market Pulse workspace ---------------------------------------------
+  searchSymbols: (q: string, signal?: AbortSignal) =>
+    request<SymbolSearchResponse>(`/market/search?q=${encodeURIComponent(q)}`, { signal }),
+  getQuote: (symbol: string, signal?: AbortSignal) =>
+    request<QuoteResponse>(`/market/quote/${encodeURIComponent(symbol)}`, { signal }),
+  getCandles: (symbol: string, range: string, signal?: AbortSignal) =>
+    request<CandlesResponse>(`/market/candles/${encodeURIComponent(symbol)}?range=${encodeURIComponent(range)}`, { signal }),
+  getNews: (symbol: string, signal?: AbortSignal) =>
+    request<NewsResponse>(`/market/news/${encodeURIComponent(symbol)}`, { signal }),
+  screenSymbols: (symbols: string[], signal?: AbortSignal) =>
+    request<ScreenResponse>("/market/screen", { method: "POST", body: JSON.stringify({ symbols }), signal }),
   listRuns: (limit?: number) => request<RunListItem[]>(`/runs${limit ? `?limit=${encodeURIComponent(String(limit))}` : ""}`),
   getRun: (id: string, params: RunDetailParams = {}) => {
     const q = new URLSearchParams();
@@ -289,6 +307,39 @@ export const api = {
     }),
 };
 
+export interface QuantLabsCatalog {
+  labs: Array<{ id: string; name: string }>;
+  principle: string;
+}
+
+export interface QuantLabEvidence {
+  source: string;
+  observed_at: string;
+  method: string;
+  data_class: "observed" | "simulation";
+  caveats: string[];
+}
+
+export interface QuantLabResult {
+  kind: string;
+  metrics?: Record<string, number | string | null>;
+  evidence: QuantLabEvidence;
+  series?: Array<Record<string, unknown>>;
+  price?: Array<Record<string, unknown>>;
+  frontier?: Array<Record<string, number>>;
+  weights?: Array<{ ticker: string; weight: number }>;
+  histogram?: Array<Record<string, number>>;
+  paths?: number[][];
+  points?: Array<Record<string, unknown>>;
+  bids?: Array<{ price: number; quantity: number }>;
+  asks?: Array<{ price: number; quantity: number }>;
+  trades?: Array<Record<string, unknown>>;
+  headlines?: Array<Record<string, unknown>>;
+  comparison?: Record<string, number | null> | null;
+  quantiles?: Record<string, number>;
+  [key: string]: unknown;
+}
+
 // --- Capability types ---
 
 /** Runtime capability flags returned by `GET /api`. */
@@ -307,6 +358,102 @@ export interface MarketOverview {
   observed_at: string | null;
   refresh_seconds: number;
   items: MarketOverviewItem[];
+}
+
+// --- Market Pulse workspace -------------------------------------------------
+
+export interface SymbolSearchResult {
+  symbol: string;
+  name: string;
+  exchange: string | null;
+  quote_type: string | null;
+}
+
+export interface SymbolSearchResponse {
+  source: string;
+  query: string;
+  results: SymbolSearchResult[];
+}
+
+/**
+ * Fundamentals are a provider-shaped bag of ~60 optional fields. Typing it as
+ * a partial record keeps the UI honest: every read must handle `undefined`,
+ * because any given field can be absent for any given security.
+ */
+export type Fundamentals = Partial<Record<string, string | number>>;
+
+export interface QuoteResponse {
+  symbol: string;
+  name: string;
+  price: number | null;
+  change_percent: number | null;
+  previous_close: number | null;
+  currency: string | null;
+  exchange: string | null;
+  quote_type: string | null;
+  source: string;
+  observed_at: string;
+  fundamentals: Fundamentals;
+}
+
+export interface CandlesResponse {
+  symbol: string;
+  range: string;
+  interval: string;
+  source: string;
+  status: "live" | "unavailable";
+  observed_at: string;
+  bars: PriceBar[];
+}
+
+export interface NewsItem {
+  id: string;
+  title: string;
+  summary: string | null;
+  published_at: string | null;
+  publisher: string | null;
+  url: string | null;
+}
+
+export interface NewsResponse {
+  symbol: string;
+  source: string;
+  status: "live" | "unavailable";
+  observed_at: string;
+  items: NewsItem[];
+}
+
+export interface ScreenRow {
+  symbol: string;
+  name: string;
+  price: number | null;
+  change_percent: number | null;
+  currency: string | null;
+  exchange: string | null;
+  sector: string | null;
+  industry: string | null;
+  market_cap: number | null;
+  trailing_pe: number | null;
+  forward_pe: number | null;
+  price_to_book: number | null;
+  dividend_yield: number | null;
+  beta: number | null;
+  return_on_equity: number | null;
+  profit_margins: number | null;
+  debt_to_equity: number | null;
+  revenue_growth: number | null;
+  fifty_two_week_high: number | null;
+  fifty_two_week_low: number | null;
+  average_volume: number | null;
+}
+
+export interface ScreenResponse {
+  source: string;
+  status: "live" | "unavailable";
+  observed_at: string;
+  rows: ScreenRow[];
+  /** Symbols the provider could not resolve — surfaced, never silently dropped. */
+  unavailable: string[];
 }
 
 export interface ApiInfo {

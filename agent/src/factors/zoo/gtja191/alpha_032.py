@@ -48,5 +48,10 @@ __alpha_meta__ = {
 def compute(panel: dict) -> pd.DataFrame:
     h = panel["high"]
     v = panel["volume"]
-    inner = rank(ts_corr(rank(h), rank(v), 3))
+    # Identical formula to alpha101_015: a flat 3-bar rank window leaves the
+    # correlation undefined; treat it as zero co-movement so a degenerate
+    # synthetic panel does not collapse the factor to all-NaN. No-op on real
+    # market data where the ranks vary within the window.
+    corr = ts_corr(rank(h), rank(v), 3).fillna(0.0)
+    inner = rank(corr)
     return -1.0 * inner.rolling(3, min_periods=3).sum()

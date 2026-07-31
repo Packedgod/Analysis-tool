@@ -15,17 +15,30 @@ from __future__ import annotations
 
 import datetime as dt
 import logging
+import time
 from typing import Dict, List, Optional
 
 import pandas as pd
+import requests
 
 from backtest.loaders import yahoo_client
-from backtest.loaders.base import cached_loader_fetch, validate_date_range
+from backtest.loaders.base import (
+    cached_loader_fetch,
+    positive_env_float,
+    retry_with_budget,
+    validate_date_range,
+)
 from backtest.loaders.registry import register
 
 logger = logging.getLogger(__name__)
 
 _OHLCV_COLUMNS = ("open", "high", "low", "close", "volume")
+
+# Wall-clock budget for retrying a single symbol's Yahoo chart fetch across
+# transient HTTP/network failures. Mirrors the per-loader budget pattern used
+# by okx/ccxt; overridable via env for slow links or CI. The per-symbol
+# fallback in ``fetch`` still catches a genuinely dead symbol after this.
+_YAHOO_FETCH_BUDGET_S = positive_env_float("YAHOO_FETCH_BUDGET_S", 60.0)
 
 # Project interval -> Yahoo chart interval. Daily is the only granularity this
 # loader exposes for equities; anything else falls back to lowercasing so an
@@ -241,11 +254,25 @@ class DataLoader:
         period1 = _epoch_seconds(start_date)
         period2 = _epoch_seconds(end_date) + 86400
 
-        rows = yahoo_client.get_chart(
-            code,
-            interval=_to_yahoo_interval(interval),
-            period1=period1,
-            period2=period2,
+        # Retry the Yahoo fetch itself on transient HTTP/network errors before
+        # giving up on the symbol. A non-transient error (e.g. Yahoo's "no data"
+        # ValueError) is not retried and propagates to the per-symbol fallback
+        # in ``fetch``, so one dead symbol still never aborts the batch.
+        deadline = time.monotonic() + _YAHOO_FETCH_BUDGET_S
+
+        def _fetch_chart() -> List[dict]:
+            return yahoo_client.get_chart(
+                code,
+                interval=_to_yahoo_interval(interval),
+                period1=period1,
+                period2=period2,
+            )
+
+        rows = retry_with_budget(
+            _fetch_chart,
+            transient=requests.RequestException,
+            deadline=deadline,
+            label=f"yahoo fetch for {code}",
         )
         frame = _rows_to_frame(rows, start_date, end_date, interval)
         return frame if not frame.empty else None

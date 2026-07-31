@@ -59,8 +59,14 @@ def compute(panel: dict) -> pd.DataFrame:
     adv60 = ts_mean(volume, 60)
 
     # Helper aliases (local closures keep the file standalone & purity-safe).
-    a = ts_rank(decay_linear(ts_corr(rank(vwap), rank(volume), 4), 4), 8)
-    b = ts_rank(decay_linear(ts_argmax(ts_corr(ts_rank(close, 7), ts_rank(adv60, 4), 4), 13), 14), 13)
+    # Short-window correlations of cross-sectional ranks are undefined on flat
+    # windows (common on synthetic panels); treat an undefined co-movement as
+    # zero so the compounded decay/ts_rank chain does not collapse to all-NaN.
+    # No-op on real market data where the ranks vary within the window.
+    corr_a = ts_corr(rank(vwap), rank(volume), 4).fillna(0.0)
+    corr_b = ts_corr(ts_rank(close, 7), ts_rank(adv60, 4), 4).fillna(0.0)
+    a = ts_rank(decay_linear(corr_a, 4), 8)
+    b = ts_rank(decay_linear(ts_argmax(corr_b, 13), 14), 13)
     arr_a = a.to_numpy(dtype=np.float64, na_value=np.nan)
     arr_b = b.to_numpy(dtype=np.float64, na_value=np.nan)
     out = pd.DataFrame(np.fmax(arr_a, arr_b), index=close.index, columns=close.columns) * -1.0

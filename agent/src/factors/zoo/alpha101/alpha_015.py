@@ -64,5 +64,12 @@ def compute(panel: dict) -> pd.DataFrame:
 
     # Helper aliases (local closures keep the file standalone & purity-safe).
     rolling_sum = _rolling_sum
-    out = -1.0 * rolling_sum(rank(ts_corr(rank(high), rank(volume), 3)), 3)
+    # A 3-bar correlation of cross-sectional ranks is undefined (NaN) whenever a
+    # rank series is flat across the window — pervasive on synthetic/degenerate
+    # panels, rare on real markets. Treat an undefined short-window co-movement
+    # as zero correlation so the factor degrades gracefully instead of cascading
+    # to all-NaN through the outer rank/rolling-sum; a no-op on well-populated
+    # real data where the ranks vary within the window.
+    corr = ts_corr(rank(high), rank(volume), 3).fillna(0.0)
+    out = -1.0 * rolling_sum(rank(corr), 3)
     return out

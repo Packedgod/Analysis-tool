@@ -338,3 +338,352 @@
 
 [dir="rtl"] .rtl\:flip-x { transform: scaleX(-1); }
 
+
+/* ===========================================================================
+   Editorial interaction layer
+   ---------------------------------------------------------------------------
+   Two ideas borrowed from the reference sites, applied on top of the existing
+   token set so every one of the 11 themes keeps working:
+
+   1. Three typographic voices — a light, tightly-tracked display face; the
+      regular sans for UI; and uppercase mono for micro-labels.
+   2. Elevation by colour stepping rather than drop shadows, with motion kept
+      short and non-springy (0.2-0.6s, ease-out, no overshoot).
+
+   Everything animated here is gated on prefers-reduced-motion at the bottom
+   of this file.
+   =========================================================================== */
+
+@layer components {
+  /* --- Voice 1: display ---------------------------------------------------
+     Weight 300 with negative tracking and sub-1 line-height. Never bold: the
+     size carries the emphasis, not the weight. */
+  .display-1 {
+    @apply font-light leading-[0.92] tracking-[-0.045em];
+    font-size: clamp(2.75rem, 6.5vw, 5.75rem);
+  }
+
+  .display-2 {
+    @apply font-light leading-[0.95] tracking-[-0.04em];
+    font-size: clamp(2rem, 4vw, 3.25rem);
+  }
+
+  .display-3 {
+    @apply font-light leading-[1.02] tracking-[-0.03em];
+    font-size: clamp(1.4rem, 2.4vw, 2rem);
+  }
+
+  /* An italic run inside a display line, for editorial tension. */
+  .display-accent {
+    @apply italic text-primary;
+    font-variation-settings: "slnt" -8;
+  }
+
+  /* --- Voice 3: mono micro-label ----------------------------------------- */
+  .eyebrow {
+    @apply font-mono text-[10px] font-medium uppercase text-muted-foreground;
+    letter-spacing: 0.18em;
+  }
+
+  .eyebrow-primary {
+    @apply text-primary;
+  }
+
+  /* =====================================================================
+     Scroll reveal
+     ===================================================================== */
+  .reveal {
+    opacity: 0;
+    transition:
+      opacity 0.6s cubic-bezier(0.22, 0.61, 0.36, 1) var(--reveal-delay, 0ms),
+      transform 0.6s cubic-bezier(0.22, 0.61, 0.36, 1) var(--reveal-delay, 0ms);
+    will-change: opacity, transform;
+  }
+
+  .reveal-rise { transform: translate3d(0, 18px, 0); }
+  .reveal-fade { transform: none; }
+  .reveal-wipe { transform: translate3d(-14px, 0, 0); }
+  [dir="rtl"] .reveal-wipe { transform: translate3d(14px, 0, 0); }
+
+  .reveal.is-shown {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+
+  /* --- Headline that resolves line by line ------------------------------ */
+  /* The clip box must be taller than the line box: display type runs at a
+     sub-1 line-height, so ascenders and descenders overflow it and would be
+     sheared off by `overflow: hidden`. The padding grows the clip region and
+     the matching negative margin keeps the text on its original baseline. */
+  .split-line {
+    display: block;
+    overflow: hidden;
+    padding-block: 0.18em 0.14em;
+    margin-block: -0.18em -0.14em;
+  }
+
+  .split-line-inner {
+    display: block;
+    /* Must clear the padded clip box, not just the line box: 100% of the
+       inner height would leave the line peeking through the extra padding. */
+    transform: translate3d(0, 135%, 0);
+    transition: transform 1s cubic-bezier(0.16, 1, 0.3, 1) var(--reveal-delay, 0ms);
+    will-change: transform;
+  }
+
+  .split-line-inner.is-shown { transform: translate3d(0, 0, 0); }
+
+  /* =====================================================================
+     Spotlight surface — cursor-tracked highlight + border warm-up.
+     --mx/--my are written by useSpotlight; --spot-on gates the glow so it
+     fades out cleanly when the pointer leaves.
+     ===================================================================== */
+  .spotlight {
+    position: relative;
+    isolation: isolate;
+    transition:
+      border-color 0.25s ease-out,
+      transform 0.25s ease-out,
+      background-color 0.25s ease-out;
+  }
+
+  .spotlight::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: inherit;
+    opacity: calc(var(--spot-on, 0) * 1);
+    transition: opacity 0.3s ease-out;
+    background: radial-gradient(
+      18rem circle at var(--mx, 50%) var(--my, 50%),
+      hsl(var(--primary) / 0.14),
+      transparent 62%
+    );
+  }
+
+  .spotlight:hover {
+    border-color: hsl(var(--primary) / 0.38);
+  }
+
+  .spotlight-lift:hover {
+    transform: translate3d(0, -3px, 0);
+  }
+
+  /* =====================================================================
+     Numbered section opener — `01.` + a rule that draws itself in
+     ===================================================================== */
+  .section-mark {
+    @apply flex items-baseline gap-3;
+  }
+
+  .section-mark-index {
+    @apply font-mono text-[11px] tabular-nums text-primary;
+    letter-spacing: 0.12em;
+  }
+
+  .section-mark-title {
+    @apply shrink-0 text-sm font-medium tracking-tight text-foreground;
+  }
+
+  .section-mark-rule {
+    @apply h-px flex-1 origin-left bg-border;
+    transform: scaleX(0);
+    transition: transform 0.9s cubic-bezier(0.22, 0.61, 0.36, 1) 0.1s;
+  }
+
+  [dir="rtl"] .section-mark-rule { transform-origin: right; }
+  .section-mark.is-shown .section-mark-rule { transform: scaleX(1); }
+
+  .section-mark-hint {
+    @apply shrink-0 font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground;
+  }
+
+  /* =====================================================================
+     Inverted block — breaks the dark rhythm to spotlight a figure. Derived
+     from --foreground/--background so it inverts correctly in all 11 themes,
+     light ones included.
+     ===================================================================== */
+  .invert-block {
+    background: hsl(var(--foreground) / 0.92);
+    color: hsl(var(--background));
+    border-color: transparent;
+  }
+
+  .invert-block .invert-muted { color: hsl(var(--background) / 0.62); }
+  .invert-block .invert-rule { background: hsl(var(--background) / 0.16); }
+
+  /* Symbol marks invert too: dark glyph on a tinted chip. */
+  .invert-block .symbol-mark {
+    border-color: hsl(var(--background) / 0.18);
+    background: hsl(var(--background) / 0.1);
+    color: hsl(var(--background) / 0.78);
+  }
+
+  /* =====================================================================
+     Link with a trace underline that draws from the leading edge
+     ===================================================================== */
+  .link-trace {
+    position: relative;
+    transition: color 0.25s ease-out;
+  }
+
+  .link-trace::after {
+    content: "";
+    position: absolute;
+    inset-inline: 0;
+    bottom: -2px;
+    height: 1px;
+    background: currentColor;
+    transform: scaleX(0);
+    transform-origin: right;
+    transition: transform 0.3s ease-out;
+  }
+
+  .link-trace:hover::after,
+  .link-trace:focus-visible::after {
+    transform: scaleX(1);
+    transform-origin: left;
+  }
+
+  /* =====================================================================
+     Navigation item with a rail indicator that grows on the active route
+     ===================================================================== */
+  .nav-item {
+    position: relative;
+    transition: color 0.2s ease-out, background-color 0.2s ease-out;
+  }
+
+  .nav-item::before {
+    content: "";
+    position: absolute;
+    inset-inline-start: 0;
+    top: 50%;
+    height: 0;
+    width: 2px;
+    border-radius: 1px;
+    background: hsl(var(--primary));
+    transform: translateY(-50%);
+    transition: height 0.28s cubic-bezier(0.22, 0.61, 0.36, 1);
+  }
+
+  .nav-item:hover::before { height: 34%; }
+  .nav-item[data-active="true"]::before { height: 62%; }
+
+  /* The icon nudges toward the label on hover — cheap, readable feedback. */
+  .nav-item .nav-icon {
+    transition: transform 0.25s ease-out, color 0.2s ease-out;
+  }
+
+  .nav-item:hover .nav-icon { transform: translateX(2px); }
+  [dir="rtl"] .nav-item:hover .nav-icon { transform: translateX(-2px); }
+
+  /* =====================================================================
+     Buttons
+     ===================================================================== */
+  /* Sheen that sweeps across the primary action on hover. */
+  .primary-action {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .primary-action::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      100deg,
+      transparent 20%,
+      hsl(var(--primary-foreground) / 0.22) 50%,
+      transparent 80%
+    );
+    transform: translateX(-100%);
+    transition: transform 0.6s ease-out;
+  }
+
+  .primary-action:hover:not(:disabled)::after { transform: translateX(100%); }
+
+  /* Ghost button matching the references' outline CTA. */
+  .ghost-action {
+    @apply inline-flex items-center justify-center gap-2 rounded-md border px-4 py-2.5 text-xs font-medium text-foreground transition;
+  }
+
+  .ghost-action:hover {
+    border-color: hsl(var(--primary) / 0.45);
+    background: hsl(var(--primary) / 0.06);
+  }
+
+  /* =====================================================================
+     Data display
+     ===================================================================== */
+  /* Live figures: fixed-width digits so a changing number never reflows. */
+  .figure {
+    @apply font-mono tabular-nums;
+    font-feature-settings: "tnum" 1, "zero" 1;
+  }
+
+  /* Flash a tinted background when a live value ticks. */
+  .tick-up { animation: tick-flash-up 0.7s ease-out; }
+  .tick-down { animation: tick-flash-down 0.7s ease-out; }
+
+  /* Thin reading-progress rail pinned above scrolling content. */
+  .scroll-rail {
+    @apply pointer-events-none absolute inset-x-0 top-0 z-30 h-px;
+    background: hsl(var(--border) / 0.6);
+  }
+
+  .scroll-rail-fill {
+    @apply h-full origin-left bg-primary;
+    transition: transform 0.12s linear;
+  }
+
+  [dir="rtl"] .scroll-rail-fill { transform-origin: right; }
+
+  /* Hairline elevation: colour stepping, not shadow. */
+  .flat-surface {
+    background: hsl(var(--card));
+    box-shadow: inset 0 1px 0 hsl(var(--foreground) / 0.045);
+  }
+
+  .flat-surface-raised {
+    background: color-mix(in srgb, hsl(var(--card)) 88%, hsl(var(--foreground)) 12%);
+  }
+}
+
+@keyframes tick-flash-up {
+  0% { background-color: hsl(var(--success) / 0.22); }
+  100% { background-color: transparent; }
+}
+
+@keyframes tick-flash-down {
+  0% { background-color: hsl(var(--danger) / 0.22); }
+  100% { background-color: transparent; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal,
+  .split-line-inner,
+  .section-mark-rule {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+
+  .spotlight::before,
+  .primary-action::after { display: none; }
+
+  .spotlight-lift:hover { transform: none; }
+  .tick-up, .tick-down { animation: none; }
+}
+
+/* ---------------------------------------------------------------------------
+   Inverted-surface accent corrections.
+   Deliberately NOT inside @layer: Tailwind's `utilities` layer outranks
+   `components` regardless of specificity, so `.text-success` would otherwise
+   win over `.invert-block .text-success`. Unlayered rules beat every layer.
+   The accents are tuned for a dark canvas and vibrate at small sizes on the
+   light inverted panel, so they are darkened toward the background here.
+   --------------------------------------------------------------------------- */
+.invert-block .text-success { color: color-mix(in srgb, hsl(var(--success)) 55%, hsl(var(--background))); }
+.invert-block .text-danger { color: color-mix(in srgb, hsl(var(--danger)) 68%, hsl(var(--background))); }
+.invert-block .text-primary { color: color-mix(in srgb, hsl(var(--primary)) 52%, hsl(var(--background))); }
