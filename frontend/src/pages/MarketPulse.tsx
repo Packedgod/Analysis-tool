@@ -6,6 +6,7 @@ import {
   Table2, Trash2, TrendingDown, TrendingUp, X,
 } from "lucide-react";
 import { toast } from "sonner";
+import { GovernanceRisk, type PromoterRisk } from "@/components/market/GovernanceRisk";
 
 import {
   api, type CandlesResponse, type NewsResponse, type QuoteResponse,
@@ -67,6 +68,7 @@ export function MarketPulse() {
   const [quote, setQuote] = useState<QuoteResponse | null>(null);
   const [quoteError, setQuoteError] = useState<string | null>(null);
   const [quoteLoading, setQuoteLoading] = useState(true);
+  const [governance, setGovernance] = useState<PromoterRisk | null>(null);
 
   const [candles, setCandles] = useState<CandlesResponse | null>(null);
   const [candlesError, setCandlesError] = useState<string | null>(null);
@@ -100,6 +102,17 @@ export function MarketPulse() {
         setQuoteError(error instanceof Error ? error.message : "Quote unavailable.");
       })
       .finally(() => { if (!controller.signal.aborted) setQuoteLoading(false); });
+    return () => controller.abort();
+  }, [symbol]);
+
+  // Governance is best-effort and never blocks the page: the endpoint already
+  // returns a status envelope, so a gap simply hides the panel.
+  useEffect(() => {
+    const controller = new AbortController();
+    setGovernance(null);
+    api.getGovernance(symbol, controller.signal)
+      .then((data) => { if (!controller.signal.aborted) setGovernance(data); })
+      .catch(() => { /* absent governance data is not an error worth surfacing */ });
     return () => controller.abort();
   }, [symbol]);
 
@@ -354,7 +367,12 @@ export function MarketPulse() {
         )}
 
         {tab === "fundamentals" && (
-          <FundamentalsPanel fundamentals={fundamentals} currency={quote?.currency ?? null} loading={quoteLoading} />
+          <div className="space-y-5">
+            {/* Governance sits above the ratios: a pledge trend changes how you
+                read every other number on the page. */}
+            <GovernanceRisk risk={governance} />
+            <FundamentalsPanel fundamentals={fundamentals} currency={quote?.currency ?? null} loading={quoteLoading} />
+          </div>
         )}
 
         {/* Screener */}

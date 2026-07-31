@@ -42,6 +42,9 @@ _FIELD_ALIASES: Dict[str, str] = {
     "period": "period", "date": "period", "quarter": "period", "asondate": "period",
     "promoterpct": "promoter_pct", "promoterandpromotergroup": "promoter_pct",
     "promoterholding": "promoter_pct", "promoters": "promoter_pct",
+    # NSE's corporate-share-holdings-master spells the promoter and public
+    # columns this way; verified against live payloads for NSE equities.
+    "prandprgrp": "promoter_pct", "publicval": "public_pct",
     "pledgedpctofpromoter": "pledged_pct_of_promoter",
     "pledgedpromoter": "pledged_pct_of_promoter",
     "pledged": "pledged_pct_of_promoter",

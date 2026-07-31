@@ -284,6 +284,27 @@ def register_market_routes(app: FastAPI, require_auth: Callable[..., Any]) -> No
             logger.info("Quote unavailable for %s: %s", clean, exc)
             raise HTTPException(502, f"Quote data unavailable for {clean}") from exc
 
+    @app.get("/market/governance/{symbol}", dependencies=dep)
+    async def market_governance(symbol: str):
+        """Promoter shareholding / pledge governance risk for one security.
+
+        Never 502s on a data gap: the upstream NSE corporate endpoint is
+        undocumented and may block or change shape, and an unavailable pledge
+        level must read as "unknown", never as "no pledging". The panel is
+        additive to the fundamentals view, so a clean ``status`` envelope is a
+        better contract here than an error.
+        """
+        clean = _clean_symbol(symbol)
+        try:
+            import json as _json
+
+            from src.tools.promoter_pledge_tool import get_promoter_pledge
+
+            return _json.loads(get_promoter_pledge(clean, None))
+        except Exception as exc:  # noqa: BLE001 — degrade, never fail the page
+            logger.info("Governance data unavailable for %s: %s", clean, exc)
+            return {"status": "unavailable", "symbol": clean, "error": "governance data unavailable"}
+
     @app.get("/market/candles/{symbol}", dependencies=dep)
     async def market_candles(
         symbol: str,

@@ -99,8 +99,31 @@ def normalize_records(records: Iterable[Dict[str, Any]]) -> List[Dict[str, Any]]
             "dii_pct": _num(raw.get("dii_pct")),
             "public_pct": _num(raw.get("public_pct")),
         })
-    out.sort(key=lambda r: str(r["period"]))
+    out.sort(key=lambda r: _sort_key(r["period"]))
     return out
+
+
+# Filings quote quarter ends in several shapes; ``30-JUN-2026`` sorted as a
+# string lands before ``31-MAR-2026``, which silently mislabels the latest
+# quarter and inverts every quarter-on-quarter delta. Parse to a real date.
+_MONTHS = {m: i for i, m in enumerate(
+    ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"], start=1)}
+
+
+def _sort_key(period: Any) -> tuple:
+    """Chronological sort key; unparseable periods sort last but stay stable."""
+    text = str(period).strip()
+    # ISO first: 2024-03-31
+    try:
+        parts = text.split("-")
+        if len(parts) == 3 and len(parts[0]) == 4:
+            return (0, int(parts[0]), int(parts[1]), int(parts[2]))
+        # DD-MON-YYYY: 31-MAR-2024
+        if len(parts) == 3 and parts[1].upper()[:3] in _MONTHS:
+            return (0, int(parts[2]), _MONTHS[parts[1].upper()[:3]], int(parts[0]))
+    except (ValueError, KeyError):
+        pass
+    return (1, 0, 0, 0)
 
 
 def _severity(pledge_of_promoter: Optional[float]) -> str:

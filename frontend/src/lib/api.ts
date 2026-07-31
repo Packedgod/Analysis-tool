@@ -150,6 +150,12 @@ export const api = {
     request<SymbolSearchResponse>(`/market/search?q=${encodeURIComponent(q)}`, { signal }),
   getQuote: (symbol: string, signal?: AbortSignal) =>
     request<QuoteResponse>(`/market/quote/${encodeURIComponent(symbol)}`, { signal }),
+  /** Promoter pledge / shareholding governance risk. Returns a status envelope
+   *  rather than throwing when the upstream filing source is unavailable. */
+  getGovernance: (symbol: string, signal?: AbortSignal) =>
+    request<import("@/components/market/GovernanceRisk").PromoterRisk>(
+      `/market/governance/${encodeURIComponent(symbol)}`, { signal },
+    ),
   getCandles: (symbol: string, range: string, signal?: AbortSignal) =>
     request<CandlesResponse>(`/market/candles/${encodeURIComponent(symbol)}?range=${encodeURIComponent(range)}`, { signal }),
   getNews: (symbol: string, signal?: AbortSignal) =>
