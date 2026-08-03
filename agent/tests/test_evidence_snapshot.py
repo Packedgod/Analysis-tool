@@ -145,3 +145,68 @@ class TestValidationJsonSafety:
 
         returns = _safe_returns(np.array([100.0, 0.0, 0.0, 50.0]))
         assert np.isfinite(returns).all()
+
+
+class TestEvidenceBudgeting:
+    """Budget tuned against a real 31-iteration run (session 4f058e384636).
+
+    That trace held 331k chars of successful results, 68% of it bulk document
+    reads. A flat cap let those crowd out the four financial statements that the
+    factor table is built from, so the harvest is tiered and budgeted instead.
+    """
+
+    def _entry(self, tool, size, iteration=1):
+        return {"tool": tool, "iteration": iteration, "result": "x" * size}
+
+    def test_core_evidence_survives_bulk_document_pressure(self) -> None:
+        from src.agent.loop import _budget_tool_evidence
+
+        # Mirror the real shape: fundamentals fetched early, bulk reads later.
+        collected = [self._entry("get_financial_statements", 12_000, 3) for _ in range(4)]
+        collected += [self._entry("read_document", 49_000, i) for i in range(5, 25)]
+        kept = _budget_tool_evidence(collected)
+        tools = [e["tool"] for e in kept]
+        assert tools.count("get_financial_statements") == 4, (
+            "core fundamentals must never be crowded out by bulk reads"
+        )
+
+    def test_recency_does_not_outrank_evidence_class(self) -> None:
+        from src.agent.loop import _budget_tool_evidence
+
+        # The statements are the OLDEST entries here; they must still win.
+        collected = [self._entry("get_financial_statements", 10_000, 3) for _ in range(4)]
+        collected += [self._entry("get_official_evidence", 27_000, 30)]
+        kept = _budget_tool_evidence(collected)
+        assert [e["tool"] for e in kept].count("get_financial_statements") == 4
+
+    def test_total_budget_is_respected(self) -> None:
+        from src.agent.loop import _EVIDENCE_TOTAL_CHAR_BUDGET, _budget_tool_evidence
+
+        collected = [self._entry("get_financial_statements", 20_000, i) for i in range(20)]
+        kept = _budget_tool_evidence(collected)
+        assert sum(len(e["result"]) for e in kept) <= _EVIDENCE_TOTAL_CHAR_BUDGET
+
+    def test_truncation_is_declared_not_silent(self) -> None:
+        from src.agent.loop import _EVIDENCE_PRIORITY_RESULT_CHARS, _budget_tool_evidence
+
+        kept = _budget_tool_evidence([self._entry("get_financial_statements", 40_000)])
+        assert kept[0]["truncated"] is True
+        assert kept[0]["original_chars"] == 40_000
+        assert len(kept[0]["result"]) == _EVIDENCE_PRIORITY_RESULT_CHARS
+
+    def test_chronological_order_is_restored(self) -> None:
+        from src.agent.loop import _budget_tool_evidence
+
+        collected = [
+            self._entry("read_file", 50, 1),
+            self._entry("get_market_data", 50, 2),
+            self._entry("read_file", 50, 3),
+        ]
+        assert [e["iteration"] for e in _budget_tool_evidence(collected)] == [1, 2, 3]
+
+    def test_small_run_is_untouched(self) -> None:
+        from src.agent.loop import _budget_tool_evidence
+
+        collected = [self._entry("get_market_data", 100, 1), self._entry("read_file", 100, 2)]
+        kept = _budget_tool_evidence(collected)
+        assert len(kept) == 2 and not any(e.get("truncated") for e in kept)

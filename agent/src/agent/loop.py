@@ -78,10 +78,53 @@ result returned earlier in this conversation. Both are authoritative.
   forecasts.
 """
 
-# How much harvested tool evidence to carry into the snapshot. Bounded so a long
-# research run cannot blow the finalization prompt budget.
-_EVIDENCE_MAX_TOOL_RESULTS = 40
-_EVIDENCE_MAX_PREVIEW_CHARS = 1200
+# Harvest budget, tuned against a real 31-iteration research run whose trace held
+# 331k chars (~83k tokens) of successful results. A flat per-result cap is the
+# wrong shape there: bulk document reads were 68% of the volume (one single
+# result was 49,611 chars) and would crowd out the fundamentals that actually
+# answer the question. So results are tiered — the tools that return structured
+# company/quantitative evidence keep enough room to survive intact, everything
+# else is trimmed hard — and the whole harvest is capped by a total character
+# budget rather than a result count.
+_EVIDENCE_TOTAL_CHAR_BUDGET = 60_000          # ~15k tokens
+_EVIDENCE_PRIORITY_RESULT_CHARS = 12_000      # income/cashflow/indicators fit whole
+_EVIDENCE_DEFAULT_RESULT_CHARS = 1_200
+_EVIDENCE_MAX_TOOL_RESULTS = 60
+
+# Rank 0 — the numbers a factor table is actually built from. These must never
+# be crowded out. Measured: financial statements 8.7k–15.5k each, market data
+# ≤2.4k, analysis factors 500, pledge 729.
+_EVIDENCE_CORE_TOOLS = frozenset({
+    "get_financial_statements",
+    "get_fundamentals",
+    "get_market_data",
+    "get_master_analysis_factors",
+    "get_promoter_pledge",
+    "fund_flow",
+    "get_lockup_expiry",
+})
+
+# Rank 1 — corroborating evidence: valuable, but bulky and not the source of the
+# core figures (official evidence alone was 27k in that run). Takes what is left.
+_EVIDENCE_SUPPORTING_TOOLS = frozenset({
+    "prepare_analysis_backbone",
+    "get_official_evidence",
+    "get_company_documents",
+    "search_symbol",
+    "backtest",
+    "report_audit",
+})
+
+_EVIDENCE_PRIORITY_TOOLS = _EVIDENCE_CORE_TOOLS | _EVIDENCE_SUPPORTING_TOOLS
+
+
+def _evidence_rank(tool: str) -> int:
+    """Lower ranks are filled first when the budget is tight."""
+    if tool in _EVIDENCE_CORE_TOOLS:
+        return 0
+    if tool in _EVIDENCE_SUPPORTING_TOOLS:
+        return 1
+    return 2
 
 
 def _collect_tool_evidence(run_dir: Path) -> list[dict[str, Any]]:
@@ -121,13 +164,65 @@ def _collect_tool_evidence(run_dir: Path) -> list[dict[str, Any]]:
                 collected.append({
                     "tool": event.get("tool"),
                     "iteration": event.get("iter"),
-                    "result": payload[:_EVIDENCE_MAX_PREVIEW_CHARS],
+                    "result": payload,
                 })
     except OSError as exc:  # noqa: BLE001 — evidence harvesting is best-effort
         logger.debug("tool-evidence harvest failed: %s", exc)
         return []
-    # Keep the most recent results: later calls supersede earlier probing.
-    return collected[-_EVIDENCE_MAX_TOOL_RESULTS:]
+    return _budget_tool_evidence(collected)
+
+
+def _budget_tool_evidence(collected: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Fit harvested results into the character budget, evidence-bearing first.
+
+    Ordering is priority tier then recency, so when the budget runs out it is
+    always the bulk/low-signal reads that fall off rather than the fundamentals.
+    Truncation is recorded on each entry — a silently shortened figure is worse
+    than an obviously shortened one, because the model cannot tell it is reading
+    half a number.
+    """
+    # Rank first, recency second. Recency alone would be actively wrong here:
+    # fundamentals are typically fetched early (iteration 3 in the run this was
+    # tuned against) and would sort last, which is precisely the evidence the
+    # snapshot exists to preserve.
+    ordered = sorted(
+        enumerate(collected),
+        key=lambda pair: (_evidence_rank(pair[1]["tool"]), -pair[0]),
+    )
+
+    selected: list[tuple[int, dict[str, Any]]] = []
+    spent = 0
+    for index, entry in ordered:
+        if len(selected) >= _EVIDENCE_MAX_TOOL_RESULTS or spent >= _EVIDENCE_TOTAL_CHAR_BUDGET:
+            break
+        cap = (
+            _EVIDENCE_PRIORITY_RESULT_CHARS
+            if entry["tool"] in _EVIDENCE_PRIORITY_TOOLS
+            else _EVIDENCE_DEFAULT_RESULT_CHARS
+        )
+        cap = min(cap, _EVIDENCE_TOTAL_CHAR_BUDGET - spent)
+        if cap <= 0:
+            break
+        body = entry["result"]
+        item: dict[str, Any] = {
+            "tool": entry["tool"],
+            "iteration": entry["iteration"],
+            "result": body[:cap],
+        }
+        if len(body) > cap:
+            item["truncated"] = True
+            item["original_chars"] = len(body)
+        selected.append((index, item))
+        spent += min(len(body), cap)
+
+    dropped = len(collected) - len(selected)
+    if dropped:
+        logger.info(
+            "evidence harvest: kept %d/%d tool results (%d chars); %d dropped by budget",
+            len(selected), len(collected), spent, dropped,
+        )
+    # Restore chronological order so the model reads the run as it happened.
+    return [item for _, item in sorted(selected, key=lambda pair: pair[0])]
 
 
 def _build_artifact_evidence_snapshot(run_dir: Path) -> str:
