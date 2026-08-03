@@ -316,6 +316,38 @@ def register_system_routes(
         """Backward-compatible alias for ``/live`` (legacy monitors)."""
         return _health_payload()
 
+    @app.get("/system/data-health", dependencies=[Depends(require_auth)])
+    async def data_health(limit: int = 50):
+        """Provider schema-drift observations seen since this process started.
+
+        Makes silent feed breakage visible. The loaders detect a provider that
+        renamed or dropped a column — the failure mode that otherwise shows up
+        as confident wrong data (a synthesized ``volume = 0.0`` on every bar)
+        rather than an error. ``status`` is ``"degraded"`` when anything has
+        been observed, so a monitor can alert without parsing the detail.
+
+        In-process and bounded: this reports what *this* server has seen since
+        start, not a durable audit trail.
+        """
+        try:
+            from backtest.loaders.base import drift_summary, recent_drift
+
+            summary = drift_summary()
+            capped = max(1, min(int(limit), 200))
+            return {
+                "status": "degraded" if summary["observations"] else "ok",
+                **summary,
+                "recent": recent_drift(capped),
+                "note": (
+                    "Drift means a data provider changed shape. Figures sourced from an "
+                    "affected feed should be treated as unverified until the mapping is "
+                    "updated."
+                ),
+            }
+        except Exception as exc:  # noqa: BLE001 — health must never 500
+            logger.info("data-health unavailable: %s", exc)
+            return {"status": "unknown", "error": "drift tracking unavailable"}
+
     @app.get("/market/overview", dependencies=[Depends(require_auth)])
     async def market_overview():
         """Return a short-lived observed quote snapshot for the landing tape.

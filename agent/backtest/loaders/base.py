@@ -17,7 +17,7 @@ import os
 import time
 import uuid
 from pathlib import Path
-from typing import Callable, Iterable, Protocol, TypeVar, runtime_checkable
+from typing import Any, Callable, Iterable, Protocol, TypeVar, runtime_checkable
 
 import pandas as pd
 
@@ -112,6 +112,50 @@ def validate_ohlc(frame: pd.DataFrame, *, strategy: str = "drop") -> pd.DataFram
 # ---------------------------------------------------------------------------
 
 
+_DRIFT_LOG_MAX = 200
+# Recent drift observations, newest last. In-process and bounded: this is an
+# operator signal ("is a feed quietly broken right now?"), not an audit trail,
+# so it deliberately does not survive a restart or coordinate across workers.
+_drift_log: list[dict[str, Any]] = []
+
+
+def _record_drift(kind: str, source: str, symbol: str, detail: Any) -> None:
+    _drift_log.append({
+        "kind": kind,
+        "source": source,
+        "symbol": symbol or None,
+        "detail": detail,
+        "at": dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds"),
+    })
+    if len(_drift_log) > _DRIFT_LOG_MAX:
+        del _drift_log[: len(_drift_log) - _DRIFT_LOG_MAX]
+
+
+def recent_drift(limit: int = 50) -> list[dict[str, Any]]:
+    """Most recent provider-drift observations, newest first."""
+    return list(reversed(_drift_log[-limit:]))
+
+
+def drift_summary() -> dict[str, Any]:
+    """Aggregate drift observations per source for a health view."""
+    per_source: dict[str, dict[str, Any]] = {}
+    for entry in _drift_log:
+        bucket = per_source.setdefault(
+            entry["source"],
+            {"source": entry["source"], "missing_columns": 0, "degenerate_columns": 0, "last_seen": None},
+        )
+        if entry["kind"] == "missing_columns":
+            bucket["missing_columns"] += 1
+        else:
+            bucket["degenerate_columns"] += 1
+        bucket["last_seen"] = entry["at"]
+    return {
+        "observations": len(_drift_log),
+        "sources_affected": sorted(per_source),
+        "by_source": [per_source[key] for key in sorted(per_source)],
+    }
+
+
 def audit_provider_columns(
     frame: pd.DataFrame,
     expected: Iterable[str],
@@ -145,6 +189,8 @@ def audit_provider_columns(
             missing,
             list(frame.columns)[:12],
         )
+        _record_drift("missing_columns", source, symbol,
+                      {"missing": missing, "present": list(frame.columns)[:12]})
     return missing
 
 
@@ -180,6 +226,8 @@ def flag_degenerate_columns(
             degenerate,
             len(frame),
         )
+        _record_drift("degenerate_columns", source, symbol,
+                      {"columns": degenerate, "bars": len(frame)})
     return degenerate
 
 

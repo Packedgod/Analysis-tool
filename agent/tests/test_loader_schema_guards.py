@@ -110,3 +110,42 @@ class TestLoaderIntegration:
             frame = _rows_to_frame(rows, "2024-01-01", "2024-01-31")
         assert len(frame) == 5
         assert caplog.records == []
+
+
+class TestDataHealthEndpoint:
+    """Drift must be visible to an operator, not only in the log file."""
+
+    def _client(self):
+        from fastapi.testclient import TestClient
+
+        import api_server
+
+        return TestClient(api_server.app, client=("127.0.0.1", 50000))
+
+    def test_reports_ok_when_nothing_observed(self, monkeypatch) -> None:
+        from backtest.loaders import base as lb
+
+        monkeypatch.setattr(lb, "_drift_log", [])
+        body = self._client().get("/system/data-health").json()
+        assert body["status"] == "ok" and body["observations"] == 0
+
+    def test_reports_degraded_and_names_the_source(self, monkeypatch) -> None:
+        from backtest.loaders import base as lb
+
+        monkeypatch.setattr(lb, "_drift_log", [])
+        audit_provider_columns(
+            _frame().drop(columns=["volume"]), _OHLCV, source="yahoo", symbol="AAPL.US",
+        )
+        body = self._client().get("/system/data-health").json()
+        assert body["status"] == "degraded"
+        assert "yahoo" in body["sources_affected"]
+        assert body["recent"][0]["symbol"] == "AAPL.US"
+
+    def test_drift_log_is_bounded(self, monkeypatch) -> None:
+        from backtest.loaders import base as lb
+
+        monkeypatch.setattr(lb, "_drift_log", [])
+        frame = _frame().drop(columns=["volume"])
+        for _ in range(lb._DRIFT_LOG_MAX + 25):
+            audit_provider_columns(frame, _OHLCV, source="yahoo")
+        assert len(lb._drift_log) == lb._DRIFT_LOG_MAX

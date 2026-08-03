@@ -82,10 +82,50 @@ def monte_carlo_test(
     }
 
 
+def json_safe(value: Any) -> Any:
+    """Recursively replace non-finite floats with ``None``.
+
+    ``json.dumps`` happily writes bare ``NaN``/``Infinity`` literals, which are
+    not valid JSON: strict parsers (``JSON.parse`` in the browser, any
+    ``allow_nan=False`` serializer) reject the whole document. A wipeout path —
+    equity reaching zero — produces exactly those values, so a single degenerate
+    backtest could render validation.json unparseable rather than merely
+    uninformative. ``None`` round-trips as ``null`` and reads honestly as
+    "not computable".
+    """
+    if isinstance(value, dict):
+        return {k: json_safe(v) for k, v in value.items()}
+    if isinstance(value, (list, tuple)):
+        return [json_safe(v) for v in value]
+    if isinstance(value, (bool, int, str)) or value is None:
+        return value
+    if isinstance(value, float) or isinstance(value, np.floating):
+        return float(value) if math.isfinite(float(value)) else None
+    if isinstance(value, np.integer):
+        return int(value)
+    return value
+
+
+def _safe_returns(equity: np.ndarray) -> np.ndarray:
+    """Bar-over-bar returns that tolerate a zero/negative equity path.
+
+    A blown-up account divides by zero; suppressing that here keeps the whole
+    metric set finite instead of poisoning every downstream statistic with NaN.
+    Bars with no capital left to risk contribute a zero return.
+    """
+    if len(equity) <= 1:
+        return np.array([0.0])
+    denominator = equity[:-1]
+    numerator = np.diff(equity)
+    result = np.zeros_like(numerator, dtype=float)
+    np.divide(numerator, denominator, out=result, where=denominator != 0)
+    return np.nan_to_num(result, nan=0.0, posinf=0.0, neginf=0.0)
+
+
 def _path_metrics(pnls: np.ndarray, initial_capital: float, bars_per_year: int = 252) -> Dict[str, float]:
     """Compute Sharpe and max drawdown from a PnL sequence."""
     equity = initial_capital + np.cumsum(pnls)
-    returns = np.diff(equity) / equity[:-1] if len(equity) > 1 else np.array([0.0])
+    returns = _safe_returns(equity)
     std = returns.std(ddof=1) if len(returns) > 1 else 0.0
     sharpe = float(returns.mean() / (std + 1e-10) * np.sqrt(bars_per_year))
     peak = np.maximum.accumulate(equity)
@@ -315,7 +355,10 @@ def run_validation(
         except Exception as exc:  # noqa: BLE001 — optional section, never fatal
             results["overfitting"] = {"error": str(exc)}
 
-    return results
+    # Single exit point for JSON safety: every validator can emit a non-finite
+    # float on a degenerate path (wipeout, zero-variance, empty window), and one
+    # bare NaN makes the entire validation.json unparseable for strict readers.
+    return json_safe(results)
 
 
 # ─── Standalone CLI ───

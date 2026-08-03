@@ -508,7 +508,12 @@ def test_forced_finalization_injects_verified_snapshot(tmp_path: Path) -> None:
     assert "<verified-artifact-snapshot>" in final_system
     assert '"sharpe": "0.9615924559"' in final_system
     assert '"p_value_sharpe": 0.593' in final_system
-    assert "If a requested value is absent, label it unavailable" in final_system
+    # The unavailability rule is scoped to "no tool produced it", not "absent
+    # from the artifact list" — the latter wording made research runs report
+    # every fundamental factor as unavailable.
+    collapsed = " ".join(final_system.split())
+    assert "label a value unavailable only when no tool call in this run produced it" in collapsed.lower()
+    assert "not the complete set of evidence" in collapsed.lower()
 
 
 class _StubLLMEarlyDraftThenEvidenceFinal:

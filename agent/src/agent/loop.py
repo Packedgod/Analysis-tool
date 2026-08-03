@@ -63,13 +63,71 @@ TAIL_TOKEN_BUDGET = 20_000
 
 _EVIDENCE_ONLY_FINAL_INSTRUCTION = """\
 [SYSTEM — EVIDENCE-ONLY FINALIZATION]
-Use the verified artifact snapshot below as the authoritative source for the final answer.
-- Report material numeric claims only when they appear in this snapshot or another explicit tool result.
-- Do not estimate, approximate, infer, extrapolate, or fill missing values.
-- Do not claim that artifact data is unavailable when it appears below.
-- If a requested value is absent, label it unavailable and state which evidence is missing.
-- Distinguish historical results from forward-looking statements; omit unsupported forecasts.
+Ground the final answer in verified evidence: the snapshot below AND every tool
+result returned earlier in this conversation. Both are authoritative.
+- The snapshot is a record of this run's artifacts and gathered evidence. It is
+  NOT the complete set of evidence: a figure returned by any tool call in this
+  conversation is equally valid to report, whether or not it also appears below.
+- Report material numeric claims only when they came from the snapshot or a tool
+  result. Do not estimate, approximate, infer, extrapolate, or fill missing values.
+- Do not claim data is unavailable when it appears below or was returned by a tool.
+- Label a value unavailable ONLY when no tool call in this run produced it. Never
+  label a factor unavailable merely because it is absent from the artifact list —
+  say which evidence is missing and, if it was never fetched, say so plainly.
+- Distinguish historical results from forward-looking statements; omit unsupported
+  forecasts.
 """
+
+# How much harvested tool evidence to carry into the snapshot. Bounded so a long
+# research run cannot blow the finalization prompt budget.
+_EVIDENCE_MAX_TOOL_RESULTS = 40
+_EVIDENCE_MAX_PREVIEW_CHARS = 1200
+
+
+def _collect_tool_evidence(run_dir: Path) -> list[dict[str, Any]]:
+    """Harvest successful tool results from this run's trace.
+
+    Why: the artifact snapshot only ever described *backtest* outputs
+    (run_card / metrics / validation / equity / trades). A fundamentals question
+    produces none of those, so the snapshot came back effectively empty and the
+    model — correctly following an instruction to report only what it could
+    verify — marked every factor "unavailable in verified snapshot", even though
+    the figures had been fetched earlier and then compacted out of context.
+
+    The trace is the durable record of what was actually retrieved, so it is the
+    right place to recover that evidence. Previews are already redacted by
+    :func:`_redact_trace_result` at write time.
+    """
+    trace_path = run_dir / "trace.jsonl"
+    if not trace_path.exists():
+        return []
+    collected: list[dict[str, Any]] = []
+    try:
+        with trace_path.open("r", encoding="utf-8") as handle:
+            for line in handle:
+                if '"tool_result"' not in line:
+                    continue
+                try:
+                    event = json.loads(line)
+                except ValueError:
+                    continue
+                if event.get("type") != "tool_result" or event.get("status") != "ok":
+                    continue
+                payload = event.get("result") or event.get("preview") or ""
+                if not isinstance(payload, str):
+                    payload = str(payload)
+                if not payload.strip():
+                    continue
+                collected.append({
+                    "tool": event.get("tool"),
+                    "iteration": event.get("iter"),
+                    "result": payload[:_EVIDENCE_MAX_PREVIEW_CHARS],
+                })
+    except OSError as exc:  # noqa: BLE001 — evidence harvesting is best-effort
+        logger.debug("tool-evidence harvest failed: %s", exc)
+        return []
+    # Keep the most recent results: later calls supersede earlier probing.
+    return collected[-_EVIDENCE_MAX_TOOL_RESULTS:]
 
 
 def _build_artifact_evidence_snapshot(run_dir: Path) -> str:
@@ -146,7 +204,25 @@ def _build_artifact_evidence_snapshot(run_dir: Path) -> str:
         except (OSError, csv.Error) as exc:
             snapshot["artifacts"][relative] = f"unreadable: {exc}"
 
-    if not snapshot["artifacts"]:
+    # Evidence gathered by tools, not just backtest artifacts. Without this a
+    # research run (fundamentals, filings, screening) produced an artifact-only
+    # snapshot and every requested factor was reported "unavailable".
+    tool_evidence = _collect_tool_evidence(run_dir)
+    if tool_evidence:
+        snapshot["tool_evidence"] = tool_evidence
+        snapshot["tool_evidence_note"] = (
+            "Verified results returned by tools during this run. These are "
+            "authoritative evidence for the final answer, exactly like the "
+            "artifacts above."
+        )
+
+    snapshot["artifacts_scope"] = (
+        "The 'artifacts' list covers backtest outputs only. A run that produced "
+        "no backtest has none, which says nothing about fundamentals or other "
+        "evidence — check 'tool_evidence' and the conversation's tool results."
+    )
+
+    if not snapshot["artifacts"] and not tool_evidence:
         return ""
     return json.dumps(snapshot, ensure_ascii=False, sort_keys=True)
 
