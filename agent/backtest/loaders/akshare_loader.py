@@ -12,7 +12,7 @@ from typing import Dict, List, Optional
 import pandas as pd
 
 from backtest.loaders._symbol_utils import _is_etf_listed
-from backtest.loaders.base import cached_loader_fetch, validate_date_range
+from backtest.loaders.base import (cached_loader_fetch, validate_date_range, audit_provider_columns, flag_degenerate_columns)
 from backtest.loaders.registry import register
 
 logger = logging.getLogger(__name__)
@@ -261,8 +261,12 @@ class DataLoader:
             if col in df.columns:
                 df[col] = pd.to_numeric(df[col], errors="coerce")
 
+        audit_provider_columns(
+            df, ["open", "high", "low", "close", "volume"], source="akshare",
+        )
         ohlcv_cols = [c for c in ["open", "high", "low", "close", "volume"] if c in df.columns]
         df = df[ohlcv_cols].dropna(subset=["open", "high", "low", "close"])
         if "volume" not in df.columns:
             df["volume"] = 0.0
+        flag_degenerate_columns(df, source="akshare")
         return df

@@ -23,7 +23,9 @@ import requests
 
 from backtest.loaders import yahoo_client
 from backtest.loaders.base import (
+    audit_provider_columns,
     cached_loader_fetch,
+    flag_degenerate_columns,
     positive_env_float,
     retry_with_budget,
     validate_date_range,
@@ -153,6 +155,10 @@ def _rows_to_frame(
     frame.index = pd.DatetimeIndex(index)
     frame.index.name = "trade_date"
 
+    # Record any absent column before a default papers over it: a synthesized
+    # volume of 0.0 is indistinguishable from a real zero-volume market once
+    # written, so the drift has to be logged at the point it is masked.
+    audit_provider_columns(frame, _OHLCV_COLUMNS, source="yahoo")
     for column in _OHLCV_COLUMNS:
         if column not in frame.columns:
             frame[column] = 0.0 if column == "volume" else pd.NA
@@ -160,6 +166,7 @@ def _rows_to_frame(
     frame = frame.loc[:, list(_OHLCV_COLUMNS)].apply(pd.to_numeric, errors="coerce")
     frame["volume"] = frame["volume"].fillna(0.0)
     frame = frame.dropna(subset=["open", "high", "low", "close"])
+    flag_degenerate_columns(frame, source="yahoo")
 
     lower = pd.Timestamp(start_date).normalize()
     upper = pd.Timestamp(end_date).normalize() + pd.Timedelta(days=1)

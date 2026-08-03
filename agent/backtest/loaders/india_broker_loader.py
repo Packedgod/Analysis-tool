@@ -27,7 +27,7 @@ from typing import Any, Dict, List, Optional
 
 import pandas as pd
 
-from backtest.loaders.base import validate_date_range
+from backtest.loaders.base import (validate_date_range, audit_provider_columns, flag_degenerate_columns)
 from backtest.loaders.registry import register
 
 logger = logging.getLogger(__name__)
@@ -93,11 +93,13 @@ def _bars_to_frame(bars: list[dict], start_date: str, end_date: str) -> Optional
     frame.index = pd.DatetimeIndex(index).tz_localize(None)
     frame.index.name = "trade_date"
 
+    audit_provider_columns(frame, _OUTPUT_COLUMNS, source="india_broker")
     for col in _OUTPUT_COLUMNS:
         if col not in frame.columns:
             frame[col] = 0.0 if col == "volume" else pd.NA
     frame = frame[_OUTPUT_COLUMNS].apply(pd.to_numeric, errors="coerce")
     frame = frame.dropna(subset=["open", "high", "low", "close"]).sort_index()
+    flag_degenerate_columns(frame, source="india_broker")
 
     lower = pd.Timestamp(start_date).normalize()
     upper = pd.Timestamp(end_date).normalize() + pd.Timedelta(days=1)

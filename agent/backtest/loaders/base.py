@@ -17,7 +17,7 @@ import os
 import time
 import uuid
 from pathlib import Path
-from typing import Callable, Protocol, TypeVar, runtime_checkable
+from typing import Callable, Iterable, Protocol, TypeVar, runtime_checkable
 
 import pandas as pd
 
@@ -98,6 +98,89 @@ def validate_ohlc(frame: pd.DataFrame, *, strategy: str = "drop") -> pd.DataFram
         return frame
     logger.warning("OHLC validation: dropping %d invalid bar(s)", n_invalid)
     return frame[~invalid]
+
+
+# ---------------------------------------------------------------------------
+# Provider schema-drift guards
+#
+# Every loader maps an undocumented third-party payload onto canonical column
+# names. When a provider renames a field the mapping silently misses, and the
+# usual "fill the gap with a default" reflex turns a broken feed into confident
+# wrong data: a renamed volume column becomes ``volume = 0.0`` on every bar,
+# which volume-themed factors then compute on happily. A missing column must be
+# *noisy*, because unlike a network failure it never announces itself.
+# ---------------------------------------------------------------------------
+
+
+def audit_provider_columns(
+    frame: pd.DataFrame,
+    expected: Iterable[str],
+    *,
+    source: str,
+    symbol: str = "",
+) -> list[str]:
+    """Log and return the expected columns absent from a provider frame.
+
+    Non-fatal by design: callers still decide whether to synthesize a default,
+    drop the symbol, or fail. The value is that the drift is recorded with the
+    provider and symbol attached, instead of vanishing into a filled column.
+
+    Args:
+        frame: The provider frame *before* any defaults are synthesized.
+        expected: Canonical column names the loader relies on.
+        source: Loader name (e.g. ``"yahoo"``), for the log line.
+        symbol: Optional symbol, for the log line.
+
+    Returns:
+        The missing column names, in the order given.
+    """
+    if frame is None:
+        return list(expected)
+    missing = [column for column in expected if column not in frame.columns]
+    if missing:
+        logger.warning(
+            "provider schema drift: %s%s returned no %s column(s); present: %s",
+            source,
+            f"/{symbol}" if symbol else "",
+            missing,
+            list(frame.columns)[:12],
+        )
+    return missing
+
+
+def flag_degenerate_columns(
+    frame: pd.DataFrame,
+    *,
+    source: str,
+    symbol: str = "",
+    columns: Iterable[str] = ("volume",),
+) -> list[str]:
+    """Log and return columns that are entirely zero/NaN across a non-empty frame.
+
+    A wholly-zero volume series is far more often a mapping failure than a real
+    market: it is the fingerprint left by a synthesized default. Reported rather
+    than raised, so a genuinely volume-less instrument (an index, some FX) still
+    loads — the log is what makes the difference investigable.
+    """
+    if frame is None or frame.empty:
+        return []
+    degenerate: list[str] = []
+    for column in columns:
+        if column not in frame.columns:
+            continue
+        series = pd.to_numeric(frame[column], errors="coerce")
+        if series.isna().all() or (series.fillna(0) == 0).all():
+            degenerate.append(column)
+    if degenerate:
+        logger.warning(
+            "suspect provider data: %s%s returned all-zero/empty %s over %d bar(s) "
+            "— usually a renamed column rather than a real market",
+            source,
+            f"/{symbol}" if symbol else "",
+            degenerate,
+            len(frame),
+        )
+    return degenerate
 
 
 # ---------------------------------------------------------------------------
