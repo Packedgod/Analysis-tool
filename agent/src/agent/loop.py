@@ -511,10 +511,30 @@ def _microcompact(messages: list) -> None:
     tool_msgs = [m for m in messages if m.get("role") == "tool"]
     if len(tool_msgs) <= KEEP_RECENT:
         return
-    for msg in tool_msgs[:-KEEP_RECENT]:
+
+    # Core evidence is exempt from clearing, within a budget.
+    #
+    # KEEP_RECENT is 3, so on a 19-iteration run the financial statements
+    # fetched at iteration 2 were wiped to "[cleared]" long before the answer —
+    # and the model then correctly reported it had no citable figures. Rebuilding
+    # the evidence at finalization only helps the forced-finalization path; a run
+    # that ends normally never sees it. Keeping the numbers in context is what
+    # actually fixes both, so the tools that produce an answer's figures are
+    # retained (newest first) until the budget is spent.
+    protected = 0
+    for msg in reversed(tool_msgs[:-KEEP_RECENT]):
         content = msg.get("content", "")
-        if isinstance(content, str) and len(content) > 100:
-            msg["content"] = "[cleared]"
+        if not isinstance(content, str) or len(content) <= 100:
+            continue
+        if content == "[cleared]":
+            continue
+        if (
+            msg.get("name") in _EVIDENCE_CORE_TOOLS
+            and protected + len(content) <= _EVIDENCE_TOTAL_CHAR_BUDGET
+        ):
+            protected += len(content)
+            continue
+        msg["content"] = "[cleared]"
 
 
 def _context_collapse(messages: list) -> None:

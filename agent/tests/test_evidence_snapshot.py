@@ -210,3 +210,63 @@ class TestEvidenceBudgeting:
         collected = [self._entry("get_market_data", 100, 1), self._entry("read_file", 100, 2)]
         kept = _budget_tool_evidence(collected)
         assert len(kept) == 2 and not any(e.get("truncated") for e in kept)
+
+
+class TestEvidenceSurvivesCompaction:
+    """The real fix for a normally-terminating run.
+
+    KEEP_RECENT is 3, so on the 19-iteration verification run the statements
+    fetched at iteration 2 were cleared long before the answer, and the model
+    reported it had no citable figures. Rebuilding evidence at finalization only
+    covers the forced-finalization path — keeping it in context covers both.
+    """
+
+    def _msgs(self, n_other=20):
+        from src.agent.loop import KEEP_RECENT
+
+        msgs = [{"role": "system", "content": "sys"}]
+        msgs += [{"role": "tool", "name": "get_financial_statements",
+                  "tool_call_id": f"fs{i}", "content": "F" * 9_000} for i in range(4)]
+        msgs += [{"role": "tool", "name": "read_document",
+                  "tool_call_id": f"rd{i}", "content": "D" * 9_000} for i in range(n_other)]
+        msgs += [{"role": "tool", "name": "read_file",
+                  "tool_call_id": f"tail{i}", "content": "T" * 9_000} for i in range(KEEP_RECENT)]
+        return msgs
+
+    def test_statements_survive_while_bulk_reads_are_cleared(self) -> None:
+        from src.agent.loop import _microcompact
+
+        msgs = self._msgs()
+        _microcompact(msgs)
+        fs = [m for m in msgs if m.get("name") == "get_financial_statements"]
+        docs = [m for m in msgs if m.get("name") == "read_document"]
+        assert all(m["content"] != "[cleared]" for m in fs), (
+            "financial statements must stay citable for the whole run"
+        )
+        assert all(m["content"] == "[cleared]" for m in docs)
+
+    def test_protection_is_budget_bounded(self) -> None:
+        from src.agent.loop import _EVIDENCE_TOTAL_CHAR_BUDGET, _microcompact
+
+        msgs = [{"role": "system", "content": "s"}]
+        msgs += [{"role": "tool", "name": "get_financial_statements",
+                  "tool_call_id": f"x{i}", "content": "F" * 10_000} for i in range(40)]
+        msgs += [{"role": "tool", "name": "read_file", "tool_call_id": "t", "content": "T" * 200}]
+        from src.agent.loop import KEEP_RECENT
+
+        _microcompact(msgs)
+        kept = sum(len(m["content"]) for m in msgs
+                   if m.get("name") == "get_financial_statements" and m["content"] != "[cleared]")
+        # The KEEP_RECENT tail is always preserved and sits outside the
+        # protection budget, so allow for it explicitly rather than pretending
+        # the budget governs every retained message.
+        assert kept <= _EVIDENCE_TOTAL_CHAR_BUDGET + KEEP_RECENT * 10_000
+        # …and protection must still bite: not all 40 survive.
+        assert kept < 40 * 10_000
+
+    def test_short_runs_are_untouched(self) -> None:
+        from src.agent.loop import _microcompact
+
+        msgs = [{"role": "tool", "name": "read_document", "content": "D" * 5_000}]
+        _microcompact(msgs)
+        assert msgs[0]["content"] != "[cleared]"
